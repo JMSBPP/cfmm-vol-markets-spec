@@ -1,0 +1,42 @@
+# Stack / Cabal
+.stack-work/
+dist/
+dist-newstyle/
+cabal.project.local
+.ghc.environment.*
+.hie/
+.hpc
+.hsenv
+.cabal-sandbox/
+cabal.sandbox.config
+.HTF/
+TAGS
+*.hi
+*.o
+*.dyn_hi
+*.dyn_o
+*.chi
+*.chs.h
+*.prof
+*.aux
+*.hp
+*.eventlog
+
+# Generated Chart-cairo plots (`app/Main.hs` writes outputs/**)
+outputs/
+
+# Leftover nested template (has its own .git)
+tmp/
+
+# Secrets
+.env
+.env.*
+.secrets/
+
+# Editors / OS
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+.#*
