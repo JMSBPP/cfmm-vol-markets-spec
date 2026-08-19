@@ -16,7 +16,16 @@ import Pricing.PriceDeformation
 import Greeks.Delta (deltaLayout)
 import Greeks.Gamma (gammaLayout, kristensenGammaLayoutVsGamma)
 import Payoffs.CPMMPosition (rhsPayoffLayout)
-import Payoffs.VolatilityCall (mkVolStrike, volatilityCallLayout)
+import Payoffs.Forward (AtmForward(..))
+import Payoffs.NId (mkNId)
+import Payoffs.TargetVega (mkTargetVega)
+import Payoffs.VariancePortfolio (variancePortfolioLayout)
+import Payoffs.VolatilityCall
+  ( mkVolStrike
+  , volatilityCallLayout
+  , volatilityCallLayoutVsSqrtPrice
+  , volatilityCallLayoutVsXi
+  )
 import Liquidity.LiquidityGrid
   ( liquidityLayout
   , liquidityLayoutVsGamma
@@ -27,14 +36,21 @@ import Liquidity.LiquidityGrid
   )
 import SqrtGrid
   ( SqrtPlot(..)
+  , PayoffX96(..)
   , mkTickSpacing
   , pattern Q96
+  , sqrtPriceX96
   )
 import State
   ( pattern SQRT_PRICE_1_4
   , pattern SQRT_PRICE_4_1
   )
 import TickPath (mkTickPath, tickPathLayout)
+import Volatility.CevField
+  ( cevLayoutVsGamma
+  , cevLayoutVsSqrtPrice
+  , cevLayoutVsXi
+  )
 import Volatility.VolTermStructure (BarL(..), FlowVol(..), cevFromPhi)
 import StrikeX96 (strike)
 
@@ -45,6 +61,7 @@ main = do
   createDirectoryIfMissing True "outputs/Greeks"
   createDirectoryIfMissing True "outputs/Liquidity"
   createDirectoryIfMissing True "outputs/TickPath"
+  createDirectoryIfMissing True "outputs/Volatility"
 
   let
     tickLo = -13863
@@ -146,5 +163,62 @@ main = do
         spacing10
         tickMin
         iota32
+      )
+    )
+
+  writePanel
+    "outputs/Payoffs/vs-sqrtPriceX96.png"
+    (Cell
+      (volatilityCallLayoutVsSqrtPrice
+        (mkVolStrike 0)
+        spacing10
+        tickMin
+        iota32
+      )
+    )
+
+  writePanel
+    "outputs/Payoffs/vs-xiCoordinate.png"
+    (Cell
+      (volatilityCallLayoutVsXi
+        (mkVolStrike 0)
+        xiPinned
+        spacing10
+        tickMin
+        iota32
+      )
+    )
+
+  writePanel
+    "outputs/Volatility/vs-sqrtPriceX96.png"
+    (Cell (cevLayoutVsSqrtPrice vtsCev spacing10 tickMin iota32))
+
+  writePanel
+    "outputs/Volatility/vs-gammaCoordinate.png"
+    (Cell
+      (cevLayoutVsGamma
+        vtsCev
+        (unXiX96 xiPinned)
+        BASE_ETA
+        spacing10
+        tickMin
+        iota32
+      )
+    )
+
+  writePanel
+    "outputs/Volatility/vs-xiCoordinate.png"
+    (Cell (cevLayoutVsXi vtsCev xiPinned spacing10 tickMin iota32))
+
+  writePanel
+    "outputs/Payoffs/variance-portfolio.png"
+    (Cell
+      (variancePortfolioLayout
+        (mkNId 32)
+        (AtmForward (sqrtPriceX96 0))
+        (PayoffX96 0)
+        (mkTargetVega 1)
+        SQRT_PRICE_1_4
+        SQRT_PRICE_4_1
       )
     )

@@ -10,6 +10,44 @@ import Graphics.Rendering.Chart.Easy (execEC, layout_title, (.=))
 import PlotUtils (Panel(..), canvasSize)
 import OptionRatio (OptionRatio(..))
 import Payoffs.Payoff (squareSqrtPrice)
+import qualified Payoffs.Payoff as Payoff
+import Payoffs.NId
+  ( MintPlan(..)
+  , PanopticTokenId(..)
+  , fourLegNumLegs
+  , fourLegSkeleton
+  , mkNId
+  , nSigma
+  , panopticIsLong
+  , panopticOptionRatio
+  , panopticStrike
+  , panopticTickSpacing
+  , panopticTokenType
+  , panopticWidth
+  , scaleByNId
+  , unNId
+  )
+import Payoffs.Forward
+  ( AtmForward(..)
+  , forward
+  , nakedForwardQ96
+  )
+import qualified Payoffs.Forward as Fwd
+import Payoffs.Log (logContract, nakedLogQ96)
+import qualified Payoffs.Log as PLog
+import Payoffs.VariancePortfolio
+  ( fromDef6
+  , fromLegs
+  , scaleByTargetVega
+  , toPayoff
+  )
+import Payoffs.TargetVega
+  ( mkTargetVega
+  , positionSizeForTargetVega
+  , targetVegaFromMint
+  , targetVegaFromMints
+  , unTargetVega
+  )
 import Liquidity.LiquidityGrid
   ( XiX96(..)
   , ell
@@ -21,6 +59,11 @@ import Liquidity.LiquidityGrid
   , xiStar
   )
 import Pricing.PriceDeformation (EtaX96(..), pattern BASE_ETA)
+import Volatility.CevField
+  ( cevLayoutVsGamma
+  , cevLayoutVsSqrtPrice
+  , cevLayoutVsXi
+  )
 import Volatility.VolTermStructure
   ( BarL(..)
   , FlowVol(..)
@@ -38,7 +81,10 @@ import SqrtGrid
   , mkTickSpacing
   , pattern Q96
   , rpowX96
+  , sqrtPrice
   , sqrtPriceX96
+  , tickBase
+  , tickFromSqrtPriceX96
   , unTickSpacing
   )
 import State (pattern SQRT_PRICE_1_4, pattern SQRT_PRICE_4_1)
@@ -51,6 +97,8 @@ import Payoffs.VolatilityCall
   , payoff
   , unVolStrike
   , volatilityCall
+  , volatilityCallLayoutVsSqrtPrice
+  , volatilityCallLayoutVsXi
   )
 import Volatility.TickVolatility
   ( RangeVolatility(..)
@@ -112,6 +160,147 @@ main = do
       )
     )
 
+  assertThrows "mkNId 1 rejected" (mkNId 1)
+  assertThrows "mkNId 3 rejected" (mkNId 3)
+  assertEqual "mkNId 32 stores N" 32 (unNId (mkNId 32))
+  assertEqual "N_σ = N/2" 16 (nSigma (mkNId 32))
+  assertEqual "N_id * N_σ on 1-word: scaleByNId N (N_σ) = 1"
+    1
+    (scaleByNId (mkNId 32) (nSigma (mkNId 32)))
+  assertEqual "scaleByNId 2/32 of 32 = 2" 2 (scaleByNId (mkNId 32) 32)
+
+  let
+    n32 = mkNId 32
+    atm0 = AtmForward (sqrtPriceX96 0)
+    PayoffX96 p0 = squareSqrtPrice (sqrtPriceX96 0)
+    PayoffX96 naked0 = nakedForwardQ96 (sqrtPriceX96 0) atm0
+  assertEqual "forward naked at p* is 0" 0 naked0
+  assertEqual "squareSqrtPrice tick0 is Q96" Q96 p0
+  let
+    s10 = sqrtPriceX96 10
+    SqrtPriceX96 s10Raw = s10
+    SqrtPriceX96 s0Raw = sqrtPriceX96 0
+    PayoffX96 naked10 = nakedForwardQ96 s10 atm0
+    PayoffX96 p10 = squareSqrtPrice s10
+    expectedNaked =
+      ((p10 - p0) * Q96) `div` p0
+  assertEqual "naked forward is (P-P*)/P* in Q96" expectedNaked naked10
+  if naked10 == (s10Raw - s0Raw)
+    then error "forward must not be s-s*"
+    else putStrLn "ok: forward ≠ s−s*"
+  assertEqual
+    "optional forward = N_id * naked"
+    (scaleByNId n32 naked10)
+    (let PayoffX96 y = Fwd.payoff n32 s10 atm0 in y)
+  _ <- evaluate (forward n32 atm0)
+  putStrLn "ok: forward Payoff"
+
+  let
+    PayoffX96 log0 = nakedLogQ96 (sqrtPriceX96 0) atm0
+  assertEqual "log at p* is 0" 0 log0
+  let
+    i10 = tickFromSqrtPriceX96 s10
+    i0 = tickFromSqrtPriceX96 (sqrtPriceX96 0)
+    expectedLog =
+      floor (fromIntegral Q96 * fromIntegral (i10 - i0) * log tickBase)
+    PayoffX96 log10 = nakedLogQ96 s10 atm0
+  assertEqual "naked log is (i-i*) ln λ in Q96" expectedLog log10
+  let SqrtPriceX96 word10 = s10
+  if log10 == word10
+    then error "log must not be ln of the Q96 word"
+    else putStrLn "ok: log ≠ Q96 word"
+  assertEqual
+    "optional log = N_id * naked"
+    (scaleByNId n32 log10)
+    (let PayoffX96 y = PLog.payoff n32 s10 atm0 in y)
+  _ <- evaluate (logContract n32 atm0)
+  putStrLn "ok: logContract Payoff"
+
+  let
+    remaining = PayoffX96 1000
+    piLegs = fromLegs n32 atm0 remaining
+    piDef6 = fromDef6 n32 atm0 remaining
+    yLegs0 = Payoff.runPayoff (toPayoff piLegs) (sqrtPriceX96 0)
+    yDef0 = Payoff.runPayoff (toPayoff piDef6) (sqrtPriceX96 0)
+  assertEqual "fromLegs at ATM = remaining" remaining yLegs0
+  assertEqual "fromDef6 at ATM = remaining" remaining yDef0
+  assertEqual "fromLegs = fromDef6 at ATM" yLegs0 yDef0
+  let
+    yLegs10 = Payoff.runPayoff (toPayoff piLegs) s10
+    yDef10 = Payoff.runPayoff (toPayoff piDef6) s10
+  assertEqual "fromLegs = fromDef6 off ATM" yLegs10 yDef10
+
+  assertThrows "mkTargetVega 0 rejected" (mkTargetVega 0)
+  assertThrows "mkTargetVega (-1) rejected" (mkTargetVega (-1))
+  assertEqual "mkTargetVega 1" 1 (unTargetVega (mkTargetVega 1))
+  let
+    unit = scaleByTargetVega (mkTargetVega 1) piLegs
+    times3 = scaleByTargetVega (mkTargetVega 3) piLegs
+    PayoffX96 u10 = Payoff.runPayoff unit s10
+    PayoffX96 t10 = Payoff.runPayoff times3 s10
+    PayoffX96 base10 = Payoff.runPayoff (toPayoff piLegs) s10
+  assertEqual "ΔQ_v=1 recovers Π_opt" base10 u10
+  assertEqual "ΔQ_v=3 scales Y by 3" (3 * base10) t10
+
+  let
+    dqv7 = mkTargetVega 7
+    ratios = (1, 2, 3, 4)
+    skeleton = fourLegSkeleton 0 ratios
+  assertThrows "optionRatio 0 rejected" (fourLegSkeleton 0 (0, 1, 1, 1))
+  assertThrows "optionRatio 128 rejected" (fourLegSkeleton 0 (1, 1, 1, 128))
+  assertEqual "num_legs=4" 4 (fourLegNumLegs skeleton)
+  assertEqual "tickSpacing once" 10 (panopticTickSpacing skeleton)
+  assertEqual "optionRatio leg 0" 1 (panopticOptionRatio skeleton 0)
+  assertEqual "optionRatio leg 1" 2 (panopticOptionRatio skeleton 1)
+  assertEqual "optionRatio leg 2" 3 (panopticOptionRatio skeleton 2)
+  assertEqual "optionRatio leg 3" 4 (panopticOptionRatio skeleton 3)
+  if panopticOptionRatio skeleton 0 == panopticOptionRatio skeleton 1
+       && panopticOptionRatio skeleton 1 == panopticOptionRatio skeleton 2
+       && panopticOptionRatio skeleton 2 == panopticOptionRatio skeleton 3
+    then error "optionRatio must differ per leg in this inhabitant"
+    else putStrLn "ok: optionRatio differs per leg"
+  mapM_
+    (\leg -> do
+      assertEqual ("isLong leg " ++ show leg) 1 (panopticIsLong skeleton leg)
+      assertEqual ("width leg " ++ show leg) 1 (panopticWidth skeleton leg)
+    )
+    [0, 1, 2, 3]
+  assertEqual "tokenType put 0" 0 (panopticTokenType skeleton 0)
+  assertEqual "tokenType put 1" 0 (panopticTokenType skeleton 1)
+  assertEqual "tokenType call 2" 1 (panopticTokenType skeleton 2)
+  assertEqual "tokenType call 3" 1 (panopticTokenType skeleton 3)
+  assertEqual "strike leg 0" (-15) (panopticStrike skeleton 0)
+  assertEqual "strike leg 1" (-5) (panopticStrike skeleton 1)
+  assertEqual "strike leg 2" 5 (panopticStrike skeleton 2)
+  assertEqual "strike leg 3" 15 (panopticStrike skeleton 3)
+  let
+    plan7 = MintPlan skeleton (positionSizeForTargetVega dqv7)
+  assertEqual
+    "round-trip positionSize = ΔQ_v*"
+    dqv7
+    (targetVegaFromMint plan7)
+  let
+    fromA = scaleByTargetVega dqv7 piLegs
+    fromB = scaleByTargetVega (targetVegaFromMint plan7) piLegs
+    yA0 = Payoff.runPayoff fromA (sqrtPriceX96 0)
+    yB0 = Payoff.runPayoff fromB (sqrtPriceX96 0)
+    yA10 = Payoff.runPayoff fromA s10
+    yB10 = Payoff.runPayoff fromB s10
+  assertEqual "hop B ATM Y = hop A" yA0 yB0
+  assertEqual "hop B off-ATM Y = hop A" yA10 yB10
+  assertThrows
+    "num_legs≠4 rejected"
+    (targetVegaFromMint (MintPlan (PanopticTokenId 0 3) 1))
+
+  assertThrows "empty mint list rejected" (targetVegaFromMints [])
+  let
+    p1 = MintPlan skeleton (positionSizeForTargetVega (mkTargetVega 4))
+    p2 = MintPlan skeleton (positionSizeForTargetVega (mkTargetVega 5))
+  assertEqual
+    "ΔQ_v* additive"
+    (mkTargetVega 9)
+    (targetVegaFromMints [p1, p2])
+
   let
     barL2 = BarL 2
     flowVol1 = FlowVol 1
@@ -129,6 +318,18 @@ main = do
     1e-9
     1.0
     sig0
+  let
+    sig10 = unInstantaneousVol (volAt vts 10 (Step 0))
+  approxEqual
+    "CEV hyperbola: volAt(10) = δ / p_{1/2}(10)"
+    1e-9
+    (1.0 / sqrtPrice 10)
+    sig10
+  approxEqual
+    "CEV hyperbola: σ(i)·p_{1/2}(i) = δ"
+    1e-9
+    1.0
+    (sig10 * sqrtPrice 10)
   assertThrows "BarL 0 rejected" (cevFromPhi BASE_ETA (BarL 0) flowVol1)
   assertThrows "FlowVol 0 rejected" (cevFromPhi BASE_ETA barL2 (FlowVol 0))
   assertThrows "η ≠ BASE_ETA rejected" (cevFromPhi etaTwoThirds barL2 flowVol1)
@@ -177,6 +378,10 @@ main = do
     "static book first segment Δ=10"
     (RangeVolatility 25)
     (bookRanges V.! 0)
+  assertEqual
+    "static book last segment n=8 Δ=10 ⇒ S=(Δ·7/2)²"
+    (RangeVolatility 1225)
+    (bookRanges V.! 6)
 
   assertThrows "mkVolStrike (-1) rejected" (mkVolStrike (-1))
   assertEqual "mkVolStrike 0" 0 (unVolStrike (mkVolStrike 0))
@@ -246,6 +451,52 @@ main = do
   let
     xiPinned = xiStar spacing10
     eta = BASE_ETA
+  assertEqual
+    "ξ^0 = Q96"
+    Q96
+    (unXiX96 (xiCoordinate xiPinned 0))
+  if unXiX96 (xiCoordinate xiPinned 0) > unXiX96 (xiCoordinate xiPinned 1)
+    then putStrLn "ok: ξ^x decreasing for ξ*<1"
+    else
+      error
+        "xiCoordinate must decrease in rung for ξ*<1 (vs-xi π_σ is a decreasing curve)"
+  _ <- evaluate
+    (volatilityCallLayoutVsSqrtPrice
+      (mkVolStrike 0)
+      spacing10
+      (0 :: Tick)
+      (mkLadderResolution 32)
+    )
+  _ <- evaluate
+    (volatilityCallLayoutVsXi
+      (mkVolStrike 0)
+      xiPinned
+      spacing10
+      (0 :: Tick)
+      (mkLadderResolution 32)
+    )
+  putStrLn "ok: π_σ vs-sqrtPrice / vs-xi layouts"
+  _ <- evaluate
+    (cevLayoutVsSqrtPrice vts spacing10 (0 :: Tick) (mkLadderResolution 32))
+  _ <- evaluate
+    (cevLayoutVsGamma
+      vts
+      (unXiX96 xiPinned)
+      BASE_ETA
+      spacing10
+      (0 :: Tick)
+      (mkLadderResolution 32)
+    )
+  _ <- evaluate
+    (cevLayoutVsXi
+      vts
+      xiPinned
+      spacing10
+      (0 :: Tick)
+      (mkLadderResolution 32)
+    )
+  putStrLn "ok: CEV vs-{sqrtPrice,gamma,xi} layouts"
+  let
     i0 = 0 :: Tick
     i1 = 10 :: Tick
     g0 = gammaCoordinate (unXiX96 xiPinned) eta spacing10 i0

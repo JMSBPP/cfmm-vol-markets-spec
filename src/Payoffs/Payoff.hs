@@ -3,6 +3,8 @@
 module Payoffs.Payoff
   ( Payoff(..)
   , addPayoff
+  , subPayoff
+  , scalePayoff
   , applyStrikeVariation
   , squareSqrtPrice
   ) where
@@ -17,6 +19,8 @@ import StrikeX96
   ( StrikeSlope(..)
   , StrikeVariation(..)
   )
+
+import Payoffs.NId (NId, scaleByNId)
 
 ---------------------------------------------
 -- Later generalization requires:	   --
@@ -54,6 +58,27 @@ addPayoff (Payoff payoff1) (Payoff payoff2) =
 
       in
         PayoffX96 (value1 + value2)
+
+
+subPayoff :: Payoff -> Payoff -> Payoff
+subPayoff (Payoff payoff1) (Payoff payoff2) =
+    Payoff $ \price ->
+     let
+        PayoffX96 value1 =
+          payoff1 price
+
+        PayoffX96 value2 =
+          payoff2 price
+
+      in
+        PayoffX96 (value1 - value2)
+
+
+scalePayoff :: NId -> Payoff -> Payoff
+scalePayoff nId (Payoff pf) =
+    Payoff $ \price ->
+      let PayoffX96 value = pf price
+      in  PayoffX96 (scaleByNId nId value)
 
 
 applyStrikeVariation

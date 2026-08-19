@@ -98,7 +98,12 @@ src/
 │   ├── CashSecuredPut.hs
 │   ├── RangeAccrualNote.hs
 │   ├── CPMMPosition.hs
-│   └── VolatilityCall.hs
+│   ├── VolatilityCall.hs
+│   ├── NId.hs
+│   ├── Forward.hs
+│   ├── Log.hs
+│   ├── VariancePortfolio.hs
+│   └── TargetVega.hs
 ├── Pricing/
 │   └── PriceDeformation.hs
 ├── Greeks/
@@ -109,23 +114,41 @@ src/
 ├── Volatility/
 │   ├── VolatilityGrid.hs
 │   ├── VolTermStructure.hs
-│   └── TickVolatility.hs
+│   ├── TickVolatility.hs
+│   └── CevField.hs
 ├── TickPath.hs
 ├── SqrtGrid.hs
 ├── StrikeX96.hs
 ├── OptionRatio.hs
 └── State.hs
 
-outputs/{Pricing,Payoffs,Greeks,Liquidity,TickPath}/
+outputs/{Pricing,Payoffs,Greeks,Liquidity,TickPath,Volatility}/
 ```
 
 - `SqrtGrid`: \(\lambda=1.0001\), `TickSpacing` \(\Delta_i\in[1,200]\)
 - `LiquidityGrid`: \(\xi\) is the liquidity base (like \(\lambda\) for price). Canonical \(Y\) is Bunni `uint256 liquidityDensityX96` (Q96), the Haskell type `LiquidityDensityX96`. \(\iota\) is ladder length, not \(\eta\).
-- `VolatilityGrid`: \(\Gamma_{\varphi}(i)\) coordinate. Canonical field \(\pi_{\sigma}\) is unit-notional `VolatilityCall` on that X (`outputs/Payoffs/vs-gammaCoordinate.png`).
+- `VolatilityGrid`: \(\Gamma_{\varphi}(i)\) coordinate. Canonical field \(\pi_{\sigma}\) is unit-notional `VolatilityCall` on that X.
 - `VolTermStructure` / `TickPath` / `TickVolatility`: PricePaths layer (below).
+- `CevField`: static CEV \(\sigma(i)=\texttt{volAt}\,i=\delta/p_{1/2}(i)\), plotted under `outputs/Volatility/`.
 - `Greeks.Gamma`: Kristensen \(\partial^2V/\partial P^2\), not \(\Gamma_{\varphi}\). Interior \(-\Gamma\) vs `gammaCoordinate` is the tautological ray (`outputs/Greeks/vs-gammaCoordinate.png`).
 
 Main chooses which panels to write.
+
+Atlas rule: each folder has one canonical Y; `vs-*` only changes X.
+
+| Folder | Canonical Y | vs-xiCoordinate | vs-gammaCoordinate | vs-sqrtPriceX96 |
+|---|---|---|---|---|
+| Liquidity | `liquidityDensityX96` | done | done | done |
+| Payoffs (\(\pi_\sigma\)) | Algebra `(S−K)+` | done | done | done |
+| Volatility (CEV) | `volAt` = \(\delta/p_{1/2}(i)\) | done | done | done |
+
+vs-gamma for \(\pi_\sigma\): expected \(Y\propto(j+1)^2\) vs growing \(\Gamma_\varphi\) (visual floor is \(K=0\) scale, not a vanilla kink). \(Y\propto(\log\Gamma_\varphi)^2\).
+
+Do not plot `liquidityDensityX96` as a VolatilityCall Y (already the Liquidity atlas). \(\xi\) as X for \(\pi_\sigma\) is the decreasing dual of vs-gamma.
+
+CEV plots matter: they are the static \(\sigma(i)\) `VolTermStructure` was built for; B1 tick² is not that field. vs-sqrtPrice CEV is \(\sigma\propto 1/p\).
+
+Do not feed `volAt` into `VolatilityCall.payoff` (CEV return vol ≠ Algebra tick²).
 
 Liquidity density (`uint256 liquidityDensityX96`) is plotted against each atlas X, in this order:
 
@@ -146,6 +169,10 @@ cevFromPhi η L̄ σ_F → VolTermStructure → TickPath N seed i0 → ticks vs 
 - Four σ’s: \(\sigma_F\) = flow input; \(\sigma(i)\) = `volAt`; \(\sigma_X\) = Algebra window mean (`VolatilityAverage`); strike \(\sigma_K^2\) for the call is `VolStrike` (same Algebra raw integer as \(S\)).
 - MEV (\(P_{\mathrm{trade}}\), \(a_t\), …) maps **into** \(\sigma_F\) later (`flowVolFromMev`); not fields of `cevFromPhi`.
 - Plot: `outputs/TickPath/vs-steps.png` (Y = tick, X = steps).
-- Unit-notional \(\pi_\sigma=(S-K)^+\) (`Payoffs/VolatilityCall.hs`): \(S\) is `_volatilityOnRange` on the **static book** \(i\to i+\Delta_i\) (same rungs as Liquidity vs-gamma), not a CEV `TickPath`. \(K\) is Algebra-raw `VolStrike`. Plot: `outputs/Payoffs/vs-gammaCoordinate.png` — X = `gammaCoordinate`, Y = \((S-K)^+\). Money view \(\Delta Q_v\cdot(S-K)^+\) later.
+- Unit-notional \(\pi_\sigma=(S-K)^+\) (`Payoffs/VolatilityCall.hs`): \(S\) is `_volatilityOnRange` on the **static book** \(i\to i+\Delta_i\) (same rungs as Liquidity vs-gamma), not a CEV `TickPath`. \(K\) is Algebra-raw `VolStrike`. Plots: `outputs/Payoffs/vs-{gammaCoordinate,sqrtPriceX96,xiCoordinate}.png`.
 
-Pricing `vs-*` and remaining Volatility atlas panels remain later.
+CEV field plots: `outputs/Volatility/vs-{sqrtPriceX96,gammaCoordinate,xiCoordinate}.png`.
+
+Hop A (money view): \(N_{\mathrm{id}}=2/N\), `Forward.hs` / `Log.hs` on linear \(P\) (`squareSqrtPrice`, never \(s-s^\star\)), opaque \(\Pi\) (`fromLegs` = `fromDef6` at ATM), then \(\pi_{96}=\Delta Q_v\cdot\Pi_{\mathrm{opt}}\). Plot: `outputs/Payoffs/variance-portfolio.png` (Y = `PayoffX96`, not clipped at 0). `targetVega` is raw \(L\), not a vol word.
+
+Hop B (in `NId.hs`, under Hop A): EVM `PanopticTokenId` `{tokenId, numLegs}` + `MintPlan` `{tokenId, positionSize}`. First inhabitant is the 4-leg all-long skeleton (per-leg `optionRatio` 4-tuple in \(1..127\), puts below \(i^\star\), calls above; \(\Delta=10\) around tick 0). `positionSize` carries \(\Delta Q_v^\star\) (id is scale-free, including the ratio shape). Dual-run: \(\pi_{96}\) from scalar \(\Delta Q_v\) equals \(\pi_{96}\) from `targetVegaFromMint`. The non-EVM `FourLegId` stub is gone. Hop C: `targetVegaFromMints` is additive. Not an on-chain `VolOrder` pack.

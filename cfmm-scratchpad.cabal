@@ -33,8 +33,13 @@ library
       Payoffs.CashSecuredPut
       Payoffs.CoveredCall
       Payoffs.CPMMPosition
+      Payoffs.Forward
+      Payoffs.Log
+      Payoffs.NId
       Payoffs.Payoff
       Payoffs.RangeAccrualNote
+      Payoffs.TargetVega
+      Payoffs.VariancePortfolio
       Payoffs.VolatilityCall
       PlotUtils
       Pricing.PriceDeformation
@@ -42,6 +47,7 @@ library
       State
       StrikeX96
       TickPath
+      Volatility.CevField
       Volatility.TickVolatility
       Volatility.VolatilityGrid
       Volatility.VolTermStructure
