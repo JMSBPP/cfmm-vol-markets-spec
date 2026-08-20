@@ -40,6 +40,8 @@ import Payoffs.VariancePortfolio
   , fromLegs
   , scaleByTargetVega
   , toPayoff
+  , variancePortfolioLayoutVsGamma
+  , variancePortfolioLayoutVsXi
   )
 import Payoffs.TargetVega
   ( mkTargetVega
@@ -288,6 +290,16 @@ main = do
     yB10 = Payoff.runPayoff fromB s10
   assertEqual "hop B ATM Y = hop A" yA0 yB0
   assertEqual "hop B off-ATM Y = hop A" yA10 yB10
+  let
+    piZero = fromLegs n32 atm0 (PayoffX96 0)
+    hopBZero = scaleByTargetVega (targetVegaFromMint plan7) piZero
+    yAtm = Payoff.runPayoff hopBZero (sqrtPriceX96 0)
+    PayoffX96 yLeft = Payoff.runPayoff hopBZero (sqrtPriceX96 (-160))
+    PayoffX96 yRight = Payoff.runPayoff hopBZero (sqrtPriceX96 150)
+  assertEqual "hop B two-sided ATM Y=0" (PayoffX96 0) yAtm
+  if yLeft > 0 && yRight > 0
+    then putStrLn "ok: hop B two-sided wings Y>0"
+    else error "hop B two-sided: expected Y>0 on both wings"
   assertThrows
     "num_legs≠4 rejected"
     (targetVegaFromMint (MintPlan (PanopticTokenId 0 3) 1))
@@ -496,6 +508,50 @@ main = do
       (mkLadderResolution 32)
     )
   putStrLn "ok: CEV vs-{sqrtPrice,gamma,xi} layouts"
+  let
+    hopBPlan =
+      MintPlan
+        (fourLegSkeleton 0 (1, 2, 3, 4))
+        (positionSizeForTargetVega (mkTargetVega 1))
+    hopBMin = -160 :: Tick
+    hopBIota = mkLadderResolution 32
+  assertThrows
+    "hop B one-sided iMin=0 rejected"
+    (variancePortfolioLayoutVsGamma
+      hopBPlan
+      n32
+      atm0
+      (PayoffX96 0)
+      (unXiX96 xiPinned)
+      BASE_ETA
+      spacing10
+      (0 :: Tick)
+      hopBIota
+    )
+  _ <- evaluate
+    (variancePortfolioLayoutVsGamma
+      hopBPlan
+      n32
+      atm0
+      (PayoffX96 0)
+      (unXiX96 xiPinned)
+      BASE_ETA
+      spacing10
+      hopBMin
+      hopBIota
+    )
+  _ <- evaluate
+    (variancePortfolioLayoutVsXi
+      hopBPlan
+      n32
+      atm0
+      (PayoffX96 0)
+      xiPinned
+      spacing10
+      hopBMin
+      hopBIota
+    )
+  putStrLn "ok: hop B Π vs-gamma / vs-xi layouts"
   let
     i0 = 0 :: Tick
     i1 = 10 :: Tick

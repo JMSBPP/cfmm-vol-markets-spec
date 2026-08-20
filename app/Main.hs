@@ -17,9 +17,13 @@ import Greeks.Delta (deltaLayout)
 import Greeks.Gamma (gammaLayout, kristensenGammaLayoutVsGamma)
 import Payoffs.CPMMPosition (rhsPayoffLayout)
 import Payoffs.Forward (AtmForward(..))
-import Payoffs.NId (mkNId)
-import Payoffs.TargetVega (mkTargetVega)
-import Payoffs.VariancePortfolio (variancePortfolioLayout)
+import Payoffs.NId (MintPlan(..), fourLegSkeleton, mkNId)
+import Payoffs.TargetVega (mkTargetVega, positionSizeForTargetVega)
+import Payoffs.VariancePortfolio
+  ( variancePortfolioLayout
+  , variancePortfolioLayoutVsGamma
+  , variancePortfolioLayoutVsXi
+  )
 import Payoffs.VolatilityCall
   ( mkVolStrike
   , volatilityCallLayout
@@ -220,5 +224,43 @@ main = do
         (mkTargetVega 1)
         SQRT_PRICE_1_4
         SQRT_PRICE_4_1
+      )
+    )
+
+  let
+    hopBPlan =
+      MintPlan
+        (fourLegSkeleton 0 (1, 2, 3, 4))
+        (positionSizeForTargetVega (mkTargetVega 1))
+    hopBAtm = AtmForward (sqrtPriceX96 0)
+    hopBNid = mkNId 32
+    hopBMin = -160
+  writePanel
+    "outputs/Payoffs/variance-portfolio-vs-gammaCoordinate.png"
+    (Cell
+      (variancePortfolioLayoutVsGamma
+        hopBPlan
+        hopBNid
+        hopBAtm
+        (PayoffX96 0)
+        (unXiX96 xiPinned)
+        BASE_ETA
+        spacing10
+        hopBMin
+        iota32
+      )
+    )
+  writePanel
+    "outputs/Payoffs/variance-portfolio-vs-xiCoordinate.png"
+    (Cell
+      (variancePortfolioLayoutVsXi
+        hopBPlan
+        hopBNid
+        hopBAtm
+        (PayoffX96 0)
+        xiPinned
+        spacing10
+        hopBMin
+        iota32
       )
     )
