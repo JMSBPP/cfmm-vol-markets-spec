@@ -11,6 +11,12 @@ import PlotUtils (Panel(..), canvasSize)
 import OptionRatio (OptionRatio(..))
 import Payoffs.Payoff (squareSqrtPrice)
 import qualified Payoffs.Payoff as Payoff
+import Payoffs.Linear (linearPayoff)
+import Payoffs.Return
+  ( mkReturn
+  , returnPipsScale
+  , unReturnPips
+  )
 import Payoffs.NId
   ( MintPlan(..)
   , PanopticTokenId(..)
@@ -59,6 +65,10 @@ import Liquidity.LiquidityChunk
   , createChunk
   , unLiquidityChunk
   )
+import Liquidity.TickLiquidity
+  ( TickLiquidity(..)
+  , tickLiquidityAt
+  )
 import Liquidity.LiquidityGrid
   ( XiX96(..)
   , ell
@@ -88,12 +98,76 @@ import Volatility.VolTermStructure
   , unInstantaneousVol
   , volAt
   )
+import Pricing.Stremia
+  ( FeeFactorX96(..)
+  , FeePips(..)
+  , askPayoff
+  , bidPayoff
+  , compositeFeePips
+  , feeFactor
+  , feePipsFromAsk
+  , feePipsFromBid
+  , feePipsFromBidAsk
+  , feePipsScale
+  , mkFeePips
+  , nakedAskQ96
+  , nakedBidQ96
+  , sqrtFeeFactorX96
+  , unFeeFactorX96
+  , unFeePips
+  )
+import Pricing.FeeStructure
+  ( FeeStructure(..)
+  , mkFeeStructure
+  , toFeePips
+  )
+import Pricing.InterestPriceMap
+  ( mkInterestPriceMap
+  , priceTickAt
+  )
+import Payoffs.Savings (savings, savingsPayoff)
+import Payoffs.Swap
+  ( Leg(..)
+  , Swap(..)
+  , runSwapAlongTenor
+  , scalePayoffX96
+  , survivalFactorX96
+  , swapFromFeeStructure
+  )
+import Pricing.InterestSqrt
+  ( InterestSqrtX96(..)
+  , interestSqrtX96
+  , mkInterestTick
+  , unInterestSqrtX96
+  , unInterestTick
+  )
+import Trading.PriceImpact
+  ( askSqrtPriceX96
+  , bidSqrtPriceX96
+  )
+import Trading.Quote
+  ( mkQuote
+  , phiMFromQuote
+  , phiXFromQuote
+  )
+import Trading.KappaCoordinate
+  ( KappaCoordinate(..)
+  , KappaPips(..)
+  , kappaAt
+  , kappaMax
+  , mkKappaPips
+  , quantizeKappaPips
+  , unKappaPips
+  )
+import Data.Word (Word8)
 import SqrtGrid
   ( PayoffX96(..)
   , SqrtPriceX96(..)
   , Tick
+  , integerSqrt
   , invX96
   , mkTickSpacing
+  , mulX96
   , pattern Q96
   , rpowX96
   , sqrtPrice
@@ -800,3 +874,344 @@ main = do
     1e-30
     formula
     (fromRational (gamma pMid))
+
+  -- FeePips / feeFactor (Stremia)
+  assertEqual "feePipsScale" 1000000 feePipsScale
+  assertThrows "FeePips negative rejected" (mkFeePips (-1))
+  assertEqual
+    "feeFactor 0 = Q96"
+    Q96
+    (unFeeFactorX96 (feeFactor (mkFeePips 0)))
+  let
+    FeeFactorX96 f100 = feeFactor (mkFeePips 100)
+    expected100 =
+      Q96 + mulX96 100 (Q96 * Q96 `div` feePipsScale)
+  assertEqual "feeFactor 100 = Q96 + φ_X96 via mulX96" expected100 f100
+
+  -- Stremia bid/ask payoffs
+  let
+    mid = SqrtPriceX96 Q96
+    φ0 = mkFeePips 0
+    φ = mkFeePips 100
+    PayoffX96 midP = Payoff.squareSqrtPrice mid
+    PayoffX96 ask0 = nakedAskQ96 φ0 mid
+    PayoffX96 bid0 = nakedBidQ96 φ0 mid
+    PayoffX96 askP = nakedAskQ96 φ mid
+    PayoffX96 bidP = nakedBidQ96 φ mid
+  assertEqual "ask φ=0 = mid P" midP ask0
+  assertEqual "bid φ=0 = mid P" midP bid0
+  assertEqual "ask ≥ mid (φ=100)" True (askP >= midP)
+  assertEqual "mid ≥ bid (φ=100)" True (midP >= bidP)
+  let
+    FeeFactorX96 f = feeFactor φ
+    expectAsk = PayoffX96 (mulX96 midP f)
+    expectBid = PayoffX96 (mulX96 midP (invX96 f))
+  assertEqual "nakedAsk = P · feeFactor" expectAsk (nakedAskQ96 φ mid)
+  assertEqual "nakedBid = P / feeFactor" expectBid (nakedBidQ96 φ mid)
+  assertEqual
+    "askPayoff run = nakedAsk"
+    (nakedAskQ96 φ mid)
+    (Payoff.runPayoff (askPayoff φ) mid)
+  assertEqual
+    "bidPayoff run = nakedBid"
+    (nakedBidQ96 φ mid)
+    (Payoff.runPayoff (bidPayoff φ) mid)
+
+  -- PriceImpact fee'd sqrt quotes + consistency with Stremia payoffs
+  assertEqual "askSqrt φ=0 = mid" mid (askSqrtPriceX96 φ0 mid)
+  assertEqual "bidSqrt φ=0 = mid" mid (bidSqrtPriceX96 φ0 mid)
+  let
+    askS = askSqrtPriceX96 φ mid
+    bidS = bidSqrtPriceX96 φ mid
+  assertEqual "askSqrt ≥ mid" True (askS >= mid)
+  assertEqual "mid ≥ bidSqrt" True (mid >= bidS)
+  let
+    FeeFactorX96 fAsk = feeFactor φ
+    sf = integerSqrt (fAsk * Q96)
+  assertEqual "sqrtFeeFactorX96" sf (sqrtFeeFactorX96 (FeeFactorX96 fAsk))
+  assertEqual
+    "askSqrt at Q96 mid = sqrtFeeFactor"
+    (SqrtPriceX96 sf)
+    askS
+  assertEqual
+    "bidSqrt at Q96 mid = inv sqrtFeeFactor"
+    (SqrtPriceX96 (invX96 sf))
+    bidS
+  let
+    PayoffX96 fromSqrtAsk = Payoff.squareSqrtPrice askS
+    PayoffX96 fromPayAsk = nakedAskQ96 φ mid
+    PayoffX96 fromSqrtBid = Payoff.squareSqrtPrice bidS
+    PayoffX96 fromPayBid = nakedBidQ96 φ mid
+  assertEqual
+    "ask sqrt↔payoff within 1"
+    True
+    (abs (fromSqrtAsk - fromPayAsk) <= 1)
+  assertEqual
+    "bid sqrt↔payoff within 1"
+    True
+    (abs (fromSqrtBid - fromPayBid) <= 1)
+
+  -- Linear + ReturnPips
+  assertEqual
+    "linearPayoff = squareSqrtPrice at Q96"
+    (squareSqrtPrice (SqrtPriceX96 Q96))
+    (linearPayoff (SqrtPriceX96 Q96))
+  assertEqual
+    "linearPayoff = squareSqrtPrice at tick 10"
+    (squareSqrtPrice (sqrtPriceX96 10))
+    (linearPayoff (sqrtPriceX96 10))
+  assertEqual "returnPipsScale" 1000000 returnPipsScale
+  let
+    retMid = SqrtPriceX96 Q96
+    PayoffX96 pd = linearPayoff retMid
+  assertEqual
+    "mkReturn mid mid = 0"
+    0
+    (unReturnPips (mkReturn (PayoffX96 pd) (PayoffX96 pd)))
+  assertThrows "mkReturn denom 0" (mkReturn (PayoffX96 1) (PayoffX96 0))
+  let
+    ask3000 = nakedAskQ96 (mkFeePips 3000) retMid
+    r3000 = unReturnPips (mkReturn ask3000 (linearPayoff retMid))
+  assertEqual "ask3000 vs linear ≈ 3000 pips" True (abs (r3000 - 3000) <= 1)
+
+  -- feePipsFromBidAsk (φ_M = φ_X)
+  let
+    sFee = SqrtPriceX96 Q96
+    midFee = linearPayoff sFee
+    rt φWant =
+      let got =
+            feePipsFromBidAsk
+              midFee
+              (nakedBidQ96 φWant sFee)
+              (nakedAskQ96 φWant sFee)
+      in  abs (unFeePips got - unFeePips φWant) <= 1
+  assertEqual "feePipsFromBidAsk round-trip 0" True (rt (mkFeePips 0))
+  assertEqual "feePipsFromBidAsk round-trip 100" True (rt (mkFeePips 100))
+  assertEqual "feePipsFromBidAsk round-trip 3000" True (rt (mkFeePips 3000))
+  assertThrows
+    "feePipsFromBidAsk disagree"
+    (feePipsFromBidAsk
+      midFee
+      (nakedBidQ96 (mkFeePips 100) sFee)
+      (nakedAskQ96 (mkFeePips 3000) sFee))
+  assertThrows
+    "feePipsFromBidAsk mid 0"
+    (feePipsFromBidAsk (PayoffX96 0) (PayoffX96 1) (PayoffX96 1))
+
+  -- One-sided invert + composite
+  let
+    askP3000 = linearPayoff (askSqrtPriceX96 (mkFeePips 3000) sFee)
+    bidP100 = linearPayoff (bidSqrtPriceX96 (mkFeePips 100) sFee)
+  assertEqual
+    "feePipsFromAsk ≈ 3000"
+    True
+    (abs (unFeePips (feePipsFromAsk midFee askP3000) - 3000) <= 1)
+  assertEqual
+    "feePipsFromBid ≈ 100"
+    True
+    (abs (unFeePips (feePipsFromBid midFee bidP100) - 100) <= 1)
+  let
+    φM = mkFeePips 3000
+    φX = mkFeePips 100
+    FeePips mRaw = φM
+    FeePips xRaw = φX
+    phiMX96 = (mRaw * Q96) `div` feePipsScale
+    phiXX96 = (xRaw * Q96) `div` feePipsScale
+    expectedComposite =
+      mkFeePips $
+        ((Q96 - mulX96 (Q96 - phiMX96) (Q96 - phiXX96)) * feePipsScale)
+          `div` Q96
+  assertEqual
+    "compositeFeePips 3000×100"
+    expectedComposite
+    (compositeFeePips φM φX)
+
+  -- Quote → φ_M / φ_X
+  let
+    qSym =
+      mkQuote
+        sFee
+        (bidSqrtPriceX96 (mkFeePips 3000) sFee)
+        (askSqrtPriceX96 (mkFeePips 3000) sFee)
+  assertEqual
+    "phiM symmetric ≈ 3000"
+    True
+    (abs (unFeePips (phiMFromQuote qSym) - 3000) <= 1)
+  assertEqual
+    "phiX symmetric ≈ 3000"
+    True
+    (abs (unFeePips (phiXFromQuote qSym) - 3000) <= 1)
+  let
+    qSplit =
+      mkQuote
+        sFee
+        (bidSqrtPriceX96 (mkFeePips 100) sFee)
+        (askSqrtPriceX96 (mkFeePips 3000) sFee)
+  assertEqual
+    "phiM split ≈ 3000"
+    True
+    (abs (unFeePips (phiMFromQuote qSplit) - 3000) <= 1)
+  assertEqual
+    "phiX split ≈ 100"
+    True
+    (abs (unFeePips (phiXFromQuote qSplit) - 100) <= 1)
+  assertThrows
+    "mkQuote ask < mid"
+    (mkQuote sFee sFee (SqrtPriceX96 (Q96 `div` 2)))
+
+  -- TickLiquidity (geometric at chunk bounds)
+  let
+    xiTL = xiStar (mkTickSpacing 10)
+    chTL = createChunk (-20) (-10) Q96
+    loTL = -20 :: Tick
+    hiTL = -10 :: Tick
+    TickLiquidity tLo lLo = tickLiquidityAt xiTL chTL loTL
+    TickLiquidity tHi lHi = tickLiquidityAt xiTL chTL hiTL
+  assertEqual "tlTick lo" loTL tLo
+  assertEqual "tlTick hi" hiTL tHi
+  assertEqual "L(lo) = chunkLiquidity" (chunkLiquidity chTL) lLo
+  assertEqual
+    "L(hi) = mulX96 L(lo) ξ"
+    (mulX96 lLo (unXiX96 xiTL))
+    lHi
+  assertThrows
+    "tickLiquidityAt rejects interior tick"
+    (tickLiquidityAt xiTL chTL (-15))
+
+  -- KappaPips / kappaAt (Def 45, encoding B)
+  assertEqual "kappaMax" 1 kappaMax
+  assertThrows "mkKappaPips (-1)" (mkKappaPips (-1))
+  assertThrows "mkKappaPips 256" (mkKappaPips 256)
+  assertEqual "mkKappaPips 255" (KappaPips 255) (mkKappaPips 255)
+  let
+    xiK = xiStar (mkTickSpacing 10)
+    chK = createChunk (-20) (-10) Q96
+    expectedK = quantizeKappaPips (1 / 10)
+    KappaCoordinate gotNothing = kappaAt Nothing xiK chK
+    KappaCoordinate gotJust = kappaAt (Just BASE_ETA) xiK chK
+  assertEqual "kappaAt Nothing ≡ trading base 1/10 pips" expectedK gotNothing
+  assertEqual "kappaAt Just BASE_ETA ≡ Nothing" gotNothing gotJust
+  assertEqual "expected pips Word8" (26 :: Word8) (unKappaPips expectedK)
+
+  -- FeePips Monoid (survival stack)
+  let
+    φ100 = mkFeePips 100
+    φ3000 = mkFeePips 3000
+    φ500 = mkFeePips 500
+  assertEqual
+    "FeePips <> ≡ compositeFeePips"
+    (compositeFeePips φ3000 φ100)
+    (φ3000 <> φ100)
+  assertEqual "φ <> mempty" φ3000 (φ3000 <> mempty)
+  assertEqual "mempty <> φ" φ3000 (mempty <> φ3000)
+  assertEqual
+    "FeePips associativity (1 pip)"
+    True
+    (abs
+      ( unFeePips ((φ3000 <> φ100) <> φ500)
+          - unFeePips (φ3000 <> (φ100 <> φ500))
+      )
+      <= 1)
+  assertEqual
+    "FeePips commutativity (1 pip)"
+    True
+    (abs (unFeePips (φ3000 <> φ100) - unFeePips (φ100 <> φ3000)) <= 1)
+
+  -- FeeStructure bag + toFeePips
+  let
+    fs = mkFeeStructure (mkFeePips 100) (mkFeePips 3000)
+  assertEqual "feePhiX" (mkFeePips 100) (feePhiX fs)
+  assertEqual "feePhiM" (mkFeePips 3000) (feePhiM fs)
+  assertEqual
+    "toFeePips ≡ compositeFeePips M X"
+    (compositeFeePips (mkFeePips 3000) (mkFeePips 100))
+    (toFeePips fs)
+
+  -- InterestSqrtX96 / InterestTick (λ^{t/2} twin of SqrtPriceX96)
+  assertEqual "unInterestTick" 10 (unInterestTick (mkInterestTick 10))
+  assertEqual
+    "interestSqrtX96 t=0 → Q96"
+    Q96
+    (unInterestSqrtX96 (interestSqrtX96 (mkInterestTick 0)))
+  let
+    expectInterest t =
+      floor $ tickBase ** (fromIntegral t / 2) * fromIntegral Q96 :: Integer
+  assertEqual
+    "interestSqrt t=1"
+    (expectInterest 1)
+    (unInterestSqrtX96 (interestSqrtX96 (mkInterestTick 1)))
+  assertEqual
+    "interestSqrt t=10"
+    (expectInterest 10)
+    (unInterestSqrtX96 (interestSqrtX96 (mkInterestTick 10)))
+  assertEqual
+    "interestSqrt t=-10"
+    (expectInterest (-10))
+    (unInterestSqrtX96 (interestSqrtX96 (mkInterestTick (-10))))
+  let
+    SqrtPriceX96 p10 = sqrtPriceX96 10
+    InterestSqrtX96 i10 = interestSqrtX96 (mkInterestTick 10)
+  assertEqual "numeric twin of sqrtPriceX96 @ 10" p10 i10
+
+  -- Savings payoff (interest linear Y = s_r²)
+  let
+    s0 = interestSqrtX96 (mkInterestTick 0)
+    s10Sav = interestSqrtX96 (mkInterestTick 10)
+    InterestSqrtX96 w10Sav = s10Sav
+  assertEqual
+    "savings t=0 → Q96"
+    (PayoffX96 Q96)
+    (savingsPayoff s0)
+  assertEqual
+    "savings = s²/Q96 @ t=10"
+    (PayoffX96 ((w10Sav * w10Sav) `div` Q96))
+    (savingsPayoff s10Sav)
+  assertEqual
+    "numeric twin of squareSqrtPrice on same word"
+    (squareSqrtPrice (SqrtPriceX96 w10Sav))
+    (savingsPayoff (InterestSqrtX96 w10Sav))
+
+  -- Swap / FeeStructure (Pay Linear×(1-φ_X), Receive Savings×(1-φ_M))
+  assertEqual "survival 0" Q96 (survivalFactorX96 (mkFeePips 0))
+  let
+    φX = mkFeePips 100
+    φM = mkFeePips 3000
+    fs = mkFeeStructure φX φM
+    sw = swapFromFeeStructure fs
+    Swap (Leg payPf) (Leg recvPf) = sw
+    s0Price = sqrtPriceX96 0
+    sr0 = interestSqrtX96 (mkInterestTick 0)
+  assertEqual
+    "pay @ 0 ≡ scale linear (1-φ_X)"
+    (scalePayoffX96 (survivalFactorX96 φX) (linearPayoff s0Price))
+    (Payoff.runPayoff payPf s0Price)
+  assertEqual
+    "recv @ 0 ≡ scale savings (1-φ_M)"
+    (scalePayoffX96 (survivalFactorX96 φM) (savingsPayoff sr0))
+    (Payoff.runPayoff recvPf sr0)
+  assertEqual
+    "savings Payoff t=0"
+    (PayoffX96 Q96)
+    (Payoff.runPayoff savings sr0)
+
+  -- InterestPriceMap + Swap net along tenor
+  assertThrows "InterestPriceMap k=0" (mkInterestPriceMap 0 0)
+  assertEqual
+    "priceTickAt k=1 i0=0 t=7"
+    7
+    (priceTickAt (mkInterestPriceMap 1 0) (mkInterestTick 7))
+  assertEqual
+    "priceTickAt k=2 i0=5 t=3"
+    11
+    (priceTickAt (mkInterestPriceMap 2 5) (mkInterestTick 3))
+  let
+    map0 = mkInterestPriceMap 1 0
+    t0Net = mkInterestTick 0
+    PayoffX96 yr0 = Payoff.runPayoff recvPf (interestSqrtX96 t0Net)
+    PayoffX96 yp0 =
+      Payoff.runPayoff payPf (sqrtPriceX96 (priceTickAt map0 t0Net))
+    expectedNet = PayoffX96 (yr0 - yp0)
+  assertEqual
+    "alongTenor t=0 ≡ recv − pay"
+    expectedNet
+    (runSwapAlongTenor map0 sw t0Net)

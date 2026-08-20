@@ -12,8 +12,8 @@ import SqrtGrid
   ( SqrtPriceX96(..)
   , PayoffX96(..)
   , SqrtPlot
-  , plotSqrtFunction
   )
+import Payoffs.PlotSqrt (PlotY(..), plotSqrtFunction)
 
 import StrikeX96 (StrikeX96(..))
 import OptionRatio (OptionRatio(..))
@@ -25,12 +25,12 @@ payoff (SqrtPriceX96 p) k@(StrikeX96 kRaw) ro@(OptionRatio r)
   | p < upperBound k ro  = PayoffX96 $ floor (fromInteger (upperArmNumerator p kRaw r) / (r - 1))
   | otherwise            = PayoffX96 0
 
-rangeAccrualNote :: StrikeX96 -> OptionRatio -> Payoff.Payoff
+rangeAccrualNote :: StrikeX96 -> OptionRatio -> Payoff.Payoff SqrtPriceX96
 rangeAccrualNote k r = Payoff.Payoff (\p -> payoff p k r)
 
 plotPayoff :: FilePath -> SqrtPlot -> StrikeX96 -> OptionRatio -> IO ()
 plotPayoff path config k r =
-  plotSqrtFunction path config [Payoff.runPayoff (rangeAccrualNote k r)]
+  plotSqrtFunction path config PayoffY [Payoff.runPayoff (rangeAccrualNote k r)]
 
 -- Lower boundary: kappa / sqrt(r)  in X96
 lowerBound :: StrikeX96 -> OptionRatio -> Integer

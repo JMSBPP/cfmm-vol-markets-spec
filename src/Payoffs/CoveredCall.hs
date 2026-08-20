@@ -12,8 +12,8 @@ import SqrtGrid
   ( SqrtPriceX96(..)
   , PayoffX96(..)
   , SqrtPlot
-  , plotSqrtFunction
   )
+import Payoffs.PlotSqrt (PlotY(..), plotSqrtFunction)
 
 
 payoff
@@ -33,7 +33,7 @@ payoff
 
 coveredCall
   :: Strike.StrikeX96
- -> Payoff.Payoff
+ -> Payoff.Payoff SqrtPriceX96
 coveredCall strikePrice =
   Payoff.Payoff (`payoff` strikePrice)
 
@@ -75,6 +75,7 @@ plotPayoff path config strikePrice variation =
     plotSqrtFunction
       path
       config
+      PayoffY
       [ Payoff.runPayoff originalPayoff
       , Payoff.runPayoff variedPayoff
       ]

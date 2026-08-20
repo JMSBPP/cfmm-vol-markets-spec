@@ -103,10 +103,16 @@ src/
 │   ├── MintPlan.hs
 │   ├── Forward.hs
 │   ├── Log.hs
+│   ├── Linear.hs
+│   ├── Return.hs
+│   ├── PlotSqrt.hs
 │   ├── VariancePortfolio.hs
 │   └── TargetVega.hs
 ├── Pricing/
-│   └── PriceDeformation.hs
+│   ├── PriceDeformation.hs
+│   └── Stremia.hs
+├── Trading/
+│   └── PriceImpact.hs
 ├── Greeks/
 │   ├── Delta.hs
 │   └── Gamma.hs
@@ -125,10 +131,18 @@ src/
 ├── OptionRatio.hs
 └── State.hs
 
-outputs/{Pricing,Payoffs,Greeks,Liquidity,TickPath,Volatility}/
+outputs/{Pricing,Payoffs,Payoffs/Returns,Greeks,Liquidity,TickPath,Volatility}/
 ```
 
+- `Payoffs.Linear.linearPayoff`: standardized linear \(P=s^2\) as `PayoffX96`.
+- `Payoffs.Return.ReturnPips` / `mkReturn`: ppm return of one level vs another (`returnPipsScale = 10^6`).
+- `Payoffs.PlotSqrt.PlotY`: `PayoffY` | `ReturnY` on sqrt-series plots; return PNGs under `outputs/Payoffs/Returns/`.
 - `SqrtGrid`: \(\lambda=1.0001\), `TickSpacing` \(\Delta_i\in[1,200]\)
+- `Pricing.InterestSqrt`: `InterestTick` / `InterestSqrtX96` — \(\lambda^{t/2}\) twin of price `Tick` / `SqrtPriceX96` (interest dimensions; \(1+r=\lambda^{t}\))
+- `Payoff u`: parametric underlying (`SqrtPriceX96` | `InterestSqrtX96`, …)
+- `Payoffs.Savings.savingsPayoff` / `savings`: \(Y=s_r^{2}=\lambda^{t}\); plot `outputs/Payoffs/savings-vs-interestSqrtX96.png`
+- `Payoffs.Swap`: Pay/Receive phantoms; `swapFromFeeStructure` → pay Linear×(1-φ_X) vs sqrt, receive Savings×(1-φ_M) vs interest; net along \(i=kt+i_0\) (`outputs/Payoffs/swap-*-vs-*.png`, `swap-net-vs-interestSqrtX96.png`)
+- `Pricing.InterestPriceMap`: \(i=k t+i_0\) (caller `i_0`, default `k=1`)
 - `LiquidityGrid`: \(\xi\) is the liquidity base (like \(\lambda\) for price). Canonical \(Y\) is Bunni `uint256 liquidityDensityX96` (Q96), the Haskell type `LiquidityDensityX96`. \(\iota\) is ladder length, not \(\eta\).
 - `VolatilityGrid`: \(\Gamma_{\varphi}(i)\) coordinate. Canonical field \(\pi_{\sigma}\) is unit-notional `VolatilityCall` on that X.
 - `VolTermStructure` / `TickPath` / `TickVolatility`: PricePaths layer (below).
@@ -187,3 +201,95 @@ Hop B (in `NId.hs` / `MintPlan.hs`, under Hop A): EVM `PanopticTokenId` `{tokenI
 Hop B atlas (two-sided ticks \(i\in[-160,150]\), \(\Delta=10\), \(\iota=32\); Y = `PayoffX96` from `MintPlan`, not Algebra `(S-K)+`): `outputs/Payoffs/variance-portfolio-vs-{gammaCoordinate,xiCoordinate}.png`. Does not overwrite `outputs/Payoffs/vs-*.png`.
 
 - Density→Panoptic ratio brainstorm (no implementation): [`docs/superpowers/specs/2026-08-20-liquiditydensity-optionratio-brainstorm.md`](../docs/superpowers/specs/2026-08-20-liquiditydensity-optionratio-brainstorm.md)
+
+
+
+Note from VOLATILITY_INSTRUMENTS.md 
+
+We have:
+
+\[
+	\begin{aligned}
+		p_{\varphi}^{\text{(ask)}} \, &= (1+ \phi) p_{\varphi} \\
+		p_{\varphi}^{\text{(bid)}} \, &= \frac{p_{\varphi}}{1+\phi}
+	\end{aligned}
+\]
+
+
+And we have \(p_{\varphi} \to p_{1/2}\)
+
+Done: \(p_{1/2}^{(\mathrm{bid/ask})}\) —
+- payoffs: `Pricing.Stremia.nakedAskQ96` / `nakedBidQ96` (linear \(P\times(1+\phi)\))
+- quotes: `Trading.PriceImpact.askSqrtPriceX96` / `bidSqrtPriceX96` (\(s\sqrt{1+\phi}\))
+- `Trading.Quote`: mid+bid/ask `SqrtPriceX96` → \(\phi_M\leftarrow\phi(\mathrm{ask})\), \(\phi_X\leftarrow\phi(\mathrm{bid})\) (may differ)
+- equal-φ special case: `feePipsFromBidAsk mid bid ask` (agree ≤1 pip)
+- composite: `compositeFeePips φ_M φ_X` for \(\phi\equiv 1-(1-\phi_M)(1-\phi_X)\)
+- `Pricing.FeeStructure`: bag `{φ_X, φ_M}`; `toFeePips` → \(1-(1-\phi_M)(1-\phi_X)\)
+- `FeePips` is a `Monoid` (survival stack \(1-(1-\phi_1)(1-\phi_2)\)); `FeeStructure` is not
+- AdaptiveStremia stub: \(\phi(\Theta_\phi;\sigma^2,\nu)\)
+- Done: Def 45 `kappaAt (Maybe EtaX96) XiX96 LiquidityChunk` → `KappaCoordinate` / `KappaPips`
+  - `TickLiquidity` at chunk lo/hi (geometric \(L\); \(L_{\mathrm{hi}}/L_{\mathrm{lo}}=\xi\))
+  - `Nothing` η → `BASE_ETA` (½) ⇒ trading base \(1/\Delta\) on geometric book (Thm 43)
+  - **Encoding B (this cycle):** `KappaPips` = `Word8` quantize of real κ on \([0,\kappa_{\max}]\) with \(\kappa_{\max}=1\)
+  - **VISIBLE — upgrade path C:** κ as discrete **rung index** (tick analogue). Promote B→C when κ is a first-class atlas axis; do not treat B as final.
+- plot: `outputs/Payoffs/Returns/stremia-bid-ask.png` — mid + ask/bid `ReturnY`
+- plot: `outputs/Payoffs/Returns/stremia-fee-vs-return.png` — FeePips vs ReturnPips (ask / bid / \(r=\phi\))
+- plot: `outputs/Payoffs/Returns/stremia-fee-rate-vs-sqrt.png` — FeePips vs quote SqrtPriceX96 (bid left / ask right of mid)
+
+Note:
+
+There is already \(\phi (\Theta_{\phi}; \sigma^2, \nu)\) the `AdaptiveStremia`
+
+And we have, given a `Quote` objetc wich containts this bid and ask:
+
+\[
+	\begin{aligned}
+		( \phi (p_{1/2}^{(\text{ask})}), \phi (p_{1/2}^{(\text{bid})}) )
+	\end{aligned}
+\]
+
+Then we do the assignment:
+
+\[
+	\begin{aligned}
+		\phi_M \leftarrow \phi (p_{1/2}^{(\text{ask})}) \\
+		\phi_X \leftarrow \phi (p_{1/2}^{(\text{bid})})
+	\end{aligned}
+\]
+
+Since we have the return coordinate \(r(\phi)\). Note that the curvature enters as the
+parameter:
+
+\[
+	\begin{aligned}
+		\phi \leftarrow \phi (\Theta_{\phi}; \sigma^2, \nu) \\
+		\phi \equiv 1 - (1 - \phi_M) (1 - \phi_X) \\
+		r (\kappa_{\varphi} ; \phi_X, \phi_M) = (1\, - \, \kappa_{\varphi}) \, \phi_M+ \kappa_{\varphi} \, \phi_X
+	\end{aligned}
+\]
+> **VISIBLE:** κ is aiming to be a coordinate discretization just as ticks (**upgrade path C**). This cycle ships **B** (`KappaPips` u8 quantize); promote to rung index when κ is a first-class atlas axis.
+
+
+We have:
+
+\[
+	\begin{aligned}
+		\Delta Q \, &= \, \mathbb{I}_{\Delta Q} \, \Delta Q_X + (1 - \mathbb{I}_{\Delta Q}) \, \Delta Q_M
+	\end{aligned}
+\]
+
+
+Then:
+
+\[
+	\begin{aligned}
+		\Delta \pi^{\phi} \,& = \, \phi (\Theta_{\phi}; \sigma^2, \nu) \, \cdot \, \Delta Q \\
+		\int_{N} \, \Delta \pi^{\phi} \, \Delta N \, &= \, \int_{N} \,  \Big (\phi (\Theta_{\phi}; \sigma^2, \nu) \, \cdot \, \Delta Q\Big) \, \cdot \Delta N \\
+		\frac{\Delta \pi^{\varphi}}{\Delta N} \leftarrow \int_{N} \, \Delta \pi^{\phi} \, \Delta N \\
+         \frac{\Delta \pi^{\varphi}}{\Delta N} \, \equiv p_{\pi^{\varphi}}\equiv \, \mathbb{E}^{\mathbb{Q}} \, \Big [m \cdot \pi^{\varphi}\Big]
+	\end{aligned}
+\]
+
+
+
+

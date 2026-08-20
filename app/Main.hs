@@ -1,4 +1,6 @@
 {-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE DisambiguateRecordFields #-}
 
 module Main (main) where
 
@@ -13,6 +15,32 @@ import Pricing.PriceDeformation
   , plotVarSigmaEta
   , pattern BASE_ETA
   )
+import Pricing.Stremia
+  ( defaultFeePipsGrid
+  , mkFeePips
+  , nakedAskQ96
+  , nakedBidQ96
+  , plotFeeRateVsSqrt
+  , plotFeeVsReturn
+  )
+import Payoffs.Linear (linearPayoff)
+import Payoffs.PlotSqrt (PlotY(..), plotSqrtFunction)
+import Payoffs.PlotInterest
+  ( InterestPlot(..)
+  , plotInterestFunction
+  , plotInterestTickFunction
+  )
+import Payoffs.Savings (savingsPayoff)
+import Payoffs.Swap
+  ( Leg(..)
+  , Swap(..)
+  , runSwapAlongTenor
+  , swapFromFeeStructure
+  )
+import Pricing.FeeStructure (mkFeeStructure)
+import Pricing.InterestPriceMap (mkInterestPriceMap)
+import Pricing.InterestSqrt (interestSqrtX96, mkInterestTick)
+import qualified Payoffs.Payoff as Payoff
 import Greeks.Delta (deltaLayout)
 import Greeks.Gamma (gammaLayout, kristensenGammaLayoutVsGamma)
 import Payoffs.CPMMPosition (rhsPayoffLayout)
@@ -41,6 +69,7 @@ import Liquidity.LiquidityGrid
   )
 import SqrtGrid
   ( SqrtPlot(..)
+  , SqrtPriceX96(..)
   , PayoffX96(..)
   , mkTickSpacing
   , pattern Q96
@@ -63,6 +92,7 @@ main :: IO ()
 main = do
   createDirectoryIfMissing True "outputs/Pricing"
   createDirectoryIfMissing True "outputs/Payoffs"
+  createDirectoryIfMissing True "outputs/Payoffs/Returns"
   createDirectoryIfMissing True "outputs/Greeks"
   createDirectoryIfMissing True "outputs/Liquidity"
   createDirectoryIfMissing True "outputs/TickPath"
@@ -97,6 +127,83 @@ main = do
 
   plotVarSigmaEta
     "outputs/Pricing/varsigma-eta.png"
+
+  plotSqrtFunction
+    "outputs/Payoffs/Returns/stremia-bid-ask.png"
+    config
+      { plotTitle = "mid / ask/bid ReturnPips (FeePips 100 & 3000)"
+      , yAxisTitle = "ReturnPips"
+      }
+    ReturnY
+    [ linearPayoff
+    , nakedAskQ96 (mkFeePips 100)
+    , nakedBidQ96 (mkFeePips 100)
+    , nakedAskQ96 (mkFeePips 3000)
+    , nakedBidQ96 (mkFeePips 3000)
+    ]
+
+  let feeMid = SqrtPriceX96 Q96
+  plotFeeVsReturn
+    "outputs/Payoffs/Returns/stremia-fee-vs-return.png"
+    feeMid
+    defaultFeePipsGrid
+  plotFeeRateVsSqrt
+    "outputs/Payoffs/Returns/stremia-fee-rate-vs-sqrt.png"
+    feeMid
+    defaultFeePipsGrid
+
+  createDirectoryIfMissing True "outputs/Payoffs"
+  plotInterestFunction
+    "outputs/Payoffs/savings-vs-interestSqrtX96.png"
+    InterestPlot
+      { plotTitle = "savingsPayoff vs interestSqrtX96"
+      , xAxisTitle = "interestSqrtX96"
+      , yAxisTitle = "PayoffX96"
+      , xMin = interestSqrtX96 (mkInterestTick (-100))
+      , xMax = interestSqrtX96 (mkInterestTick 100)
+      }
+    PayoffY
+    [savingsPayoff]
+
+  let
+    fsDemo = mkFeeStructure (mkFeePips 100) (mkFeePips 3000)
+    swDemo = swapFromFeeStructure fsDemo
+    Swap (Leg payPf) (Leg recvPf) = swDemo
+    ipmDemo = mkInterestPriceMap 1 0
+    tLo = mkInterestTick (-100)
+    tHi = mkInterestTick 100
+  plotSqrtFunction
+    "outputs/Payoffs/swap-pay-linear-vs-sqrtPriceX96.png"
+    config
+      { plotTitle = "Swap pay: linear×(1-φ_X) (φ_X=100)"
+      , yAxisTitle = "PayoffX96"
+      }
+    PayoffY
+    [Payoff.runPayoff payPf]
+  plotInterestFunction
+    "outputs/Payoffs/swap-receive-savings-vs-interestSqrtX96.png"
+    InterestPlot
+      { plotTitle = "Swap receive: savings×(1-φ_M) (φ_M=3000)"
+      , xAxisTitle = "interestSqrtX96"
+      , yAxisTitle = "PayoffX96"
+      , xMin = interestSqrtX96 tLo
+      , xMax = interestSqrtX96 tHi
+      }
+    PayoffY
+    [Payoff.runPayoff recvPf]
+  plotInterestTickFunction
+    "outputs/Payoffs/swap-net-vs-interestSqrtX96.png"
+    InterestPlot
+      { plotTitle = "Swap net: recv−pay along i=k·t+i₀ (k=1,i₀=0)"
+      , xAxisTitle = "interestSqrtX96"
+      , yAxisTitle = "PayoffX96"
+      , xMin = interestSqrtX96 tLo
+      , xMax = interestSqrtX96 tHi
+      }
+    PayoffY
+    tLo
+    tHi
+    [runSwapAlongTenor ipmDemo swDemo]
 
   writePanel
     "outputs/Pricing/panel-deformation-cpmm.png"

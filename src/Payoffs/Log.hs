@@ -35,6 +35,6 @@ payoff nId spot atm =
   let PayoffX96 naked = nakedLogQ96 spot atm
   in  PayoffX96 (scaleByNId nId naked)
 
-logContract :: NId -> AtmForward -> Payoff.Payoff
+logContract :: NId -> AtmForward -> Payoff.Payoff SqrtPriceX96
 logContract nId atm =
   Payoff.Payoff (\spot -> payoff nId spot atm)

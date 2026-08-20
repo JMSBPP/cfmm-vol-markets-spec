@@ -42,9 +42,9 @@ import SqrtGrid
   )
 import Volatility.VolatilityGrid (gammaCoordinate)
 
-newtype VariancePortfolio = VariancePortfolio Payoff.Payoff
+newtype VariancePortfolio = VariancePortfolio (Payoff.Payoff SqrtPriceX96)
 
-constantPayoff :: PayoffX96 -> Payoff.Payoff
+constantPayoff :: PayoffX96 -> Payoff.Payoff SqrtPriceX96
 constantPayoff y = Payoff.Payoff (\_ -> y)
 
 fromLegs :: NId -> AtmForward -> PayoffX96 -> VariancePortfolio
@@ -74,10 +74,10 @@ fromDef6 nId atm remaining =
   in
     assert (y == remaining) (VariancePortfolio pf)
 
-toPayoff :: VariancePortfolio -> Payoff.Payoff
+toPayoff :: VariancePortfolio -> Payoff.Payoff SqrtPriceX96
 toPayoff (VariancePortfolio p) = p
 
-scaleByTargetVega :: TargetVega -> VariancePortfolio -> Payoff.Payoff
+scaleByTargetVega :: TargetVega -> VariancePortfolio -> Payoff.Payoff SqrtPriceX96
 scaleByTargetVega dqv (VariancePortfolio (Payoff.Payoff pf)) =
   Payoff.Payoff $ \spot ->
     let PayoffX96 y = pf spot
@@ -116,7 +116,7 @@ hopBScaled
   -> NId
   -> AtmForward
   -> PayoffX96
-  -> Payoff.Payoff
+  -> Payoff.Payoff SqrtPriceX96
 hopBScaled plan nId atm remaining =
   scaleByTargetVega (targetVegaFromMint plan) (fromLegs nId atm remaining)
 

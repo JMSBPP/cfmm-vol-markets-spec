@@ -12,8 +12,8 @@ import SqrtGrid
   ( SqrtPriceX96(..)
   , PayoffX96(..)
   , SqrtPlot
-  , plotSqrtFunction
   )
+import Payoffs.PlotSqrt (PlotY(..), plotSqrtFunction)
 
 payoff
   :: SqrtPriceX96
@@ -44,7 +44,7 @@ strikeDerivative
 
 cashSecuredPut
   :: Strike.StrikeX96
-  -> Payoff.Payoff
+  -> Payoff.Payoff SqrtPriceX96
 cashSecuredPut strikePrice =
   Payoff.Payoff (`payoff` strikePrice)
 
@@ -63,6 +63,7 @@ plotPayoff path config strikePrice variation =
     plotSqrtFunction
       path
       config
+      PayoffY
       [ Payoff.runPayoff originalPayoff
       , Payoff.runPayoff variedPayoff
       ]

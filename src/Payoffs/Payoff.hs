@@ -22,87 +22,52 @@ import StrikeX96
 
 import Payoffs.NId (NId, scaleByNId)
 
----------------------------------------------
--- Later generalization requires:	   --
--- same underlying coordinate 	           --
--- newtype Payoff underlying payoff =	   --
---   Payoff				   --
---     { runPayoff :: underlying -> payoff --
---     }				   --
----------------------------------------------
-
 squareSqrtPrice :: SqrtPriceX96 -> PayoffX96
-
 squareSqrtPrice (SqrtPriceX96 sqrtPrice) =
   PayoffX96 $
     (sqrtPrice * sqrtPrice) `div` Q96
 
+newtype Payoff u = Payoff
+  { runPayoff :: u -> PayoffX96
+  }
 
-newtype Payoff =
-  Payoff
-    { runPayoff :: SqrtPriceX96 -> PayoffX96
-    }
-
-
-addPayoff :: Payoff -> Payoff -> Payoff
-
-
+addPayoff :: Payoff u -> Payoff u -> Payoff u
 addPayoff (Payoff payoff1) (Payoff payoff2) =
-    Payoff $ \price ->
-     let
-        PayoffX96 value1 =
-          payoff1 price
+  Payoff $ \underlying ->
+    let
+      PayoffX96 value1 = payoff1 underlying
+      PayoffX96 value2 = payoff2 underlying
+    in
+      PayoffX96 (value1 + value2)
 
-        PayoffX96 value2 =
-          payoff2 price
-
-      in
-        PayoffX96 (value1 + value2)
-
-
-subPayoff :: Payoff -> Payoff -> Payoff
+subPayoff :: Payoff u -> Payoff u -> Payoff u
 subPayoff (Payoff payoff1) (Payoff payoff2) =
-    Payoff $ \price ->
-     let
-        PayoffX96 value1 =
-          payoff1 price
+  Payoff $ \underlying ->
+    let
+      PayoffX96 value1 = payoff1 underlying
+      PayoffX96 value2 = payoff2 underlying
+    in
+      PayoffX96 (value1 - value2)
 
-        PayoffX96 value2 =
-          payoff2 price
-
-      in
-        PayoffX96 (value1 - value2)
-
-
-scalePayoff :: NId -> Payoff -> Payoff
+scalePayoff :: NId -> Payoff u -> Payoff u
 scalePayoff nId (Payoff pf) =
-    Payoff $ \price ->
-      let PayoffX96 value = pf price
-      in  PayoffX96 (scaleByNId nId value)
-
+  Payoff $ \underlying ->
+    let PayoffX96 value = pf underlying
+    in  PayoffX96 (scaleByNId nId value)
 
 applyStrikeVariation
-  :: Payoff
+  :: Payoff SqrtPriceX96
   -> (SqrtPriceX96 -> StrikeSlope)
   -> StrikeVariation
-  -> Payoff
-
+  -> Payoff SqrtPriceX96
 applyStrikeVariation
   (Payoff payoff)
   strikeDerivative
   (StrikeVariation deltaK) =
     Payoff $ \sqrtPrice ->
-
       let
-        PayoffX96 payoffValue =
-          payoff sqrtPrice
-
-        StrikeSlope slope =
-          strikeDerivative sqrtPrice
-
-        variation =
-          round (fromInteger deltaK * slope)
-
+        PayoffX96 payoffValue = payoff sqrtPrice
+        StrikeSlope slope = strikeDerivative sqrtPrice
+        variation = round (fromInteger deltaK * slope)
       in
-        PayoffX96
-          (payoffValue + variation)
+        PayoffX96 (payoffValue + variation)

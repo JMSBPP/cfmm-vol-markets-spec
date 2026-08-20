@@ -37,6 +37,6 @@ payoff nId spot atm =
   let PayoffX96 naked = nakedForwardQ96 spot atm
   in  PayoffX96 (scaleByNId nId naked)
 
-forward :: NId -> AtmForward -> Payoff.Payoff
+forward :: NId -> AtmForward -> Payoff.Payoff SqrtPriceX96
 forward nId atm =
   Payoff.Payoff (\spot -> payoff nId spot atm)

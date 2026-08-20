@@ -24,10 +24,9 @@ import SqrtGrid
   ( SqrtPriceX96(..)
   , PayoffX96(..)
   , SqrtPlot
-  , plotSqrtFunction
-  , sqrtFunctionLayout
   , tickFromSqrtPriceX96
   )
+import Payoffs.PlotSqrt (PlotY(..), plotSqrtFunction, sqrtFunctionLayout)
 
 import Pricing.PriceDeformation
   ( EtaX96
@@ -42,7 +41,7 @@ import OptionRatio (OptionRatio(..))
 -- | A single-tick CPMM LP payoff: call + range accrual = put + range accrual
 -- (put-call parity in sqrt-price coordinates).
 -- The constructor is opaque; same-strike is guaranteed by construction.
-newtype CPMMPosition = CPMMPosition Payoff.Payoff
+newtype CPMMPosition = CPMMPosition (Payoff.Payoff SqrtPriceX96)
 
 -- | Construct from covered call + range accrual.
 -- Asserts equality with the put path at the canonical witness p = kappa.
@@ -79,12 +78,12 @@ fromDelta
 fromDelta spot r d =
   fromCall (strikeFromDelta spot r d) r
 
-toPayoff :: CPMMPosition -> Payoff.Payoff
+toPayoff :: CPMMPosition -> Payoff.Payoff SqrtPriceX96
 toPayoff (CPMMPosition p) = p
 
 plotPayoff :: FilePath -> SqrtPlot -> StrikeX96 -> OptionRatio -> IO ()
 plotPayoff path config k r =
-  plotSqrtFunction path config
+  plotSqrtFunction path config PayoffY
     [ Payoff.runPayoff (toPayoff (fromCall k r))
     , Payoff.runPayoff (toPayoff (fromPut  k r))
     ]
@@ -92,7 +91,7 @@ plotPayoff path config k r =
 -- x = undeformed p_{1/2}(i); y = π(p_{1/2}(i; η))
 payoffAtEta
   :: EtaX96
-  -> Payoff.Payoff
+  -> Payoff.Payoff SqrtPriceX96
   -> SqrtPriceX96
   -> PayoffX96
 payoffAtEta eta payoff sample =
@@ -110,7 +109,7 @@ cpmmEtaLayout config k r labeledEtas =
   let
     position = toPayoff (fromCall k r)
   in
-    sqrtFunctionLayout config
+    sqrtFunctionLayout config PayoffY
       [ (label, payoffAtEta eta position)
       | (label, eta) <- labeledEtas
       ]
@@ -125,7 +124,7 @@ rhsPayoffLayout config k r warpedEta =
   let
     cpmm = toPayoff (fromCall k r)
   in
-    sqrtFunctionLayout config
+    sqrtFunctionLayout config PayoffY
       [ ("Covered Call", payoffAtEta BASE_ETA (CC.coveredCall k))
       , ("Range Accrual", payoffAtEta BASE_ETA (RAN.rangeAccrualNote k r))
       , ("CPMM η = 1/2", payoffAtEta BASE_ETA cpmm)

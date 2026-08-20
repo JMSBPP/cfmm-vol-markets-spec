@@ -33,28 +33,40 @@ library
       Liquidity.LiquidityChunk
       Liquidity.LiquidityDensity
       Liquidity.LiquidityGrid
+      Liquidity.TickLiquidity
       OptionRatio
       Payoffs.CashSecuredPut
       Payoffs.CoveredCall
       Payoffs.CPMMPosition
       Payoffs.Forward
+      Payoffs.Linear
       Payoffs.Log
       Payoffs.MintPlan
       Payoffs.NId
       Payoffs.Payoff
+      Payoffs.PlotInterest
+      Payoffs.PlotSqrt
       Payoffs.RangeAccrualNote
+      Payoffs.Return
+      Payoffs.Savings
+      Payoffs.Swap
       Payoffs.TargetVega
       Payoffs.VariancePortfolio
       Payoffs.VolatilityCall
       PlotUtils
+      Pricing.AdaptiveStremia
+      Pricing.FeeStructure
+      Pricing.InterestPriceMap
+      Pricing.InterestSqrt
       Pricing.PriceDeformation
       Pricing.Stremia
       SqrtGrid
       State
       StrikeX96
       TickPath
-      Trading.KappaaCoordinate
+      Trading.KappaCoordinate
       Trading.PriceImpact
+      Trading.Quote
       Volatility.CevField
       Volatility.TickVolatility
       Volatility.VolatilityGrid
