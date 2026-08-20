@@ -6,6 +6,7 @@ module Pricing.PriceDeformation
   , pattern BASE_ETA
   , barSqrtPriceX96
   , uniswapMinTick
+  , uniswapMaxTick
   , varSigma
   , deformTick
   , deformedSqrtPriceX96

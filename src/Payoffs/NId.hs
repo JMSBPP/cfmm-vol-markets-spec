@@ -14,9 +14,23 @@ module Payoffs.NId
   , panopticTokenType
   , panopticStrike
   , panopticWidth
+  , volOrderToMintPlan
+  , volOrderToTokenId
   ) where
 
 import Data.Bits (shiftL, shiftR, (.&.))
+import Liquidity.LiquidityChunk (createChunk)
+import Payoffs.MintPlan (MintPlan(..), PanopticTokenId(..), fourLegNumLegs)
+import Payoffs.TargetVega (mkTargetVega, unTargetVega)
+import Pricing.PriceDeformation (uniswapMaxTick, uniswapMinTick)
+import SqrtGrid (unTickSpacing)
+import Volatility.VolOrder
+  ( VolOrder
+  , fixtureSymmetricVolOrder
+  , legIntervals
+  , tickBucketFromVolOrder
+  , volTargetVega
+  )
 
 -- Hop A: optional-space scale N_id = 2/N. Not a Panoptic field.
 
@@ -40,36 +54,37 @@ scaleByNId (NId n) x = (2 * x) `div` toInteger n
 
 -- Hop B: EVM/Panoptic tokenId + SFPM positionSize. ΔQ_v* is not in the id.
 -- Layout matches plank PanopticTokenId.plk (TokenId.sol offsets).
+-- PanopticTokenId / MintPlan / fourLegNumLegs live in Payoffs.MintPlan
+-- (split out so Payoffs.TargetVega, needed by Volatility.VolOrder's
+-- targetVega field, does not import this module — avoids a
+-- NId → VolOrder → TargetVega → NId cycle).
 
-data PanopticTokenId = PanopticTokenId
-  { tokenId :: Integer
-  , numLegs :: Integer
-  }
-  deriving (Show, Eq)
-
-data MintPlan = MintPlan
-  { mintTokenId      :: PanopticTokenId
-  , mintPositionSize :: Integer
-  }
-  deriving (Show, Eq)
-
-fourLegNumLegs :: PanopticTokenId -> Int
-fourLegNumLegs tid = fromInteger (numLegs tid)
-
--- Canonical 4-leg all-long skeleton around i*=0, Δ=10:
--- puts [-20,-10], [-10,0] | calls [0,10], [10,20]. Per-leg optionRatio is the
--- caller 4-tuple (1..127), not Kristensen OptionRatio and not quantized w_k.
-fourLegSkeleton :: Integer -> (Integer, Integer, Integer, Integer) -> PanopticTokenId
-fourLegSkeleton poolId (r0, r1, r2, r3)
+-- Geometry-derived 4-leg all-long position: puts on [i_l,i*), calls on
+-- [i*,i_u]; the four leg intervals and Δ come from `VolOrder` (Layer 1),
+-- not hardcoded ticks. Per-leg optionRatio is the caller 4-tuple (1..127),
+-- not Kristensen OptionRatio and not quantized w_k.
+volOrderToTokenId
+  :: VolOrder
+  -> Integer
+  -> (Integer, Integer, Integer, Integer)
+  -> PanopticTokenId
+volOrderToTokenId vo poolId (r0, r1, r2, r3)
   | any (\r -> r < 1 || r > 127) [r0, r1, r2, r3] =
-      error "Payoffs.NId.fourLegSkeleton: optionRatio must be in 1..127"
+      error "Payoffs.NId.volOrderToTokenId: optionRatio must be in 1..127"
+  | not (all spanFeasible intervals) =
+      error "Payoffs.NId.volOrderToTokenId: each leg span must be >= tick spacing"
+  | putSide < 2 * d || callSide < 2 * d =
+      error "Payoffs.NId.volOrderToTokenId: each side of i* must be >= 2 * tick spacing"
+  | not (all widthPackable intervals) =
+      error "Payoffs.NId.volOrderToTokenId: each leg width must be < 4096 tick spacings (TokenId width field is 12 bits)"
+  | not (all tickInPoolBounds allTicks) =
+      error "Payoffs.NId.volOrderToTokenId: ticks must satisfy |tick| <= uniswapMaxTick"
   | otherwise =
       let
-        ts = 10
-        tid0 = addLegFromBucket 0 (-20) (-10) ts 0
-        tid1 = addLegFromBucket tid0 (-10) 0 ts 1
-        tid2 = addLegFromBucket tid1 0 10 ts 2
-        tid3 = addLegFromBucket tid2 10 20 ts 3
+        tid0 = addLegFromBucket 0 l0 h0 d 0
+        tid1 = addLegFromBucket tid0 l1 h1 d 1
+        tid2 = addLegFromBucket tid1 l2 h2 d 2
+        tid3 = addLegFromBucket tid2 l3 h3 d 3
         tid4 = addTokenType tid3 0 0
         tid5 = addTokenType tid4 0 1
         tid6 = addTokenType tid5 1 2
@@ -86,9 +101,52 @@ fourLegSkeleton poolId (r0, r1, r2, r3)
         tid17 = addRiskPartner tid16 2 2
         tid18 = addRiskPartner tid17 3 3
         tid19 = addPoolId tid18 (poolId .&. 0xffffffffffff)
-        tid20 = addTickSpacing tid19 ts
+        tid20 = addTickSpacing tid19 d
       in
         PanopticTokenId tid20 4
+  where
+    (_, _, ts) = tickBucketFromVolOrder vo
+    d = toInteger (unTickSpacing ts)
+    intervals =
+      [ (toInteger lo, toInteger hi)
+      | (lo, hi) <- legIntervals vo
+      ]
+    (l0, h0) = intervals !! 0
+    (l1, h1) = intervals !! 1
+    (l2, h2) = intervals !! 2
+    (l3, h3) = intervals !! 3
+    spanFeasible (lo, hi) = hi - lo >= d
+    putSide = h1 - l0
+    callSide = h3 - l2
+    widthPackable (lo, hi) = (hi - lo) `div` d < maxPackedWidth
+    allTicks = concat [[lo, hi] | (lo, hi) <- intervals]
+    tickInPoolBounds t =
+      t >= toInteger uniswapMinTick && t <= toInteger uniswapMaxTick
+
+-- TokenId width field is 12 bits (mask 0xfff in addWidth) → widthInTicks < 2^12.
+maxPackedWidth :: Integer
+maxPackedWidth = 4096
+
+-- MintPlan: tokenId from geometry + ratios, chunk = envelope [i_l, i_u] at
+-- liquidity ΔQ_v* (VolOrder's targetVega field, M1 shape).
+volOrderToMintPlan
+  :: VolOrder
+  -> Integer
+  -> (Integer, Integer, Integer, Integer)
+  -> MintPlan
+volOrderToMintPlan vo poolId ratios =
+  let
+    tid = volOrderToTokenId vo poolId ratios
+    (iL, iU, _) = tickBucketFromVolOrder vo
+    ch = createChunk iL iU (unTargetVega (volTargetVega vo))
+  in
+    MintPlan tid ch
+
+-- Thin wrapper: fixture VolOrder (vega irrelevant — tokenId is scale-free,
+-- size comes from MintPlan) reproduces the legacy fixed-tick skeleton.
+fourLegSkeleton :: Integer -> (Integer, Integer, Integer, Integer) -> PanopticTokenId
+fourLegSkeleton poolId ratios =
+  volOrderToTokenId (fixtureSymmetricVolOrder (mkTargetVega 1)) poolId ratios
 
 panopticTickSpacing :: PanopticTokenId -> Integer
 panopticTickSpacing (PanopticTokenId tid _) =

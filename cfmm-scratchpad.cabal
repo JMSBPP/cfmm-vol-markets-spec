@@ -27,7 +27,11 @@ library
   exposed-modules:
       Greeks.Delta
       Greeks.Gamma
+      Greeks.Theta
+      Greeks.Vega
       Lib
+      Liquidity.LiquidityChunk
+      Liquidity.LiquidityDensity
       Liquidity.LiquidityGrid
       OptionRatio
       Payoffs.CashSecuredPut
@@ -35,6 +39,7 @@ library
       Payoffs.CPMMPosition
       Payoffs.Forward
       Payoffs.Log
+      Payoffs.MintPlan
       Payoffs.NId
       Payoffs.Payoff
       Payoffs.RangeAccrualNote
@@ -43,13 +48,17 @@ library
       Payoffs.VolatilityCall
       PlotUtils
       Pricing.PriceDeformation
+      Pricing.Stremia
       SqrtGrid
       State
       StrikeX96
       TickPath
+      Trading.KappaaCoordinate
+      Trading.PriceImpact
       Volatility.CevField
       Volatility.TickVolatility
       Volatility.VolatilityGrid
+      Volatility.VolOrder
       Volatility.VolTermStructure
   other-modules:
       Paths_cfmm_scratchpad

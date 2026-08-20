@@ -88,6 +88,11 @@ unLadderResolution (LadderResolution n) = n
 -- Bunni ILiquidityDensityFunction.query:
 --   uint256 liquidityDensityX96  -- density of the rounded tick, scaled by Q96
 -- Range [0, Q96]; partition of unity in that word (LibGeometricDistribution).
+--
+-- TODO (brainstorm): LiquidityDensity → LiquidityChunk / LiquidityDensity → Panoptic
+-- optionRatio (r_k ∝ ℓ_k · dsqrt_k, 7-bit quantize) is NOT implemented — see
+-- docs/superpowers/specs/2026-08-20-liquiditydensity-optionratio-brainstorm.md
+-- This type stays Bunni Q96 mass; it is not Kristensen OptionRatio and not chunk L.
 newtype LiquidityDensityX96 = LiquidityDensityX96 Integer
   deriving (Show, Eq, Ord)
 

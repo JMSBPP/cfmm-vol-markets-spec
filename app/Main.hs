@@ -19,6 +19,7 @@ import Payoffs.CPMMPosition (rhsPayoffLayout)
 import Payoffs.Forward (AtmForward(..))
 import Payoffs.NId (MintPlan(..), fourLegSkeleton, mkNId)
 import Payoffs.TargetVega (mkTargetVega, positionSizeForTargetVega)
+import Liquidity.LiquidityChunk (createChunk)
 import Payoffs.VariancePortfolio
   ( variancePortfolioLayout
   , variancePortfolioLayoutVsGamma
@@ -231,7 +232,7 @@ main = do
     hopBPlan =
       MintPlan
         (fourLegSkeleton 0 (1, 2, 3, 4))
-        (positionSizeForTargetVega (mkTargetVega 1))
+        (createChunk (-160) 150 (positionSizeForTargetVega (mkTargetVega 1)))
     hopBAtm = AtmForward (sqrtPriceX96 0)
     hopBNid = mkNId 32
     hopBMin = -160

@@ -26,6 +26,8 @@ import Payoffs.NId
   , panopticWidth
   , scaleByNId
   , unNId
+  , volOrderToMintPlan
+  , volOrderToTokenId
   )
 import Payoffs.Forward
   ( AtmForward(..)
@@ -50,6 +52,13 @@ import Payoffs.TargetVega
   , targetVegaFromMints
   , unTargetVega
   )
+import Liquidity.LiquidityChunk
+  ( chunkLiquidity
+  , chunkTickLower
+  , chunkTickUpper
+  , createChunk
+  , unLiquidityChunk
+  )
 import Liquidity.LiquidityGrid
   ( XiX96(..)
   , ell
@@ -60,7 +69,11 @@ import Liquidity.LiquidityGrid
   , xiCoordinate
   , xiStar
   )
-import Pricing.PriceDeformation (EtaX96(..), pattern BASE_ETA)
+import Pricing.PriceDeformation
+  ( EtaX96(..)
+  , pattern BASE_ETA
+  , uniswapMaxTick
+  )
 import Volatility.CevField
   ( cevLayoutVsGamma
   , cevLayoutVsSqrtPrice
@@ -101,6 +114,17 @@ import Payoffs.VolatilityCall
   , volatilityCall
   , volatilityCallLayoutVsSqrtPrice
   , volatilityCallLayoutVsXi
+  )
+import Volatility.VolOrder
+  ( fixtureSymmetricVolOrder
+  , legIntervals
+  , mkVolOrder
+  , mkVolRangeWidth
+  , mkVolSkew
+  , roundTick
+  , tickBucketFromVolOrder
+  , tickVolatilityTick
+  , volOrderSplitPoints
   )
 import Volatility.TickVolatility
   ( RangeVolatility(..)
@@ -276,11 +300,16 @@ main = do
   assertEqual "strike leg 2" 5 (panopticStrike skeleton 2)
   assertEqual "strike leg 3" 15 (panopticStrike skeleton 3)
   let
-    plan7 = MintPlan skeleton (positionSizeForTargetVega dqv7)
+    plan7 =
+      MintPlan
+        skeleton
+        (createChunk (-20) 20 (positionSizeForTargetVega dqv7))
   assertEqual
-    "round-trip positionSize = ΔQ_v*"
+    "round-trip chunkLiquidity = ΔQ_v*"
     dqv7
     (targetVegaFromMint plan7)
+  assertEqual "envelope lo" (-20) (chunkTickLower (mintChunk plan7))
+  assertEqual "envelope hi" 20 (chunkTickUpper (mintChunk plan7))
   let
     fromA = scaleByTargetVega dqv7 piLegs
     fromB = scaleByTargetVega (targetVegaFromMint plan7) piLegs
@@ -302,16 +331,161 @@ main = do
     else error "hop B two-sided: expected Y>0 on both wings"
   assertThrows
     "num_legs≠4 rejected"
-    (targetVegaFromMint (MintPlan (PanopticTokenId 0 3) 1))
+    (targetVegaFromMint (MintPlan (PanopticTokenId 0 3) (createChunk (-1) 1 1)))
 
   assertThrows "empty mint list rejected" (targetVegaFromMints [])
   let
-    p1 = MintPlan skeleton (positionSizeForTargetVega (mkTargetVega 4))
-    p2 = MintPlan skeleton (positionSizeForTargetVega (mkTargetVega 5))
+    p1 =
+      MintPlan
+        skeleton
+        (createChunk (-20) 20 (positionSizeForTargetVega (mkTargetVega 4)))
+    p2 =
+      MintPlan
+        skeleton
+        (createChunk (-20) 20 (positionSizeForTargetVega (mkTargetVega 5)))
   assertEqual
     "ΔQ_v* additive"
     (mkTargetVega 9)
     (targetVegaFromMints [p1, p2])
+
+  assertThrows "skew 0 rejected" (mkVolSkew 0)
+  assertThrows "skew 65535 rejected" (mkVolSkew 65535)
+  assertThrows "mkVolRangeWidth 0 rejected" (mkVolRangeWidth 0 (mkTickSpacing 10))
+  assertEqual "tickVolatilityTick Q96 → 0" 0 (tickVolatilityTick (mkVolStrike Q96))
+
+  -- roundTick: Haskell div already floors toward -∞; must not double-decrement
+  -- negative off-grid ticks (regression for the Solidity-style -1 bug).
+  assertEqual "roundTick (-5) 10 floors to -10" (-10) (roundTick (-5) (mkTickSpacing 10))
+  assertEqual "roundTick (-15) 10 floors to -20" (-20) (roundTick (-15) (mkTickSpacing 10))
+  assertEqual "roundTick (-10) 10 on-grid is unchanged" (-10) (roundTick (-10) (mkTickSpacing 10))
+  assertEqual "roundTick 5 10 floors to 0" 0 (roundTick 5 (mkTickSpacing 10))
+  assertEqual "roundTick 15 10 floors to 10" 10 (roundTick 15 (mkTickSpacing 10))
+  assertEqual "roundTick 0 10 is 0" 0 (roundTick 0 (mkTickSpacing 10))
+  let
+    dqv1 = mkTargetVega 1
+    vo = fixtureSymmetricVolOrder dqv1
+    (iL, iU, ts) = tickBucketFromVolOrder vo
+  assertEqual "fixture i_l" (-20) iL
+  assertEqual "fixture i_u" 20 iU
+  assertEqual "fixture Δ" 10 (unTickSpacing ts)
+  let
+    iStar = 0
+    (mP, mC) = volOrderSplitPoints iL iU iStar ts
+  assertEqual "fixture m_p" (-10) mP
+  assertEqual "fixture m_c" 10 mC
+  assertEqual
+    "fixture four legs"
+    [(-20, -10), (-10, 0), (0, 10), (10, 20)]
+    (legIntervals vo)
+
+  let
+    voVega7 = fixtureSymmetricVolOrder (mkTargetVega 7)
+    voRatios = (1, 2, 3, 4)
+    voTid = volOrderToTokenId voVega7 0 voRatios
+    voPlan = volOrderToMintPlan voVega7 0 voRatios
+  assertEqual "volOrder num_legs" 4 (fourLegNumLegs voTid)
+  assertEqual
+    "volOrder strikes match legs"
+    [-15, -5, 5, 15]
+    [panopticStrike voTid l | l <- [0, 1, 2, 3]]
+  assertEqual "mint plan vega" (mkTargetVega 7) (targetVegaFromMint voPlan)
+  assertEqual
+    "mint chunk = envelope"
+    (-20, 20, 7)
+    ( chunkTickLower (mintChunk voPlan)
+    , chunkTickUpper (mintChunk voPlan)
+    , chunkLiquidity (mintChunk voPlan)
+    )
+  let
+    voFromScalar = scaleByTargetVega (mkTargetVega 7) piLegs
+    voFromMint = scaleByTargetVega (targetVegaFromMint voPlan) piLegs
+    voY0 = Payoff.runPayoff voFromScalar (sqrtPriceX96 0)
+    voY10 = Payoff.runPayoff voFromMint s10
+    voY0' = Payoff.runPayoff voFromMint (sqrtPriceX96 0)
+    voY10' = Payoff.runPayoff voFromScalar s10
+  assertEqual "volOrder mint plan dual-run ATM" voY0 voY0'
+  assertEqual "volOrder mint plan dual-run off-ATM" voY10' voY10
+  assertThrows
+    "volOrderToTokenId optionRatio 0 rejected"
+    (volOrderToTokenId voVega7 0 (0, 1, 1, 1))
+  assertThrows
+    "volOrderToTokenId optionRatio 128 rejected"
+    (volOrderToTokenId voVega7 0 (1, 1, 1, 128))
+
+  -- Geometry feasibility guards, tripped by constructed (non-fixture)
+  -- VolOrders: width=1/Δ=10 makes every leg span < Δ (span < Δ guard).
+  let
+    narrowVo =
+      mkVolOrder
+        (mkVolRangeWidth 1 (mkTickSpacing 10))
+        (mkVolStrike Q96)
+        (mkVolSkew 32768)
+        (mkTargetVega 1)
+  assertEqual
+    "narrow VolOrder legs collapse below Δ"
+    [(-10, -10), (-10, 0), (0, 0), (0, 0)]
+    (legIntervals narrowVo)
+  assertThrows
+    "volOrderToTokenId narrow span < Δ rejected"
+    (volOrderToTokenId narrowVo 0 (1, 1, 1, 1))
+
+  -- Skewed (near-max skew=65500) VolOrder: the put side collapses to a
+  -- sliver, also tripping the span < Δ guard (and, by construction, would
+  -- trip side < 2Δ too if a leg ever cleared span-feasibility on its own —
+  -- see fix report for why side < 2Δ is subsumed by the per-leg check here).
+  let
+    skewedVo =
+      mkVolOrder
+        (mkVolRangeWidth 40 (mkTickSpacing 10))
+        (mkVolStrike Q96)
+        (mkVolSkew 65500)
+        (mkTargetVega 1)
+  assertEqual
+    "skewed VolOrder put-side legs collapse below Δ"
+    [(-10, -10), (-10, 0), (0, 10), (10, 30)]
+    (legIntervals skewedVo)
+  assertThrows
+    "volOrderToTokenId skewed span < Δ rejected"
+    (volOrderToTokenId skewedVo 0 (1, 1, 1, 1))
+
+  -- Packer guards: leg width in tickSpacings must be < 4096 (TokenId width
+  -- field is 12 bits), and ticks must satisfy the Uniswap pool bound.
+  let
+    hugeWidthVo =
+      mkVolOrder
+        (mkVolRangeWidth 20000 (mkTickSpacing 1))
+        (mkVolStrike Q96)
+        (mkVolSkew 32768)
+        (mkTargetVega 1)
+  assertEqual
+    "huge-width VolOrder legs each span 5000 spacings"
+    [(-10000, -5000), (-5000, 0), (0, 5000), (5000, 10000)]
+    (legIntervals hugeWidthVo)
+  assertThrows
+    "volOrderToTokenId leg width >= 4096 spacings rejected"
+    (volOrderToTokenId hugeWidthVo 0 (1, 1, 1, 1))
+  let
+    SqrtPriceX96 offGridPoolWord = sqrtPriceX96 (uniswapMaxTick + 900)
+    extremeVo =
+      mkVolOrder
+        (mkVolRangeWidth 40 (mkTickSpacing 10))
+        (mkVolStrike offGridPoolWord)
+        (mkVolSkew 32768)
+        (mkTargetVega 1)
+  assertThrows
+    "volOrderToTokenId tick beyond Uniswap pool bound rejected"
+    (volOrderToTokenId extremeVo 0 (1, 1, 1, 1))
+
+  assertThrows "chunk liquidity 0" (createChunk (-20) 20 0)
+  assertThrows "chunk inverted ticks" (createChunk 20 (-20) 1)
+  let ch = createChunk (-20) 20 7
+  assertEqual "chunkTickLower" (-20) (chunkTickLower ch)
+  assertEqual "chunkTickUpper" 20 (chunkTickUpper ch)
+  assertEqual "chunkLiquidity" 7 (chunkLiquidity ch)
+  assertEqual
+    "createChunk (-20) 20 7 packs to known Panoptic-layout literal"
+    0xffffec0000140000000000000000000000000000000000000000000000000007
+    (unLiquidityChunk ch)
 
   let
     barL2 = BarL 2
@@ -512,7 +686,7 @@ main = do
     hopBPlan =
       MintPlan
         (fourLegSkeleton 0 (1, 2, 3, 4))
-        (positionSizeForTargetVega (mkTargetVega 1))
+        (createChunk (-160) 150 (positionSizeForTargetVega (mkTargetVega 1)))
     hopBMin = -160 :: Tick
     hopBIota = mkLadderResolution 32
   assertThrows

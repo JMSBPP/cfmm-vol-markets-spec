@@ -7,7 +7,8 @@ module Payoffs.TargetVega
   , targetVegaFromMints
   ) where
 
-import Payoffs.NId (MintPlan(..), PanopticTokenId(..))
+import Liquidity.LiquidityChunk (chunkLiquidity)
+import Payoffs.MintPlan (MintPlan(..), PanopticTokenId(..))
 
 newtype TargetVega = TargetVega Integer
   deriving (Show, Eq)
@@ -32,9 +33,10 @@ targetVegaFromMint :: MintPlan -> TargetVega
 targetVegaFromMint plan
   | numLegs (mintTokenId plan) /= 4 =
       error "Payoffs.TargetVega.targetVegaFromMint: num_legs must be 4"
-  | mintPositionSize plan <= 0 || mintPositionSize plan > u128Max =
-      error "Payoffs.TargetVega.targetVegaFromMint: positionSize must fit uint128 and be > 0"
-  | otherwise = mkTargetVega (mintPositionSize plan)
+  | chunkLiquidity (mintChunk plan) <= 0
+      || chunkLiquidity (mintChunk plan) > u128Max =
+      error "Payoffs.TargetVega.targetVegaFromMint: chunk liquidity must fit uint128 and be > 0"
+  | otherwise = mkTargetVega (chunkLiquidity (mintChunk plan))
 
 targetVegaFromMints :: [MintPlan] -> TargetVega
 targetVegaFromMints [] =
