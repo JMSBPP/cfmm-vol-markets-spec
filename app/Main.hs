@@ -50,7 +50,7 @@ import Pricing.InterestSqrt (interestSqrtX96, mkInterestTick)
 import qualified Payoffs.Payoff as Payoff
 import Greeks.Delta (deltaLayout)
 import Greeks.Gamma (gammaLayout, kristensenGammaLayoutVsGamma)
-import Payoffs.CPMMPosition (rhsPayoffLayout)
+import Payoffs.CLMMPosition (rhsPayoffLayout)
 import Payoffs.Forward (AtmForward(..))
 import Payoffs.NId (MintPlan(..), fourLegSkeleton, mkNId)
 import Payoffs.TargetVega (mkTargetVega, positionSizeForTargetVega)
