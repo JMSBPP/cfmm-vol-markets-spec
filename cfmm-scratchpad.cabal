@@ -36,8 +36,8 @@ library
       Liquidity.TickLiquidity
       OptionRatio
       Payoffs.CashSecuredPut
+      Payoffs.CLMMPosition
       Payoffs.CoveredCall
-      Payoffs.CPMMPosition
       Payoffs.Forward
       Payoffs.Linear
       Payoffs.Log

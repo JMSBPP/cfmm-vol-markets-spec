@@ -1,12 +1,12 @@
 {-# LANGUAGE PatternSynonyms #-}
 
-module Payoffs.CPMMPosition
-  ( CPMMPosition
+module Payoffs.CLMMPosition
+  ( CLMMPosition
   , fromCall
   , fromPut
   , toPayoff
   , plotPayoff
-  , cpmmEtaLayout
+  , clmmEtaLayout
   , rhsPayoffLayout
   , fromDelta
   ) where
@@ -38,14 +38,14 @@ import Greeks.Delta (DeltaX96, strikeFromDelta)
 import StrikeX96 (StrikeX96(..))
 import OptionRatio (OptionRatio(..))
 
--- | A single-tick CPMM LP payoff: call + range accrual = put + range accrual
+-- | A single-tick CLMM LP payoff: call + range accrual = put + range accrual
 -- (put-call parity in sqrt-price coordinates).
 -- The constructor is opaque; same-strike is guaranteed by construction.
-newtype CPMMPosition = CPMMPosition (Payoff.Payoff SqrtPriceX96)
+newtype CLMMPosition = CLMMPosition (Payoff.Payoff SqrtPriceX96)
 
 -- | Construct from covered call + range accrual.
 -- Asserts equality with the put path at the canonical witness p = kappa.
-fromCall :: StrikeX96 -> OptionRatio -> CPMMPosition
+fromCall :: StrikeX96 -> OptionRatio -> CLMMPosition
 fromCall k@(StrikeX96 kRaw) r =
   let callPath = Payoff.addPayoff (CC.coveredCall k)    (RAN.rangeAccrualNote k r)
       putPath  = Payoff.addPayoff (CSP.cashSecuredPut k) (RAN.rangeAccrualNote k r)
@@ -54,11 +54,11 @@ fromCall k@(StrikeX96 kRaw) r =
         ( Payoff.runPayoff callPath witness
           == Payoff.runPayoff putPath witness
         )
-        (CPMMPosition callPath)
+        (CLMMPosition callPath)
 
 -- | Construct from cash-secured put + range accrual.
 -- Asserts equality with the call path at the canonical witness p = kappa.
-fromPut :: StrikeX96 -> OptionRatio -> CPMMPosition
+fromPut :: StrikeX96 -> OptionRatio -> CLMMPosition
 fromPut k@(StrikeX96 kRaw) r =
   let callPath = Payoff.addPayoff (CC.coveredCall k)    (RAN.rangeAccrualNote k r)
       putPath  = Payoff.addPayoff (CSP.cashSecuredPut k) (RAN.rangeAccrualNote k r)
@@ -67,19 +67,19 @@ fromPut k@(StrikeX96 kRaw) r =
         ( Payoff.runPayoff callPath witness
           == Payoff.runPayoff putPath witness
         )
-        (CPMMPosition putPath)
+        (CLMMPosition putPath)
 
 -- Kristensen (3.23): k_δ from spot, r, and Q96 delta; then fromCall.
 fromDelta
   :: SqrtPriceX96
   -> OptionRatio
   -> DeltaX96
-  -> CPMMPosition
+  -> CLMMPosition
 fromDelta spot r d =
   fromCall (strikeFromDelta spot r d) r
 
-toPayoff :: CPMMPosition -> Payoff.Payoff SqrtPriceX96
-toPayoff (CPMMPosition p) = p
+toPayoff :: CLMMPosition -> Payoff.Payoff SqrtPriceX96
+toPayoff (CLMMPosition p) = p
 
 plotPayoff :: FilePath -> SqrtPlot -> StrikeX96 -> OptionRatio -> IO ()
 plotPayoff path config k r =
@@ -99,13 +99,13 @@ payoffAtEta eta payoff sample =
     Nothing -> PayoffX96 0
     Just deformed -> Payoff.runPayoff payoff deformed
 
-cpmmEtaLayout
+clmmEtaLayout
   :: SqrtPlot
   -> StrikeX96
   -> OptionRatio
   -> [(String, EtaX96)]
   -> Layout Double Double
-cpmmEtaLayout config k r labeledEtas =
+clmmEtaLayout config k r labeledEtas =
   let
     position = toPayoff (fromCall k r)
   in
@@ -122,11 +122,11 @@ rhsPayoffLayout
   -> Layout Double Double
 rhsPayoffLayout config k r warpedEta =
   let
-    cpmm = toPayoff (fromCall k r)
+    clmm = toPayoff (fromCall k r)
   in
     sqrtFunctionLayout config PayoffY
       [ ("Covered Call", payoffAtEta BASE_ETA (CC.coveredCall k))
       , ("Range Accrual", payoffAtEta BASE_ETA (RAN.rangeAccrualNote k r))
-      , ("CPMM η = 1/2", payoffAtEta BASE_ETA cpmm)
-      , ("CPMM η = 2/3", payoffAtEta warpedEta cpmm)
+      , ("CLMM η = 1/2", payoffAtEta BASE_ETA clmm)
+      , ("CLMM η = 2/3", payoffAtEta warpedEta clmm)
       ]

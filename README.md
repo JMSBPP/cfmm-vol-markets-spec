@@ -97,7 +97,7 @@ src/
 │   ├── CoveredCall.hs
 │   ├── CashSecuredPut.hs
 │   ├── RangeAccrualNote.hs
-│   ├── CPMMPosition.hs  // rename → CLMMPosition
+│   ├── CLMMPosition.hs
 │   ├── VolatilityCall.hs
 │   ├── NId.hs           // → Panoptic/ package
 │   ├── MintPlan.hs      // → Panoptic/ package
