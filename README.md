@@ -92,15 +92,13 @@ Then the structure is now
 
 ```
 src/
-├── Payoffs/  // payoffs and returns only (intended; some Panoptic/plotting still live here)
+├── Payoffs/  // payoffs and returns only (intended; some plotting still live here)
 │   ├── Payoff.hs
 │   ├── CoveredCall.hs
 │   ├── CashSecuredPut.hs
 │   ├── RangeAccrualNote.hs
 │   ├── CLMMPosition.hs
 │   ├── VolatilityCall.hs
-│   ├── NId.hs           // → Panoptic/ package
-│   ├── MintPlan.hs      // → Panoptic/ package
 │   ├── Forward.hs
 │   ├── Log.hs
 │   ├── Linear.hs
@@ -111,6 +109,9 @@ src/
 │   ├── PlotSqrt.hs      // → Plotting/ package
 │   ├── PlotInterest.hs  // → Plotting/ package
 │   └── VariancePortfolio.hs
+├── Panoptic/
+│   ├── NId.hs
+│   └── MintPlan.hs
 ├── Pricing/
 │   ├── PriceDeformation.hs
 │   ├── Stremia.hs
@@ -211,7 +212,7 @@ CEV field plots: `outputs/Volatility/vs-{sqrtPriceX96,gammaCoordinate,xiCoordina
 
 Hop A (money view): \(N_{\mathrm{id}}=2/N\), `Forward.hs` / `Log.hs` on linear \(P\) (`squareSqrtPrice`, never \(s-s^\star\)), opaque \(\Pi\) (`fromLegs` = `fromDef6` at ATM), then \(\pi_{96}=\Delta Q_v\cdot\Pi_{\mathrm{opt}}\). Plot: `outputs/Payoffs/variance-portfolio.png` (Y = `PayoffX96`, not clipped at 0). `targetVega` is raw \(L\), not a vol word.
 
-Hop B (in `NId.hs` / `MintPlan.hs`, under Hop A): EVM `PanopticTokenId` `{tokenId, numLegs}` + `MintPlan` `{mintTokenId, mintChunk :: LiquidityChunk}`. `PanopticTokenId` and `MintPlan` live in `Payoffs/MintPlan.hs` (split out of `NId.hs` so `TargetVega.hs` — needed by `Volatility/VolOrder.hs`'s `targetVega` field — does not import `NId`, avoiding a module cycle now that `NId` consumes `VolOrder` directly); `NId.hs` re-exports both. The 4-leg all-long tokenId is geometry-derived via `volOrderToTokenId :: VolOrder -> poolId -> ratios -> PanopticTokenId` (per-leg `optionRatio` 4-tuple in \(1..127\), puts below \(i^\star\), calls above; intervals and \(\Delta\) come from `legIntervals` / `tickBucketFromVolOrder`, not hardcoded ticks); `fourLegSkeleton` is now a thin wrapper calling `volOrderToTokenId` on `fixtureSymmetricVolOrder`. `volOrderToMintPlan` completes the `VolOrder → MintPlan` map: `mintChunk = createChunk i_l i_u (unTargetVega (volTargetVega vo))`, i.e. the envelope chunk at the order's `targetVega` (id is scale-free, including the ratio shape). Feasibility guards (each leg span \(\ge\Delta\); each side of \(i^\star\) \(\ge 2\Delta\)) `error` on infeasible `VolOrder`s. Dual-run: \(\pi_{96}\) from scalar \(\Delta Q_v\) equals \(\pi_{96}\) from `targetVegaFromMint`. The non-EVM `FourLegId` stub is gone. Hop C: `targetVegaFromMints` is additive. Not an on-chain `VolOrder` pack.
+Hop B (in `NId.hs` / `MintPlan.hs`, under Hop A): EVM `PanopticTokenId` `{tokenId, numLegs}` + `MintPlan` `{mintTokenId, mintChunk :: LiquidityChunk}`. `PanopticTokenId` and `MintPlan` live in `Panoptic/MintPlan.hs` (split out of `NId.hs` so `TargetVega.hs` — needed by `Volatility/VolOrder.hs`'s `targetVega` field — does not import `NId`, avoiding a module cycle now that `NId` consumes `VolOrder` directly); `NId.hs` re-exports both. The 4-leg all-long tokenId is geometry-derived via `volOrderToTokenId :: VolOrder -> poolId -> ratios -> PanopticTokenId` (per-leg `optionRatio` 4-tuple in \(1..127\), puts below \(i^\star\), calls above; intervals and \(\Delta\) come from `legIntervals` / `tickBucketFromVolOrder`, not hardcoded ticks); `fourLegSkeleton` is now a thin wrapper calling `volOrderToTokenId` on `fixtureSymmetricVolOrder`. `volOrderToMintPlan` completes the `VolOrder → MintPlan` map: `mintChunk = createChunk i_l i_u (unTargetVega (volTargetVega vo))`, i.e. the envelope chunk at the order's `targetVega` (id is scale-free, including the ratio shape). Feasibility guards (each leg span \(\ge\Delta\); each side of \(i^\star\) \(\ge 2\Delta\)) `error` on infeasible `VolOrder`s. Dual-run: \(\pi_{96}\) from scalar \(\Delta Q_v\) equals \(\pi_{96}\) from `targetVegaFromMint`. The non-EVM `FourLegId` stub is gone. Hop C: `targetVegaFromMints` is additive. Not an on-chain `VolOrder` pack.
 
 `Volatility/VolOrder.hs`: Plank-faithful `VolOrder {volRangeWidth, volStrike, volSkew, volTargetVega}`. `tickBucketFromVolOrder` maps `volStrike` + `volSkew` + `volRangeWidth` → `(i_l, i_u, Δ)`; `legIntervals` splits that bucket at \(i^\star\) and the two midpoints into the four leg intervals `[i_l,m_p],[m_p,i^\star],[i^\star,m_c],[m_c,i_u]`. `fixtureSymmetricVolOrder` is the canonical symmetric fixture (\(\Delta=10\), \([-20,20]\) about tick 0).
 

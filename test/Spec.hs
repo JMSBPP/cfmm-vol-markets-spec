@@ -17,7 +17,7 @@ import Payoffs.Return
   , returnPipsScale
   , unReturnPips
   )
-import Payoffs.NId
+import Panoptic.NId
   ( MintPlan(..)
   , PanopticTokenId(..)
   , fourLegNumLegs

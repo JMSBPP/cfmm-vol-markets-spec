@@ -35,14 +35,14 @@ library
       Liquidity.LiquidityGrid
       Liquidity.TickLiquidity
       OptionRatio
+      Panoptic.MintPlan
+      Panoptic.NId
       Payoffs.CashSecuredPut
       Payoffs.CLMMPosition
       Payoffs.CoveredCall
       Payoffs.Forward
       Payoffs.Linear
       Payoffs.Log
-      Payoffs.MintPlan
-      Payoffs.NId
       Payoffs.Payoff
       Payoffs.PlotInterest
       Payoffs.PlotSqrt
