@@ -92,7 +92,7 @@ Then the structure is now
 
 ```
 src/
-├── Payoffs/  // payoffs and returns only (intended; some plotting still live here)
+├── Payoffs/  // payoffs and returns only
 │   ├── Payoff.hs
 │   ├── CoveredCall.hs
 │   ├── CashSecuredPut.hs
@@ -106,12 +106,14 @@ src/
 │   ├── Savings.hs
 │   ├── Swap.hs
 │   ├── TransactionalFeeCapture.hs
-│   ├── PlotSqrt.hs      // → Plotting/ package
-│   ├── PlotInterest.hs  // → Plotting/ package
 │   └── VariancePortfolio.hs
 ├── Panoptic/
 │   ├── NId.hs
 │   └── MintPlan.hs
+├── Plotting/
+│   ├── PlotSqrt.hs
+│   ├── PlotInterest.hs
+│   └── PlotUtils.hs
 ├── Pricing/
 │   ├── PriceDeformation.hs
 │   ├── Stremia.hs
@@ -145,17 +147,16 @@ src/
 ├── StrikeX96.hs
 ├── OptionRatio.hs
 ├── TargetVega.hs
-├── PlotUtils.hs         // → Plotting/ package
 └── State.hs
 
 outputs/{Pricing,Payoffs,Payoffs/Returns,Greeks,Liquidity,TickPath,Volatility}/
 ```
 
-> Tree lists **current** modules; `//` notes are **still-open** package moves (structure not reorganized yet).
+> Tree lists **current** modules.
 
 - `Payoffs.Linear.linearPayoff`: standardized linear \(P=s^2\) as `PayoffX96`.
 - `Payoffs.Return.ReturnPips` / `mkReturn`: ppm return of one level vs another (`returnPipsScale = 10^6`).
-- `Payoffs.PlotSqrt.PlotY`: `PayoffY` | `ReturnY` on sqrt-series plots; return PNGs under `outputs/Payoffs/Returns/`.
+- `Plotting.PlotSqrt.PlotY`: `PayoffY` | `ReturnY` on sqrt-series plots; return PNGs under `outputs/Payoffs/Returns/`.
 - `SqrtGrid`: \(\lambda=1.0001\), `TickSpacing` \(\Delta_i\in[1,200]\)
 - `Pricing.InterestSqrt`: `InterestTick` / `InterestSqrtX96` — \(\lambda^{t/2}\) twin of price `Tick` / `SqrtPriceX96` (interest dimensions; \(1+r=\lambda^{t}\))
 - `Payoff u`: parametric underlying (`SqrtPriceX96` | `InterestSqrtX96`, …)

@@ -13,7 +13,7 @@ import SqrtGrid
   , PayoffX96(..)
   , SqrtPlot
   )
-import Payoffs.PlotSqrt (PlotY(..), plotSqrtFunction)
+import Plotting.PlotSqrt (PlotY(..), plotSqrtFunction)
 
 import StrikeX96 (StrikeX96(..))
 import OptionRatio (OptionRatio(..))

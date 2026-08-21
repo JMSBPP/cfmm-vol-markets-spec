@@ -7,7 +7,7 @@ import Control.Exception (ErrorCall, evaluate, try)
 
 import Greeks.Gamma (Gamma(..), cpmmGamma)
 import Graphics.Rendering.Chart.Easy (execEC, layout_title, (.=))
-import PlotUtils (Panel(..), canvasSize)
+import Plotting.PlotUtils (Panel(..), canvasSize)
 import OptionRatio (OptionRatio(..))
 import Payoffs.Payoff (squareSqrtPrice)
 import qualified Payoffs.Payoff as Payoff

@@ -13,7 +13,7 @@ import SqrtGrid
   , PayoffX96(..)
   , SqrtPlot
   )
-import Payoffs.PlotSqrt (PlotY(..), plotSqrtFunction)
+import Plotting.PlotSqrt (PlotY(..), plotSqrtFunction)
 
 payoff
   :: SqrtPriceX96

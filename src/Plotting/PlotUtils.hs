@@ -5,7 +5,7 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeOperators #-}
 
-module PlotUtils
+module Plotting.PlotUtils
   ( Panel(..)
   , writePanel
   , canvasSize

@@ -9,7 +9,7 @@ module Main (main) where
 import System.Directory (createDirectoryIfMissing)
 
 import OptionRatio (OptionRatio(..))
-import PlotUtils (Panel(..), writePanel)
+import Plotting.PlotUtils (Panel(..), writePanel)
 import Pricing.PriceDeformation
   ( EtaX96(..)
   , deformationLayout
@@ -26,8 +26,8 @@ import Pricing.Stremia
   , plotFeeVsReturn
   )
 import Payoffs.Linear (linearPayoff)
-import Payoffs.PlotSqrt (PlotY(..), plotSqrtFunction)
-import Payoffs.PlotInterest
+import Plotting.PlotSqrt (PlotY(..), plotSqrtFunction)
+import Plotting.PlotInterest
   ( InterestPlot(..)
   , plotInterestFunction
   , plotInterestTickFunction

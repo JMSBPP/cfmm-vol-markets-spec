@@ -26,7 +26,7 @@ import SqrtGrid
   , SqrtPlot
   , tickFromSqrtPriceX96
   )
-import Payoffs.PlotSqrt (PlotY(..), plotSqrtFunction, sqrtFunctionLayout)
+import Plotting.PlotSqrt (PlotY(..), plotSqrtFunction, sqrtFunctionLayout)
 
 import Pricing.PriceDeformation
   ( EtaX96
