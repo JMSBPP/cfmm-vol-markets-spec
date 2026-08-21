@@ -2,6 +2,7 @@
 
 - **Type:** `refactor`
 - **Issue:** https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/7
-- **Status:** open (tracking PR; implementation not started on this branch)
+- **PR:** https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/20
+- **Status:** done — `Plotting.PlotSqrt`, `Plotting.PlotInterest`, `Plotting.PlotUtils` (`src/Plotting/`)
 
-See `AGENTS.md` / `CLAUDE.md` / `QWEN.md` (on `chore/todo-16-scratchpad-wip` / after merge) for the branch→issue→PR workflow.
+See `AGENTS.md` for the branch→issue→PR workflow.

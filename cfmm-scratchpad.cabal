@@ -44,8 +44,6 @@ library
       Payoffs.Linear
       Payoffs.Log
       Payoffs.Payoff
-      Payoffs.PlotInterest
-      Payoffs.PlotSqrt
       Payoffs.RangeAccrualNote
       Payoffs.Return
       Payoffs.Savings
@@ -53,7 +51,9 @@ library
       Payoffs.TransactionalFeeCapture
       Payoffs.VariancePortfolio
       Payoffs.VolatilityCall
-      PlotUtils
+      Plotting.PlotInterest
+      Plotting.PlotSqrt
+      Plotting.PlotUtils
       Pricing.AdaptiveStremia
       Pricing.ExpectedReturn
       Pricing.FeeStructure
