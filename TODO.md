@@ -18,20 +18,20 @@
 
 Workflow: see `AGENTS.md` / `CLAUDE.md` / `QWEN.md` (classify → branch → issue → PR → cross-comment).
 
-| TODO | Type | Issue |
-|------|------|-------|
-| 5 | `feat` | https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/1 |
-| 6 | `feat` | https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/2 |
-| 7 | `feat` | https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/3 |
-| 8 | `feat` | https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/4 |
-| 9 | `feat` | https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/5 |
-| 10 | `refactor` | https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/6 |
-| 11 | `refactor` | https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/7 |
-| 12 | `refactor` | https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/8 |
-| 13 | `refactor` | https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/9 |
-| 14 | `feat` | https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/10 |
-| 15 | `docs` | https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/11 |
-| 16 | `chore` | https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/12 |
+| TODO | Type | Issue | PR |
+|------|------|-------|-----|
+| 5 | `feat` | [#1](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/1) | [#14](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/14) |
+| 6 | `feat` | [#2](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/2) | [#15](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/15) |
+| 7 | `feat` | [#3](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/3) | [#16](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/16) |
+| 8 | `feat` | [#4](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/4) | [#17](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/17) |
+| 9 | `feat` | [#5](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/5) | [#18](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/18) |
+| 10 | `refactor` | [#6](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/6) | [#19](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/19) |
+| 11 | `refactor` | [#7](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/7) | [#20](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/20) |
+| 12 | `refactor` | [#8](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/8) | [#21](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/21) |
+| 13 | `refactor` | [#9](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/9) | [#22](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/22) |
+| 14 | `feat` | [#10](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/10) | [#23](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/23) |
+| 15 | `docs` | [#11](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/11) | [#24](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/24) |
+| 16 | `chore` | [#12](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/12) | [#13](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/13) |
 
 ### Pricing / returns / fee-revenue
 
