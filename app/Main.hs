@@ -1,6 +1,8 @@
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE DisambiguateRecordFields #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE MonoLocalBinds #-}
 
 module Main (main) where
 
@@ -48,10 +50,10 @@ import Pricing.InterestSqrt (interestSqrtX96, mkInterestTick)
 import qualified Payoffs.Payoff as Payoff
 import Greeks.Delta (deltaLayout)
 import Greeks.Gamma (gammaLayout, kristensenGammaLayoutVsGamma)
-import Payoffs.CPMMPosition (rhsPayoffLayout)
+import Payoffs.CLMMPosition (rhsPayoffLayout)
 import Payoffs.Forward (AtmForward(..))
 import Payoffs.NId (MintPlan(..), fourLegSkeleton, mkNId)
-import Payoffs.TargetVega (mkTargetVega, positionSizeForTargetVega)
+import TargetVega (mkTargetVega, positionSizeForTargetVega)
 import Liquidity.LiquidityChunk (createChunk)
 import Payoffs.VariancePortfolio
   ( variancePortfolioLayout
@@ -92,6 +94,11 @@ import Volatility.CevField
   )
 import Volatility.VolTermStructure (BarL(..), FlowVol(..), cevFromPhi)
 import StrikeX96 (strike)
+
+-- Avoid DuplicateRecordFields update/selector ambiguity with InterestPlot.
+retitleSqrt :: SqrtPlot -> String -> String -> SqrtPlot
+retitleSqrt (SqrtPlot _ xa _ xmin xmax) title ya =
+  SqrtPlot title xa ya xmin xmax
 
 main :: IO ()
 main = do
@@ -135,10 +142,9 @@ main = do
 
   plotSqrtFunction
     "outputs/Payoffs/Returns/stremia-bid-ask.png"
-    config
-      { plotTitle = "mid / ask/bid ReturnPips (FeePips 100 & 3000)"
-      , yAxisTitle = "ReturnPips"
-      }
+    (retitleSqrt config
+      "mid / ask/bid ReturnPips (FeePips 100 & 3000)"
+      "ReturnPips")
     ReturnY
     [ linearPayoff
     , nakedAskQ96 (mkFeePips 100)
@@ -179,10 +185,9 @@ main = do
     tHi = mkInterestTick 100
   plotSqrtFunction
     "outputs/Payoffs/swap-pay-linear-vs-sqrtPriceX96.png"
-    config
-      { plotTitle = "Swap pay: linear×(1-φ_X) (φ_X=100)"
-      , yAxisTitle = "PayoffX96"
-      }
+    (retitleSqrt config
+      "Swap pay: linear×(1-φ_X) (φ_X=100)"
+      "PayoffX96")
     PayoffY
     [Payoff.runPayoff payPf]
   plotInterestFunction
@@ -215,10 +220,9 @@ main = do
     TransactionalFeeCapture (Leg capPayPf) (Leg capRecvPf) = fcDemo
   plotSqrtFunction
     "outputs/Payoffs/fee-capture-pay-vs-sqrtPriceX96.png"
-    config
-      { plotTitle = "Fee capture pay: linear×φ_X (φ_X=100)"
-      , yAxisTitle = "PayoffX96"
-      }
+    (retitleSqrt config
+      "Fee capture pay: linear×φ_X (φ_X=100)"
+      "PayoffX96")
     PayoffY
     [Payoff.runPayoff capPayPf]
   plotInterestFunction
