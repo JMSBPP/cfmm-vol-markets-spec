@@ -29,8 +29,8 @@ import Payoffs.Forward
   , unAtmForward
   )
 import Payoffs.Log (logContract, nakedLogQ96)
-import Payoffs.NId (MintPlan, NId, scaleByNId)
-import Payoffs.TargetVega (TargetVega, targetVegaFromMint, unTargetVega)
+import Panoptic.NId (MintPlan, NId, scaleByNId)
+import TargetVega (TargetVega, targetVegaFromMint, unTargetVega)
 import SqrtGrid
   ( PayoffX96(..)
   , SqrtPriceX96(..)
