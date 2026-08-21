@@ -50,7 +50,6 @@ library
       Payoffs.Return
       Payoffs.Savings
       Payoffs.Swap
-      Payoffs.TargetVega
       Payoffs.TransactionalFeeCapture
       Payoffs.VariancePortfolio
       Payoffs.VolatilityCall
@@ -65,6 +64,7 @@ library
       SqrtGrid
       State
       StrikeX96
+      TargetVega
       TickPath
       Trading.KappaCoordinate
       Trading.PriceImpact

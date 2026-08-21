@@ -51,7 +51,7 @@ import Payoffs.VariancePortfolio
   , variancePortfolioLayoutVsGamma
   , variancePortfolioLayoutVsXi
   )
-import Payoffs.TargetVega
+import TargetVega
   ( mkTargetVega
   , positionSizeForTargetVega
   , targetVegaFromMint

@@ -110,8 +110,7 @@ src/
 │   ├── TransactionalFeeCapture.hs
 │   ├── PlotSqrt.hs      // → Plotting/ package
 │   ├── PlotInterest.hs  // → Plotting/ package
-│   ├── VariancePortfolio.hs
-│   └── TargetVega.hs    // → outside Payoffs/
+│   └── VariancePortfolio.hs
 ├── Pricing/
 │   ├── PriceDeformation.hs
 │   ├── Stremia.hs
@@ -144,6 +143,7 @@ src/
 ├── SqrtGrid.hs
 ├── StrikeX96.hs
 ├── OptionRatio.hs
+├── TargetVega.hs
 ├── PlotUtils.hs         // → Plotting/ package
 └── State.hs
 

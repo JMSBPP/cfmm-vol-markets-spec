@@ -30,7 +30,7 @@ import Payoffs.Forward
   )
 import Payoffs.Log (logContract, nakedLogQ96)
 import Payoffs.NId (MintPlan, NId, scaleByNId)
-import Payoffs.TargetVega (TargetVega, targetVegaFromMint, unTargetVega)
+import TargetVega (TargetVega, targetVegaFromMint, unTargetVega)
 import SqrtGrid
   ( PayoffX96(..)
   , SqrtPriceX96(..)

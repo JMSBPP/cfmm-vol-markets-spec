@@ -53,7 +53,7 @@ import Greeks.Gamma (gammaLayout, kristensenGammaLayoutVsGamma)
 import Payoffs.CLMMPosition (rhsPayoffLayout)
 import Payoffs.Forward (AtmForward(..))
 import Payoffs.NId (MintPlan(..), fourLegSkeleton, mkNId)
-import Payoffs.TargetVega (mkTargetVega, positionSizeForTargetVega)
+import TargetVega (mkTargetVega, positionSizeForTargetVega)
 import Liquidity.LiquidityChunk (createChunk)
 import Payoffs.VariancePortfolio
   ( variancePortfolioLayout
