@@ -97,7 +97,7 @@ src/
 │   ├── CoveredCall.hs
 │   ├── CashSecuredPut.hs
 │   ├── RangeAccrualNote.hs
-│   ├── CPMMPosition.hs  // rename → CLMMPosition
+│   ├── CLMMPosition.hs
 │   ├── VolatilityCall.hs
 │   ├── NId.hs           // → Panoptic/ package
 │   ├── MintPlan.hs      // → Panoptic/ package
@@ -253,7 +253,8 @@ Done: \(p_{1/2}^{(\mathrm{bid/ask})}\) —
   - **B retired:** `KappaPips` Word8 quantize removed
 - Done: `Pricing.ExpectedReturn` — `ReturnFromKappa` on `FeeStructure` \(((1-\kappa)\phi_X+\kappa\phi_M)\) and `FeePips` \((\kappa\phi,\,r(0)=0)\); `runSwapAlongTenorMixture` = \((1-w)Y_{\mathrm{pay}}+w Y_{\mathrm{recv}}\)
 - Done: `Payoffs.TransactionalFeeCapture` — \(\pi^\phi=\phi_X P+\phi_M I\); sum along tenor; accounting identity with Swap (capture+survival≡naked); plots `fee-capture-*-vs-*.png`
-- **VISIBLE:** future `ExpectedReturn <>` Realized/other expecteds supplies \(r(0)\); parametrized \(\pi^\phi(r_\phi^e)\) / \(r_\phi^e=\phi\cdot r^e\) still deferred
+- Done: `feeRevenueExpectedReturn` / `runFeeCaptureAlongTenorMixture` — \(\pi^\phi(r_\phi^e)\) with \(r_\phi^e=\phi\cdot r^e\)
+- **VISIBLE:** future `ExpectedReturn <>` Realized/other expecteds supplies \(r(0)\); ref \(r^\phi=\phi\,\delta_{\mathrm{trans}}\) still open
 - plot: `outputs/Payoffs/Returns/stremia-bid-ask.png` — mid + ask/bid `ReturnY`
 - plot: `outputs/Payoffs/Returns/stremia-fee-vs-return.png` — FeePips vs ReturnPips (ask / bid / \(r=\phi\))
 - plot: `outputs/Payoffs/Returns/stremia-fee-rate-vs-sqrt.png` — FeePips vs quote SqrtPriceX96 (bid left / ask right of mid)
@@ -289,7 +290,7 @@ parameter:
 		r (\kappa_{\varphi} ; \phi_X, \phi_M) = (1\, - \, \kappa_{\varphi}) \, \phi_M+ \kappa_{\varphi} \, \phi_X
 	\end{aligned}
 \]
-> **VISIBLE:** κ is a coordinate discretization like ticks (**encoding C shipped**): `KappaTick` / `KappaSpacing` (\(N=255\)). B (`KappaPips`) retired. `ExpectedReturn` / \(\pi^{\Delta Q}(r^e)\) mixture and base `TransactionalFeeCapture` (\(\pi^\phi\)) shipped; next parametrized \(\pi^\phi(r_\phi^e)\) / return `<>`.
+> **VISIBLE:** κ is a coordinate discretization like ticks (**encoding C shipped**): `KappaTick` / `KappaSpacing` (\(N=255\)). B (`KappaPips`) retired. `ExpectedReturn` / \(\pi^{\Delta Q}(r^e)\) mixture and `TransactionalFeeCapture` (base + \(\pi^\phi(r_\phi^e)\)) shipped; next return `<>` / ref \(r^\phi=\phi\delta_{\mathrm{trans}}\).
 
 Consider the expected return of the swap payoff :
 

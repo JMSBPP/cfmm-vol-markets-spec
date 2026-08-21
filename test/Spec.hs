@@ -146,9 +146,11 @@ import Payoffs.TransactionalFeeCapture
   ( TransactionalFeeCapture(..)
   , assertAccountingIdentityWithSwap
   , feeFactorX96
+  , feeRevenueExpectedReturn
   , payPartitionErrorX96
   , recvPartitionErrorX96
   , runFeeCaptureAlongTenor
+  , runFeeCaptureAlongTenorMixture
   , transactionalFeeCaptureFromFeeStructure
   )
 import Pricing.InterestSqrt
@@ -1382,3 +1384,28 @@ main = do
     "fee capture along tenor ≡ sum"
     (PayoffX96 (ypCap + yrCap))
     (runFeeCaptureAlongTenor mapCap fcCap t0Cap)
+
+  -- π^φ(r_φ^e): feeRevenueExpectedReturn + mixture
+  let
+    reFullCap = ExpectedReturn (mkFeePips feePipsScale)
+    reZeroCap = ExpectedReturn (mkFeePips 0)
+    rPhiFull = feeRevenueExpectedReturn fsCap reFullCap
+    rPhiZero = feeRevenueExpectedReturn fsCap reZeroCap
+  assertEqual
+    "feeRevenueExpectedReturn r^e=0 → 0"
+    (mkFeePips 0)
+    (unExpectedReturn rPhiZero)
+  assertEqual
+    "feeRevenueExpectedReturn r^e=scale → φ"
+    (toFeePips fsCap)
+    (unExpectedReturn rPhiFull)
+  let
+    PayoffX96 yCapMix0 =
+      runFeeCaptureAlongTenorMixture mapCap rPhiZero fcCap t0Cap
+  assertEqual "fee capture mixture w=0 ≡ Y_pay" ypCap yCapMix0
+  let
+    -- Full weight on recv: use ExpectedReturn at feePipsScale as r_φ^e directly
+    rPhiAsWeight1 = ExpectedReturn (mkFeePips feePipsScale)
+    PayoffX96 yCapMix1 =
+      runFeeCaptureAlongTenorMixture mapCap rPhiAsWeight1 fcCap t0Cap
+  assertEqual "fee capture mixture w=1 ≡ Y_recv" yrCap yCapMix1

@@ -212,9 +212,9 @@ addWidth tid width leg =
 addLegFromBucket :: Integer -> Integer -> Integer -> Integer -> Integer -> Integer
 addLegFromBucket tid lo hi ts leg =
   let
-    span = hi - lo
-    strike = lo + span `div` 2
-    width = span `div` ts
+    tickSpan = hi - lo
+    strike = lo + tickSpan `div` 2
+    width = tickSpan `div` ts
   in
     addWidth (addStrike tid strike leg) width leg
 
