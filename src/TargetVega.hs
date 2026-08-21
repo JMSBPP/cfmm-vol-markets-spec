@@ -8,7 +8,7 @@ module TargetVega
   ) where
 
 import Liquidity.LiquidityChunk (chunkLiquidity)
-import Payoffs.MintPlan (MintPlan(..), PanopticTokenId(..))
+import Panoptic.MintPlan (MintPlan(..), PanopticTokenId(..))
 
 newtype TargetVega = TargetVega Integer
   deriving (Show, Eq)

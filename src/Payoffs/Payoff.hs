@@ -20,7 +20,7 @@ import StrikeX96
   , StrikeVariation(..)
   )
 
-import Payoffs.NId (NId, scaleByNId)
+import Panoptic.NId (NId, scaleByNId)
 
 squareSqrtPrice :: SqrtPriceX96 -> PayoffX96
 squareSqrtPrice (SqrtPriceX96 sqrtPrice) =

@@ -9,7 +9,7 @@ module Payoffs.Forward
   ) where
 
 import qualified Payoffs.Payoff as Payoff
-import Payoffs.NId (NId, scaleByNId)
+import Panoptic.NId (NId, scaleByNId)
 import SqrtGrid
   ( SqrtPriceX96(..)
   , PayoffX96(..)

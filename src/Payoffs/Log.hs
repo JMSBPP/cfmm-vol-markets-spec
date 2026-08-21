@@ -8,7 +8,7 @@ module Payoffs.Log
 
 import qualified Payoffs.Payoff as Payoff
 import Payoffs.Forward (AtmForward, unAtmForward)
-import Payoffs.NId (NId, scaleByNId)
+import Panoptic.NId (NId, scaleByNId)
 import SqrtGrid
   ( SqrtPriceX96
   , PayoffX96(..)
