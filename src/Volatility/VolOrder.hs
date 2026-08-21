@@ -18,7 +18,7 @@ module Volatility.VolOrder
   ) where
 
 import Payoffs.TargetVega (TargetVega)
-import Payoffs.VolatilityCall (VolStrike(..), mkVolStrike, unVolStrike)
+import Payoffs.VolatilityCall (VolStrike, mkVolStrike, unVolStrike)
 import SqrtGrid
   ( SqrtPriceX96(..)
   , Tick
