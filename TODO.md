@@ -27,6 +27,9 @@
 9. ~~**`Plotting/` package**~~ — `refactor` — [#7](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/7) / [#20](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/20)
    - `Plotting.PlotSqrt`, `Plotting.PlotInterest`, `Plotting.PlotUtils` (`src/Plotting/`)
 
+10. ~~**Commit / PR** scratchpad WIP~~ — `chore` — [#12](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/12) / [#13](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/13)
+   - Agent workflow docs + TODO↔issue map landed; product WIP followed on later PRs
+
 ---
 
 ## Open
@@ -45,7 +48,7 @@ We execute **least semantically impactful first**: renames and package moves bef
 | ~~2~~ | ~~**13**~~ | ~~Move `TargetVega` out of `Payoffs/`~~ — **done** |
 | ~~3~~ | ~~**10**~~ | ~~`Panoptic/` package move (`NId`, `MintPlan`)~~ — **done** |
 | ~~4~~ | ~~**11**~~ | ~~`Plotting/` package move~~ — **done** |
-| 5 | **16** | Chore: land/PR scratchpad WIP so trees stay clean |
+| ~~5~~ | ~~**16**~~ | ~~Chore: land/PR scratchpad WIP~~ — **done** |
 | 6 | **8** | `MarkUpStructure` / `FeeStructure` — **refactor** of markup bag API (no new return law) |
 | 7 | **15** | Docs brainstorm (density → `optionRatio`) — no code semantics |
 | 8 | **14** | Chunk × density EVM mul — local numeric feat |
@@ -68,7 +71,6 @@ Later (after **19**+**21**, not numbered yet): compose \(r_{\Delta Q}^{e}\); wir
 | 9 | `feat` | [#5](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/5) | [#18](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/18) | open | 9 |
 | 14 | `feat` | [#10](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/10) | [#23](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/23) | open | 8 |
 | 15 | `docs` | [#11](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/11) | [#24](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/24) | open | 7 |
-| 16 | `chore` | [#12](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/12) | [#13](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/13) | open | 5 |
 | 17 | `feat` | — | — | open (no GitHub issue yet) | 10 |
 | 18 | `feat` | — | — | open (no GitHub issue yet) | 11 |
 | 19 | `feat` | — | — | open (no GitHub issue yet) | 12 |
@@ -145,7 +147,3 @@ Later (not opened yet): compose \(r_{\Delta Q}^{e}\) from #19+#21; wire into par
 14. **Chunk × density EVM mul** — `feat` — [#10](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/10) (exec 8)
 
 15. **Density → Panoptic `optionRatio` brainstorm** — `docs` — [#11](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/11) (exec 7)
-
-### Hygiene — exec 5
-
-16. **Commit / PR** scratchpad WIP — `chore` — [#12](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/12) (exec 5)
