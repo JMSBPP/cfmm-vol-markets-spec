@@ -18,6 +18,9 @@
 6. ~~**Rename** `CPMMPosition` → `CLMMPosition`~~ — `refactor` — [#8](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/8) / [#21](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/21)
    - Module `Payoffs.CLMMPosition`; `clmmEtaLayout`; plot series labels
 
+7. ~~**Move** `TargetVega` out of `Payoffs/`~~ — `refactor` — [#9](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/9) / [#22](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/22)
+   - Top-level module `TargetVega` (`src/TargetVega.hs`)
+
 ---
 
 ## Open
@@ -33,7 +36,7 @@ We execute **least semantically impactful first**: renames and package moves bef
 | Exec | TODO | Why this wave |
 |------|------|----------------|
 | ~~1~~ | ~~**12**~~ | ~~Rename `CPMMPosition` → `CLMMPosition`~~ — **done** |
-| 2 | **13** | Move `TargetVega` out of `Payoffs/` — tree only |
+| ~~2~~ | ~~**13**~~ | ~~Move `TargetVega` out of `Payoffs/`~~ — **done** |
 | 3 | **10** | `Panoptic/` package move (`NId`, `MintPlan`) — tree only |
 | 4 | **11** | `Plotting/` package move — tree only |
 | 5 | **16** | Chore: land/PR scratchpad WIP so trees stay clean |
@@ -59,7 +62,6 @@ Later (after **19**+**21**, not numbered yet): compose \(r_{\Delta Q}^{e}\); wir
 | 9 | `feat` | [#5](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/5) | [#18](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/18) | open | 9 |
 | 10 | `refactor` | [#6](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/6) | [#19](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/19) | open | 3 |
 | 11 | `refactor` | [#7](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/7) | [#20](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/20) | open | 4 |
-| 13 | `refactor` | [#9](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/9) | [#22](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/22) | open | 2 |
 | 14 | `feat` | [#10](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/10) | [#23](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/23) | open | 8 |
 | 15 | `docs` | [#11](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/11) | [#24](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/24) | open | 7 |
 | 16 | `chore` | [#12](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/12) | [#13](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/13) | open | 5 |
@@ -134,13 +136,11 @@ r_{\Delta Q_{\mathrm{trans}}}^{e}
 
 Later (not opened yet): compose \(r_{\Delta Q}^{e}\) from #19+#21; wire into parametrized \(\pi^{\Delta Q}/\pi^{\phi}\); then unblock #6.
 
-### Package / tree moves (README `//` notes; not done) — exec 2–4
+### Package / tree moves (README `//` notes; not done) — exec 3–4
 
 10. **`Panoptic/` package** — `refactor` — [#6](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/6) — move `NId.hs`, `MintPlan.hs` out of `Payoffs/` (exec 3)
 
 11. **`Plotting/` package** — `refactor` — [#7](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/7) — move `PlotSqrt.hs`, `PlotInterest.hs`, `PlotUtils.hs` (exec 4)
-
-13. **`TargetVega`** — `refactor` — [#9](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/9) — move out of `Payoffs/` (exec 2)
 
 ### Liquidity / density (pre-existing) — exec 7–8
 

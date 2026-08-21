@@ -21,7 +21,7 @@ module Payoffs.NId
 import Data.Bits (shiftL, shiftR, (.&.))
 import Liquidity.LiquidityChunk (createChunk)
 import Payoffs.MintPlan (MintPlan(..), PanopticTokenId(..), fourLegNumLegs)
-import Payoffs.TargetVega (mkTargetVega, unTargetVega)
+import TargetVega (mkTargetVega, unTargetVega)
 import Pricing.PriceDeformation (uniswapMaxTick, uniswapMinTick)
 import SqrtGrid (unTickSpacing)
 import Volatility.VolOrder
@@ -55,7 +55,7 @@ scaleByNId (NId n) x = (2 * x) `div` toInteger n
 -- Hop B: EVM/Panoptic tokenId + SFPM positionSize. ΔQ_v* is not in the id.
 -- Layout matches plank PanopticTokenId.plk (TokenId.sol offsets).
 -- PanopticTokenId / MintPlan / fourLegNumLegs live in Payoffs.MintPlan
--- (split out so Payoffs.TargetVega, needed by Volatility.VolOrder's
+-- (split out so TargetVega, needed by Volatility.VolOrder's
 -- targetVega field, does not import this module — avoids a
 -- NId → VolOrder → TargetVega → NId cycle).
 
