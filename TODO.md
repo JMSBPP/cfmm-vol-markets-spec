@@ -12,6 +12,9 @@
 
 4. ~~`ExpectedReturn` + \(\pi^{\Delta Q}(r^e)\) mixture~~ — `ReturnFromKappa` (FeeStructure / FeePips); `runSwapAlongTenorMixture`
 
+5. ~~**Parametrized fee capture** \(\pi^\phi(r_\phi^e)\)~~ — `feat` — [#1](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/1) / [#14](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/14)
+   - `feeRevenueExpectedReturn` (\(r_\phi^e=\phi\cdot r^e\)); `runFeeCaptureAlongTenorMixture`
+
 ---
 
 ## Open
@@ -20,7 +23,6 @@ Workflow: see `AGENTS.md` / `CLAUDE.md` / `QWEN.md` (classify → branch → iss
 
 | TODO | Type | Issue | PR |
 |------|------|-------|-----|
-| 5 | `feat` | [#1](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/1) | [#14](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/14) |
 | 6 | `feat` | [#2](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/2) | [#15](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/15) |
 | 7 | `feat` | [#3](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/3) | [#16](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/16) |
 | 8 | `feat` | [#4](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/4) | [#17](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/17) |
@@ -34,11 +36,6 @@ Workflow: see `AGENTS.md` / `CLAUDE.md` / `QWEN.md` (classify → branch → iss
 | 16 | `chore` | [#12](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/12) | [#13](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/13) |
 
 ### Pricing / returns / fee-revenue
-
-5. **Parametrized fee capture** \(\pi^\phi(r_\phi^e)\) — `feat` — [#1](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/1)
-   - \((1-r_\phi^e)\,\phi_X P + r_\phi^e\,\phi_M I\)
-   - Construct \(r_\phi^e = \phi\cdot r^e\) with \(\phi=\phi_M\otimes\phi_X\) (`toFeePips`)
-   - Wire like Swap mixture; keep base `TransactionalFeeCapture` as \(r_\phi^e\)-free legs
 
 6. **`ExpectedReturn` composition / nonzero \(r(0)\)** — `feat` — [#2](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/2)
    - `ExpectedReturn <>` Realized (and other expecteds) → that sum *is* future \(r(0)\) before κ-scaling
