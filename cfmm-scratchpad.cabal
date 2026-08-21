@@ -51,10 +51,12 @@ library
       Payoffs.Savings
       Payoffs.Swap
       Payoffs.TargetVega
+      Payoffs.TransactionalFeeCapture
       Payoffs.VariancePortfolio
       Payoffs.VolatilityCall
       PlotUtils
       Pricing.AdaptiveStremia
+      Pricing.ExpectedReturn
       Pricing.FeeStructure
       Pricing.InterestPriceMap
       Pricing.InterestSqrt

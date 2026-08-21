@@ -1,17 +1,20 @@
 {-# LANGUAGE PatternSynonyms #-}
 
 module Trading.KappaCoordinate
-  ( KappaPips(..)
-  , mkKappaPips
-  , unKappaPips
+  ( KappaTick(..)
+  , mkKappaTick
+  , unKappaTick
+  , KappaSpacing(..)
+  , mkKappaSpacing
+  , defaultKappaSpacing
+  , unKappaSpacing
+  , kappaFromTick
+  , snapKappaTick
   , KappaCoordinate(..)
-  , kappaMax
-  , quantizeKappaPips
   , kappaAt
   ) where
 
 import Data.Maybe (fromMaybe)
-import Data.Word (Word8)
 
 import Liquidity.LiquidityChunk
   ( LiquidityChunk
@@ -24,45 +27,61 @@ import Pricing.PriceDeformation (EtaX96(..), pattern BASE_ETA)
 import SqrtGrid (pattern Q96)
 
 -- ---------------------------------------------------------------------------
--- VISIBLE NOTE — κ encoding upgrade (do not bury / do not delete)
+-- VISIBLE NOTE — κ encoding C (do not bury / do not delete)
 --
--- THIS CYCLE (B): KappaPips = 8-bit quantization of a real κ on [0, κ_max].
---   κ_max = 1; pips = round(κ / κ_max * 255) clipped to 0..255.
+-- THIS CYCLE (C): KappaTick = discrete rung index j on uniform lattice
+--   κ_j = j/N over [0,1], N = 255 (defaultKappaSpacing).
+--   Snap: round(κ_real * N) clipped to 0..N. On-chain uint8 = index, not
+--   a compressed-float costume.
 --
--- UPGRADE PATH (C): discrete κ *rung index* (tick analogue) — stable discrete
---   identity, composable for later r(κ; φ_X, φ_M) / fee-tree walks; on-chain
---   uint8 as index, not a compressed float costume.
+-- B RETIRED: KappaPips / quantizeKappaPips (Word8 of real κ) removed.
 --
--- When κ becomes a first-class atlas axis next to λ / ξ, promote B → C.
--- Keep Def 45 high-res compute, then snap to a rung.
--- Also mirrored in scratchpad/README.md and the Def 45 design spec.
+-- Def 45 unchanged: high-res κ_real, then snapKappaTick.
+-- Deferred: π^φ(r_φ^e), ExpectedReturn <> Realized (future r(0)).
+-- r(κ; φ_X, φ_M) / κ·φ shipped in Pricing.ExpectedReturn.
+-- Also mirrored in scratchpad/README.md and the C design spec.
 -- ---------------------------------------------------------------------------
 
-newtype KappaPips = KappaPips Word8
+newtype KappaSpacing = KappaSpacing Int
   deriving (Show, Eq, Ord)
 
-mkKappaPips :: Integer -> KappaPips
-mkKappaPips p
-  | p < 0 || p > 255 =
-      error "Trading.KappaCoordinate.mkKappaPips: KappaPips must be in 0..255"
-  | otherwise = KappaPips (fromIntegral p)
+mkKappaSpacing :: Int -> KappaSpacing
+mkKappaSpacing n
+  | n /= 255 =
+      error "Trading.KappaCoordinate.mkKappaSpacing: only N=255 this cycle"
+  | otherwise = KappaSpacing n
 
-unKappaPips :: KappaPips -> Word8
-unKappaPips (KappaPips w) = w
+defaultKappaSpacing :: KappaSpacing
+defaultKappaSpacing = KappaSpacing 255
 
-newtype KappaCoordinate = KappaCoordinate KappaPips
-  deriving (Show, Eq)
+unKappaSpacing :: KappaSpacing -> Int
+unKappaSpacing (KappaSpacing n) = n
 
--- Spec pin: cover geometric trading bases for Δ ≥ 1 at η = 1/2.
-kappaMax :: Double
-kappaMax = 1
+newtype KappaTick = KappaTick Int
+  deriving (Show, Eq, Ord)
 
-quantizeKappaPips :: Double -> KappaPips
-quantizeKappaPips k =
+mkKappaTick :: KappaSpacing -> Integer -> KappaTick
+mkKappaTick (KappaSpacing n) j
+  | j < 0 || j > fromIntegral n =
+      error "Trading.KappaCoordinate.mkKappaTick: KappaTick must be in 0..N"
+  | otherwise = KappaTick (fromIntegral j)
+
+unKappaTick :: KappaTick -> Int
+unKappaTick (KappaTick j) = j
+
+kappaFromTick :: KappaSpacing -> KappaTick -> Double
+kappaFromTick (KappaSpacing n) (KappaTick j) =
+  fromIntegral j / fromIntegral n
+
+snapKappaTick :: KappaSpacing -> Double -> KappaTick
+snapKappaTick sp@(KappaSpacing n) k =
   let
-    x = round (k / kappaMax * 255) :: Integer
+    j = round (k * fromIntegral n) :: Integer
   in
-    mkKappaPips (max 0 (min 255 x))
+    mkKappaTick sp (max 0 (min (fromIntegral n) j))
+
+newtype KappaCoordinate = KappaCoordinate KappaTick
+  deriving (Show, Eq)
 
 etaToDouble :: EtaX96 -> Double
 etaToDouble (EtaX96 e) = fromIntegral e / fromIntegral Q96
@@ -85,4 +104,4 @@ kappaAt mEta xi ch =
         then error "Trading.KappaCoordinate.kappaAt: invalid L, Δ, or η"
         else 1 / (2 * etaR * fromIntegral delta)
   in
-    KappaCoordinate (quantizeKappaPips kappaReal)
+    KappaCoordinate (snapKappaTick defaultKappaSpacing kappaReal)

@@ -121,6 +121,11 @@ import Pricing.FeeStructure
   , mkFeeStructure
   , toFeePips
   )
+import Pricing.ExpectedReturn
+  ( ExpectedReturn(..)
+  , ReturnFromKappa(..)
+  , unExpectedReturn
+  )
 import Pricing.InterestPriceMap
   ( mkInterestPriceMap
   , priceTickAt
@@ -129,10 +134,22 @@ import Payoffs.Savings (savings, savingsPayoff)
 import Payoffs.Swap
   ( Leg(..)
   , Swap(..)
+  , expectedReturnWeightX96
   , runSwapAlongTenor
+  , runSwapAlongTenorMixture
   , scalePayoffX96
   , survivalFactorX96
   , swapFromFeeStructure
+  , swapParameterized
+  )
+import Payoffs.TransactionalFeeCapture
+  ( TransactionalFeeCapture(..)
+  , assertAccountingIdentityWithSwap
+  , feeFactorX96
+  , payPartitionErrorX96
+  , recvPartitionErrorX96
+  , runFeeCaptureAlongTenor
+  , transactionalFeeCaptureFromFeeStructure
   )
 import Pricing.InterestSqrt
   ( InterestSqrtX96(..)
@@ -152,14 +169,16 @@ import Trading.Quote
   )
 import Trading.KappaCoordinate
   ( KappaCoordinate(..)
-  , KappaPips(..)
+  , KappaTick(..)
+  , defaultKappaSpacing
   , kappaAt
-  , kappaMax
-  , mkKappaPips
-  , quantizeKappaPips
-  , unKappaPips
+  , kappaFromTick
+  , mkKappaSpacing
+  , mkKappaTick
+  , snapKappaTick
+  , unKappaSpacing
+  , unKappaTick
   )
-import Data.Word (Word8)
 import SqrtGrid
   ( PayoffX96(..)
   , SqrtPriceX96(..)
@@ -1078,20 +1097,46 @@ main = do
     "tickLiquidityAt rejects interior tick"
     (tickLiquidityAt xiTL chTL (-15))
 
-  -- KappaPips / kappaAt (Def 45, encoding B)
-  assertEqual "kappaMax" 1 kappaMax
-  assertThrows "mkKappaPips (-1)" (mkKappaPips (-1))
-  assertThrows "mkKappaPips 256" (mkKappaPips 256)
-  assertEqual "mkKappaPips 255" (KappaPips 255) (mkKappaPips 255)
+  -- KappaTick / KappaSpacing (encoding C)
+  assertEqual "defaultKappaSpacing N" 255 (unKappaSpacing defaultKappaSpacing)
+  assertThrows "mkKappaSpacing 254" (mkKappaSpacing 254)
+  assertThrows "mkKappaSpacing 0" (mkKappaSpacing 0)
+  assertEqual
+    "mkKappaSpacing 255"
+    defaultKappaSpacing
+    (mkKappaSpacing 255)
+  let sp = defaultKappaSpacing
+  assertThrows "mkKappaTick (-1)" (mkKappaTick sp (-1))
+  assertThrows "mkKappaTick 256" (mkKappaTick sp 256)
+  assertEqual "mkKappaTick 0" (KappaTick 0) (mkKappaTick sp 0)
+  assertEqual "mkKappaTick 255" (KappaTick 255) (mkKappaTick sp 255)
+  assertEqual "kappaFromTick 0" 0 (kappaFromTick sp (KappaTick 0))
+  assertEqual "kappaFromTick N" 1 (kappaFromTick sp (KappaTick 255))
+  assertEqual
+    "kappaFromTick 26"
+    (26 / 255)
+    (kappaFromTick sp (KappaTick 26))
+  assertEqual
+    "snap 0.1 → 26"
+    (KappaTick 26)
+    (snapKappaTick sp 0.1)
+  assertEqual
+    "snap below 0 → 0"
+    (KappaTick 0)
+    (snapKappaTick sp (-1))
+  assertEqual
+    "snap above 1 → N"
+    (KappaTick 255)
+    (snapKappaTick sp 2)
   let
     xiK = xiStar (mkTickSpacing 10)
     chK = createChunk (-20) (-10) Q96
-    expectedK = quantizeKappaPips (1 / 10)
+    expectedTick = snapKappaTick defaultKappaSpacing (1 / 10)
     KappaCoordinate gotNothing = kappaAt Nothing xiK chK
     KappaCoordinate gotJust = kappaAt (Just BASE_ETA) xiK chK
-  assertEqual "kappaAt Nothing ≡ trading base 1/10 pips" expectedK gotNothing
+  assertEqual "kappaAt Nothing ≡ snap trading base 1/10" expectedTick gotNothing
   assertEqual "kappaAt Just BASE_ETA ≡ Nothing" gotNothing gotJust
-  assertEqual "expected pips Word8" (26 :: Word8) (unKappaPips expectedK)
+  assertEqual "expected KappaTick 26" 26 (unKappaTick expectedTick)
 
   -- FeePips Monoid (survival stack)
   let
@@ -1126,6 +1171,39 @@ main = do
     "toFeePips ≡ compositeFeePips M X"
     (compositeFeePips (mkFeePips 3000) (mkFeePips 100))
     (toFeePips fs)
+
+  -- ExpectedReturn / ReturnFromKappa
+  let
+    φXer = mkFeePips 100
+    φMer = mkFeePips 3000
+    fser = mkFeeStructure φXer φMer
+    nEr = unKappaSpacing defaultKappaSpacing
+    coord0 = KappaCoordinate (KappaTick 0)
+    coordN = KappaCoordinate (KappaTick nEr)
+    coordMid = KappaCoordinate (KappaTick (nEr `div` 2))
+  assertEqual
+    "returnFromKappa FeeStructure j=0 → φ_X"
+    φXer
+    (unExpectedReturn (returnFromKappa coord0 fser))
+  assertEqual
+    "returnFromKappa FeeStructure j=N → φ_M"
+    φMer
+    (unExpectedReturn (returnFromKappa coordN fser))
+  assertEqual
+    "returnFromKappa FeeStructure j=N/2"
+    (mkFeePips $
+      ((fromIntegral (nEr - nEr `div` 2) * 100)
+        + (fromIntegral (nEr `div` 2) * 3000))
+        `div` fromIntegral nEr)
+    (unExpectedReturn (returnFromKappa coordMid fser))
+  assertEqual
+    "returnFromKappa FeePips j=0 → 0"
+    (mkFeePips 0)
+    (unExpectedReturn (returnFromKappa coord0 φMer))
+  assertEqual
+    "returnFromKappa FeePips j=N → φ"
+    φMer
+    (unExpectedReturn (returnFromKappa coordN φMer))
 
   -- InterestSqrtX96 / InterestTick (λ^{t/2} twin of SqrtPriceX96)
   assertEqual "unInterestTick" 10 (unInterestTick (mkInterestTick 10))
@@ -1215,3 +1293,92 @@ main = do
     "alongTenor t=0 ≡ recv − pay"
     expectedNet
     (runSwapAlongTenor map0 sw t0Net)
+
+  let
+    reZero = ExpectedReturn (mkFeePips 0)
+    reFull = ExpectedReturn (mkFeePips feePipsScale)
+  assertEqual "weight r=0 → 0" 0 (expectedReturnWeightX96 reZero)
+  assertEqual
+    "weight full scale → Q96"
+    Q96
+    (expectedReturnWeightX96 reFull)
+  let
+    PayoffX96 yMix0 =
+      runSwapAlongTenorMixture map0 reZero (swapFromFeeStructure fs) t0Net
+    PayoffX96 ypOnly =
+      Payoff.runPayoff payPf (sqrtPriceX96 (priceTickAt map0 t0Net))
+  assertEqual "mixture w=0 ≡ Y_pay" ypOnly yMix0
+  let
+    PayoffX96 yMix1 =
+      runSwapAlongTenorMixture map0 reFull (swapFromFeeStructure fs) t0Net
+    PayoffX96 yrOnly =
+      Payoff.runPayoff recvPf (interestSqrtX96 t0Net)
+  assertEqual "mixture w=1 ≡ Y_recv" yrOnly yMix1
+  let
+    Swap (Leg pA) (Leg rA) =
+      swapParameterized (KappaCoordinate (KappaTick 0)) fs
+    Swap (Leg pB) (Leg rB) = swapFromFeeStructure fs
+  assertEqual
+    "swapParameterized pay @0 ≡ swapFromFeeStructure"
+    (Payoff.runPayoff pB s0Price)
+    (Payoff.runPayoff pA s0Price)
+  assertEqual
+    "swapParameterized recv @0 ≡ swapFromFeeStructure"
+    (Payoff.runPayoff rB sr0)
+    (Payoff.runPayoff rA sr0)
+
+  -- TransactionalFeeCapture (π^φ)
+  assertEqual "feeFactorX96 0" 0 (feeFactorX96 (mkFeePips 0))
+  let
+    fs0 = mkFeeStructure (mkFeePips 0) (mkFeePips 0)
+    fc0 = transactionalFeeCaptureFromFeeStructure fs0
+    TransactionalFeeCapture (Leg capPay0) (Leg capRecv0) = fc0
+    s0fc = sqrtPriceX96 0
+    sr0fc = interestSqrtX96 (mkInterestTick 0)
+  assertEqual
+    "capture φ=0 pay ≡ 0"
+    (PayoffX96 0)
+    (Payoff.runPayoff capPay0 s0fc)
+  assertEqual
+    "capture φ=0 recv ≡ 0"
+    (PayoffX96 0)
+    (Payoff.runPayoff capRecv0 sr0fc)
+  assertEqual
+    "pay partition φ=0"
+    0
+    (payPartitionErrorX96 fs0 s0fc)
+  assertEqual
+    "recv partition φ=0"
+    0
+    (recvPartitionErrorX96 fs0 sr0fc)
+
+  let
+    fsCap = mkFeeStructure (mkFeePips 100) (mkFeePips 3000)
+    sCap = sqrtPriceX96 0
+    srCap = interestSqrtX96 (mkInterestTick 0)
+  assertEqual
+    "pay partition ≤1"
+    True
+    (payPartitionErrorX96 fsCap sCap <= 1)
+  assertEqual
+    "recv partition ≤1"
+    True
+    (recvPartitionErrorX96 fsCap srCap <= 1)
+  assertEqual
+    "assertAccountingIdentityWithSwap"
+    ()
+    (assertAccountingIdentityWithSwap fsCap sCap srCap)
+
+  let
+    fcCap = transactionalFeeCaptureFromFeeStructure fsCap
+    mapCap = mkInterestPriceMap 1 0
+    t0Cap = mkInterestTick 0
+    TransactionalFeeCapture (Leg capPay) (Leg capRecv) = fcCap
+    PayoffX96 ypCap =
+      Payoff.runPayoff capPay (sqrtPriceX96 (priceTickAt mapCap t0Cap))
+    PayoffX96 yrCap =
+      Payoff.runPayoff capRecv (interestSqrtX96 t0Cap)
+  assertEqual
+    "fee capture along tenor ≡ sum"
+    (PayoffX96 (ypCap + yrCap))
+    (runFeeCaptureAlongTenor mapCap fcCap t0Cap)

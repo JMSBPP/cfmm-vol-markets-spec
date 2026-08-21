@@ -37,6 +37,11 @@ import Payoffs.Swap
   , runSwapAlongTenor
   , swapFromFeeStructure
   )
+import Payoffs.TransactionalFeeCapture
+  ( TransactionalFeeCapture(..)
+  , runFeeCaptureAlongTenor
+  , transactionalFeeCaptureFromFeeStructure
+  )
 import Pricing.FeeStructure (mkFeeStructure)
 import Pricing.InterestPriceMap (mkInterestPriceMap)
 import Pricing.InterestSqrt (interestSqrtX96, mkInterestTick)
@@ -204,6 +209,42 @@ main = do
     tLo
     tHi
     [runSwapAlongTenor ipmDemo swDemo]
+
+  let
+    fcDemo = transactionalFeeCaptureFromFeeStructure fsDemo
+    TransactionalFeeCapture (Leg capPayPf) (Leg capRecvPf) = fcDemo
+  plotSqrtFunction
+    "outputs/Payoffs/fee-capture-pay-vs-sqrtPriceX96.png"
+    config
+      { plotTitle = "Fee capture pay: linear×φ_X (φ_X=100)"
+      , yAxisTitle = "PayoffX96"
+      }
+    PayoffY
+    [Payoff.runPayoff capPayPf]
+  plotInterestFunction
+    "outputs/Payoffs/fee-capture-receive-vs-interestSqrtX96.png"
+    InterestPlot
+      { plotTitle = "Fee capture receive: savings×φ_M (φ_M=3000)"
+      , xAxisTitle = "interestSqrtX96"
+      , yAxisTitle = "PayoffX96"
+      , xMin = interestSqrtX96 tLo
+      , xMax = interestSqrtX96 tHi
+      }
+    PayoffY
+    [Payoff.runPayoff capRecvPf]
+  plotInterestTickFunction
+    "outputs/Payoffs/fee-capture-sum-vs-interestSqrtX96.png"
+    InterestPlot
+      { plotTitle = "Fee capture sum: pay+recv along i=k·t+i₀ (k=1,i₀=0)"
+      , xAxisTitle = "interestSqrtX96"
+      , yAxisTitle = "PayoffX96"
+      , xMin = interestSqrtX96 tLo
+      , xMax = interestSqrtX96 tHi
+      }
+    PayoffY
+    tLo
+    tHi
+    [runFeeCaptureAlongTenor ipmDemo fcDemo]
 
   writePanel
     "outputs/Pricing/panel-deformation-cpmm.png"

@@ -92,33 +92,48 @@ Then the structure is now
 
 ```
 src/
-├── Payoffs/
+├── Payoffs/  // payoffs and returns only (intended; some Panoptic/plotting still live here)
 │   ├── Payoff.hs
 │   ├── CoveredCall.hs
 │   ├── CashSecuredPut.hs
 │   ├── RangeAccrualNote.hs
-│   ├── CPMMPosition.hs
+│   ├── CPMMPosition.hs  // rename → CLMMPosition
 │   ├── VolatilityCall.hs
-│   ├── NId.hs
-│   ├── MintPlan.hs
+│   ├── NId.hs           // → Panoptic/ package
+│   ├── MintPlan.hs      // → Panoptic/ package
 │   ├── Forward.hs
 │   ├── Log.hs
 │   ├── Linear.hs
 │   ├── Return.hs
-│   ├── PlotSqrt.hs
+│   ├── Savings.hs
+│   ├── Swap.hs
+│   ├── TransactionalFeeCapture.hs
+│   ├── PlotSqrt.hs      // → Plotting/ package
+│   ├── PlotInterest.hs  // → Plotting/ package
 │   ├── VariancePortfolio.hs
-│   └── TargetVega.hs
+│   └── TargetVega.hs    // → outside Payoffs/
 ├── Pricing/
 │   ├── PriceDeformation.hs
-│   └── Stremia.hs
+│   ├── Stremia.hs
+│   ├── AdaptiveStremia.hs
+│   ├── FeeStructure.hs
+│   ├── ExpectedReturn.hs
+│   ├── InterestSqrt.hs
+│   └── InterestPriceMap.hs
 ├── Trading/
-│   └── PriceImpact.hs
+│   ├── PriceImpact.hs
+│   ├── Quote.hs
+│   └── KappaCoordinate.hs
 ├── Greeks/
 │   ├── Delta.hs
-│   └── Gamma.hs
+│   ├── Gamma.hs
+│   ├── Theta.hs
+│   └── Vega.hs
 ├── Liquidity/
 │   ├── LiquidityChunk.hs
-│   └── LiquidityGrid.hs
+│   ├── LiquidityGrid.hs
+│   ├── LiquidityDensity.hs
+│   └── TickLiquidity.hs
 ├── Volatility/
 │   ├── VolOrder.hs
 │   ├── VolatilityGrid.hs
@@ -129,10 +144,13 @@ src/
 ├── SqrtGrid.hs
 ├── StrikeX96.hs
 ├── OptionRatio.hs
+├── PlotUtils.hs         // → Plotting/ package
 └── State.hs
 
 outputs/{Pricing,Payoffs,Payoffs/Returns,Greeks,Liquidity,TickPath,Volatility}/
 ```
+
+> Tree lists **current** modules; `//` notes are **still-open** package moves (structure not reorganized yet).
 
 - `Payoffs.Linear.linearPayoff`: standardized linear \(P=s^2\) as `PayoffX96`.
 - `Payoffs.Return.ReturnPips` / `mkReturn`: ppm return of one level vs another (`returnPipsScale = 10^6`).
@@ -142,6 +160,7 @@ outputs/{Pricing,Payoffs,Payoffs/Returns,Greeks,Liquidity,TickPath,Volatility}/
 - `Payoff u`: parametric underlying (`SqrtPriceX96` | `InterestSqrtX96`, …)
 - `Payoffs.Savings.savingsPayoff` / `savings`: \(Y=s_r^{2}=\lambda^{t}\); plot `outputs/Payoffs/savings-vs-interestSqrtX96.png`
 - `Payoffs.Swap`: Pay/Receive phantoms; `swapFromFeeStructure` → pay Linear×(1-φ_X) vs sqrt, receive Savings×(1-φ_M) vs interest; net along \(i=kt+i_0\) (`outputs/Payoffs/swap-*-vs-*.png`, `swap-net-vs-interestSqrtX96.png`)
+- `Payoffs.TransactionalFeeCapture`: \(\pi^\phi=\phi_X P+\phi_M I\); sum along tenor; identity with Swap; plots `fee-capture-*-vs-*.png`
 - `Pricing.InterestPriceMap`: \(i=k t+i_0\) (caller `i_0`, default `k=1`)
 - `LiquidityGrid`: \(\xi\) is the liquidity base (like \(\lambda\) for price). Canonical \(Y\) is Bunni `uint256 liquidityDensityX96` (Q96), the Haskell type `LiquidityDensityX96`. \(\iota\) is ladder length, not \(\eta\).
 - `VolatilityGrid`: \(\Gamma_{\varphi}(i)\) coordinate. Canonical field \(\pi_{\sigma}\) is unit-notional `VolatilityCall` on that X.
@@ -227,11 +246,14 @@ Done: \(p_{1/2}^{(\mathrm{bid/ask})}\) —
 - `Pricing.FeeStructure`: bag `{φ_X, φ_M}`; `toFeePips` → \(1-(1-\phi_M)(1-\phi_X)\)
 - `FeePips` is a `Monoid` (survival stack \(1-(1-\phi_1)(1-\phi_2)\)); `FeeStructure` is not
 - AdaptiveStremia stub: \(\phi(\Theta_\phi;\sigma^2,\nu)\)
-- Done: Def 45 `kappaAt (Maybe EtaX96) XiX96 LiquidityChunk` → `KappaCoordinate` / `KappaPips`
+- Done: Def 45 `kappaAt (Maybe EtaX96) XiX96 LiquidityChunk` → `KappaCoordinate` / `KappaTick`
   - `TickLiquidity` at chunk lo/hi (geometric \(L\); \(L_{\mathrm{hi}}/L_{\mathrm{lo}}=\xi\))
   - `Nothing` η → `BASE_ETA` (½) ⇒ trading base \(1/\Delta\) on geometric book (Thm 43)
-  - **Encoding B (this cycle):** `KappaPips` = `Word8` quantize of real κ on \([0,\kappa_{\max}]\) with \(\kappa_{\max}=1\)
-  - **VISIBLE — upgrade path C:** κ as discrete **rung index** (tick analogue). Promote B→C when κ is a first-class atlas axis; do not treat B as final.
+  - **Encoding C (shipped):** `KappaTick` rung index on uniform lattice \(\kappa_j=j/N\), \(N=255\); Def 45 real κ then `snapKappaTick`
+  - **B retired:** `KappaPips` Word8 quantize removed
+- Done: `Pricing.ExpectedReturn` — `ReturnFromKappa` on `FeeStructure` \(((1-\kappa)\phi_X+\kappa\phi_M)\) and `FeePips` \((\kappa\phi,\,r(0)=0)\); `runSwapAlongTenorMixture` = \((1-w)Y_{\mathrm{pay}}+w Y_{\mathrm{recv}}\)
+- Done: `Payoffs.TransactionalFeeCapture` — \(\pi^\phi=\phi_X P+\phi_M I\); sum along tenor; accounting identity with Swap (capture+survival≡naked); plots `fee-capture-*-vs-*.png`
+- **VISIBLE:** future `ExpectedReturn <>` Realized/other expecteds supplies \(r(0)\); parametrized \(\pi^\phi(r_\phi^e)\) / \(r_\phi^e=\phi\cdot r^e\) still deferred
 - plot: `outputs/Payoffs/Returns/stremia-bid-ask.png` — mid + ask/bid `ReturnY`
 - plot: `outputs/Payoffs/Returns/stremia-fee-vs-return.png` — FeePips vs ReturnPips (ask / bid / \(r=\phi\))
 - plot: `outputs/Payoffs/Returns/stremia-fee-rate-vs-sqrt.png` — FeePips vs quote SqrtPriceX96 (bid left / ask right of mid)
@@ -267,7 +289,73 @@ parameter:
 		r (\kappa_{\varphi} ; \phi_X, \phi_M) = (1\, - \, \kappa_{\varphi}) \, \phi_M+ \kappa_{\varphi} \, \phi_X
 	\end{aligned}
 \]
-> **VISIBLE:** κ is aiming to be a coordinate discretization just as ticks (**upgrade path C**). This cycle ships **B** (`KappaPips` u8 quantize); promote to rung index when κ is a first-class atlas axis.
+> **VISIBLE:** κ is a coordinate discretization like ticks (**encoding C shipped**): `KappaTick` / `KappaSpacing` (\(N=255\)). B (`KappaPips`) retired. `ExpectedReturn` / \(\pi^{\Delta Q}(r^e)\) mixture and base `TransactionalFeeCapture` (\(\pi^\phi\)) shipped; next parametrized \(\pi^\phi(r_\phi^e)\) / return `<>`.
+
+Consider the expected return of the swap payoff :
+
+\[
+r^e_{\pi^{\Delta Q}}
+\equiv
+\mathbb E\left[m_{\Delta Q} \cdot \pi^{\Delta Q}\right],
+\qquad
+P_{1/2},I(r_{1/2})<0
+
+\]
+
+Such taht it parametrizes the swap payoff:
+
+\[
+
+\pi^{\Delta Q}(r^e_{\pi^{\Delta Q}};,\cdot)
+=
+
+(1-r^e_{\pi^{\Delta Q}}),
+P_{1/2}(1-\phi_X)
++
+r^e_{\pi^{\Delta Q}},
+I(r_{1/2})(1-\phi_M)
+
+\]
+
+Once a return is obtaianed from a payoff, we have that is parametrzied by the cruvature OR Ot moves on it. This calls for the kappa coordinate discretization as first class priority and such that the constructor of the payoff is parametric enough to allow for different constructions. In this case a return is obtaied from a FeeStructure:
+
+\[
+r(\kappa_\varphi;\phi_x,\phi_y)
+=
+
+(1-\kappa_\varphi)\phi_x
++
+\kappa_\varphi\phi_y
+\]
+
+Then the affine expression immediately below/right is (In this case the return takes a FeePips)
+
+\[
+r(\kappa_\varphi;\phi)
+=
+r(0)+\kappa_\varphi\phi
+\]
+
+Now consider the expected fee revenue return:
+
+\[
+r_\phi^e
+=
+\mathbb E\left[\phi\cdot\pi^{\Delta Q}\right] = \phi \cdot r^e_{\pi^{\Delta Q}}
+\]
+
+Considering \(\phi= \phi_M\otimes\phi_X\).
+
+Now we obtained the equivalent parametrized expected fee revenue as:
+
+\[
+\pi^\phi(r_\phi^e;,\cdot)
+=
+(1-r_\phi^e),
+\phi_X P_{1/2}
++
+r_\phi^e,\cdot \phi_M I(r_{1/2})
+\]
 
 
 We have:
