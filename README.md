@@ -374,7 +374,33 @@ r_{\Delta Q_{\mathrm{trans}}}^{e}
 \beta\cdot r_{\Delta Q_{\mathrm{arb}}}^{e}(\sigma_{IV},\sigma^{e})
 \]
 
-Measure: parametric \(m(\Delta Q)\), \(m(\phi,\Delta Q)\), \(m(\phi)\) via `DiscountFactor` / `Expectation` (TODO #17–#18). \(\sigma_{IV}\) stand-in: \(\sigma_{IV}(t)=2\phi\sqrt{V(t)/L(i(t))}\) (have `TickLiquidity`; no \(V(t)\) volume yet — u88 / ξ workaround TBD).
+Measure: parametric \(m(\Delta Q)\), \(m(\phi,\Delta Q)\), \(m(\phi)\) via `DiscountFactor` / `Expectation` (TODO #17–#18).
+
+#### Implied vol without nominal \(V(t)\) (TODO #20 — spec `docs/superpowers/specs/2026-08-22-scratchpad-sigma-iv-latent-u-design.md`)
+
+Kristensen form with latent ratio \(u(t):=\ln(V(t)/L(i(t)))\):
+
+\[
+\sigma_{\mathrm{IV}}(t)=2\phi\sqrt{V(t)/L(i(t))}=2\phi\,e^{u(t)/2}.
+\]
+
+Fair-fee **calibration pin** (equilibrium; `cfmm-discrete/STREAMING_PREMIUM.md` Eq 3.16):
+
+\[
+\sigma_X(t)=\sigma_{\mathrm{IV}}(t)
+\iff
+u^\star(t)=2\ln\!\Big(\frac{\sigma_X(t)}{2\phi(\,;\sigma_X(t))}\Big).
+\]
+
+Off-equilibrium \(V(t)\) is unobserved (rates-only model). Carry \(u(t)\); observables: `TickLiquidity` \(L\), fee \(\phi\), oracle \(\sigma_X\).
+
+| Tier | Update | Notes |
+|------|--------|-------|
+| T0 | \(u\leftarrow u^\star(\sigma_X,\phi)\) | default this cycle |
+| T1 | \(\Delta u\approx(\hat\epsilon_{V/L}-1)\,\Delta\ln L\) along tenor | \(\kappa_L\) liquidity growth — **not** fee-mix `KappaCoordinate` \(\kappa\) |
+| T2 | u88 encodes same \(u\) | optional EVM packing |
+
+Arb leg: \(r_{\Delta Q_{\mathrm{arb}}}^{e}=g(\sigma_{\mathrm{IV}}-\sigma^{e})\) with weight \(\beta\) (TODO #21–#22). See `cfmm-options/IMPLIED_VOLATILITY.md` for \(\Sigma=\sigma\times\sigma_{\mathrm{IV}}\).
 
 ### Flow decomposition and fee price
 
