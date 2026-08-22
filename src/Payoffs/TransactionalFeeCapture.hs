@@ -6,6 +6,7 @@
 module Payoffs.TransactionalFeeCapture
   ( TransactionalFeeCapture(..)
   , feeFactorX96
+  , transactionalFeeCaptureFromMarkUp
   , transactionalFeeCaptureFromFeeStructure
   , feeRevenueExpectedReturn
   , runFeeCaptureAlongTenor
@@ -24,10 +25,11 @@ import Payoffs.Swap
   , Swap(..)
   , expectedReturnWeightX96
   , scalePayoffX96
-  , swapFromFeeStructure
+  , swapFromMarkUp
   )
 import Pricing.ExpectedReturn (ExpectedReturn(..), unExpectedReturn)
 import Pricing.FeeStructure (FeeStructure(..), toFeePips)
+import Pricing.MarkUpStructure (TwoSidedMarkUp(..))
 import Pricing.InterestPriceMap (InterestPriceMap, priceTickAt)
 import Pricing.InterestSqrt
   ( InterestSqrtX96
@@ -54,15 +56,25 @@ data TransactionalFeeCapture (sPay :: Side) (sRecv :: Side) uPay uRecv where
 feeFactorX96 :: FeePips -> Integer
 feeFactorX96 (FeePips p) = (p * Q96) `div` feePipsScale
 
+transactionalFeeCaptureFromMarkUp
+  :: TwoSidedMarkUp a
+  => a
+  -> TransactionalFeeCapture 'Pay 'Receive SqrtPriceX96 InterestSqrtX96
+transactionalFeeCaptureFromMarkUp mu =
+  let
+    φX = markupPhiX mu
+    φM = markupPhiM mu
+  in
+    TransactionalFeeCapture
+      (Leg $ Payoff $ \s ->
+          scalePayoffX96 (feeFactorX96 φX) (linearPayoff s))
+      (Leg $ Payoff $ \sr ->
+          scalePayoffX96 (feeFactorX96 φM) (savingsPayoff sr))
+
 transactionalFeeCaptureFromFeeStructure
   :: FeeStructure
   -> TransactionalFeeCapture 'Pay 'Receive SqrtPriceX96 InterestSqrtX96
-transactionalFeeCaptureFromFeeStructure (FeeStructure φX φM) =
-  TransactionalFeeCapture
-    (Leg $ Payoff $ \s ->
-        scalePayoffX96 (feeFactorX96 φX) (linearPayoff s))
-    (Leg $ Payoff $ \sr ->
-        scalePayoffX96 (feeFactorX96 φM) (savingsPayoff sr))
+transactionalFeeCaptureFromFeeStructure = transactionalFeeCaptureFromMarkUp
 
 -- | \(r_\phi^e=\phi\cdot r^e\) with \(\phi=\phi_M\otimes\phi_X\).
 feeRevenueExpectedReturn
@@ -111,12 +123,12 @@ runFeeCaptureAlongTenorMixture ipm rPhiE (TransactionalFeeCapture (Leg pay) (Leg
     PayoffX96 y
 
 -- | \(|Y_{\mathrm{capture}}+Y_{\mathrm{swap}}-Y_{\mathrm{linear}}|\).
-payPartitionErrorX96 :: FeeStructure -> SqrtPriceX96 -> Integer
-payPartitionErrorX96 fs s =
+payPartitionErrorX96 :: TwoSidedMarkUp a => a -> SqrtPriceX96 -> Integer
+payPartitionErrorX96 mu s =
   let
     TransactionalFeeCapture (Leg cap) _ =
-      transactionalFeeCaptureFromFeeStructure fs
-    Swap (Leg surv) _ = swapFromFeeStructure fs
+      transactionalFeeCaptureFromMarkUp mu
+    Swap (Leg surv) _ = swapFromMarkUp mu
     PayoffX96 yc = runPayoff cap s
     PayoffX96 ys = runPayoff surv s
     PayoffX96 yn = linearPayoff s
@@ -124,12 +136,12 @@ payPartitionErrorX96 fs s =
     abs (yc + ys - yn)
 
 -- | \(|Y_{\mathrm{capture}}+Y_{\mathrm{swap}}-Y_{\mathrm{savings}}|\).
-recvPartitionErrorX96 :: FeeStructure -> InterestSqrtX96 -> Integer
-recvPartitionErrorX96 fs sr =
+recvPartitionErrorX96 :: TwoSidedMarkUp a => a -> InterestSqrtX96 -> Integer
+recvPartitionErrorX96 mu sr =
   let
     TransactionalFeeCapture _ (Leg cap) =
-      transactionalFeeCaptureFromFeeStructure fs
-    Swap _ (Leg surv) = swapFromFeeStructure fs
+      transactionalFeeCaptureFromMarkUp mu
+    Swap _ (Leg surv) = swapFromMarkUp mu
     PayoffX96 yc = runPayoff cap sr
     PayoffX96 ys = runPayoff surv sr
     PayoffX96 yn = savingsPayoff sr
@@ -137,12 +149,12 @@ recvPartitionErrorX96 fs sr =
     abs (yc + ys - yn)
 
 assertAccountingIdentityWithSwap
-  :: FeeStructure -> SqrtPriceX96 -> InterestSqrtX96 -> ()
-assertAccountingIdentityWithSwap fs s sr
-  | payPartitionErrorX96 fs s > 1 =
+  :: TwoSidedMarkUp a => a -> SqrtPriceX96 -> InterestSqrtX96 -> ()
+assertAccountingIdentityWithSwap mu s sr
+  | payPartitionErrorX96 mu s > 1 =
       error
         "Payoffs.TransactionalFeeCapture: pay partition vs Swap exceeds 1 X96"
-  | recvPartitionErrorX96 fs sr > 1 =
+  | recvPartitionErrorX96 mu sr > 1 =
       error
         "Payoffs.TransactionalFeeCapture: recv partition vs Swap exceeds 1 X96"
   | otherwise = ()

@@ -59,6 +59,7 @@ library
       Pricing.FeeStructure
       Pricing.InterestPriceMap
       Pricing.InterestSqrt
+      Pricing.MarkUpStructure
       Pricing.PriceDeformation
       Pricing.Stremia
       SqrtGrid

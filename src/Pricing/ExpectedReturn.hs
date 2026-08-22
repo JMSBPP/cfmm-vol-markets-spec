@@ -1,10 +1,14 @@
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 module Pricing.ExpectedReturn
   ( ExpectedReturn(..)
   , unExpectedReturn
   , ReturnFromKappa(..)
+  , returnFromKappaTwoSided
   ) where
 
-import Pricing.FeeStructure (FeeStructure(..))
+import Pricing.MarkUpStructure (TwoSidedMarkUp(..))
 import Pricing.Stremia (FeePips(..), mkFeePips, unFeePips)
 import Trading.KappaCoordinate
   ( KappaCoordinate(..)
@@ -34,19 +38,26 @@ kappaJN :: KappaCoordinate -> (Int, Int)
 kappaJN (KappaCoordinate tick) =
   (unKappaTick tick, unKappaSpacing defaultKappaSpacing)
 
-instance ReturnFromKappa FeeStructure where
-  returnFromKappa coord (FeeStructure φX φM) =
-    let
-      (j, n) = kappaJN coord
-      px = unFeePips φX
-      pm = unFeePips φM
-    in
-      ExpectedReturn $
-        mkFeePips $
-          ((fromIntegral (n - j) * px) + (fromIntegral j * pm))
-            `div` fromIntegral n
+returnFromKappaTwoSided
+  :: TwoSidedMarkUp a
+  => KappaCoordinate
+  -> a
+  -> ExpectedReturn
+returnFromKappaTwoSided coord mu =
+  let
+    (j, n) = kappaJN coord
+    px = unFeePips (markupPhiX mu)
+    pm = unFeePips (markupPhiM mu)
+  in
+    ExpectedReturn $
+      mkFeePips $
+        ((fromIntegral (n - j) * px) + (fromIntegral j * pm))
+          `div` fromIntegral n
 
-instance ReturnFromKappa FeePips where
+instance {-# OVERLAPPABLE #-} TwoSidedMarkUp a => ReturnFromKappa a where
+  returnFromKappa = returnFromKappaTwoSided
+
+instance {-# OVERLAPPING #-} ReturnFromKappa FeePips where
   returnFromKappa coord φ =
     let
       (j, n) = kappaJN coord
