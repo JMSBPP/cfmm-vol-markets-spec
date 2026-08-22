@@ -121,6 +121,10 @@ import Pricing.FeeStructure
   , mkFeeStructure
   , toFeePips
   )
+import Pricing.MarkUpStructure
+  ( MarkUpStructure(foldMarkUpFactor, markUpFactors)
+  , TwoSidedMarkUp(markupPhiX, markupPhiM)
+  )
 import Pricing.ExpectedReturn
   ( ExpectedReturn(..)
   , ReturnFromKappa(..)
@@ -1173,6 +1177,33 @@ main = do
     "toFeePips ≡ compositeFeePips M X"
     (compositeFeePips (mkFeePips 3000) (mkFeePips 100))
     (toFeePips fs)
+
+  -- MarkUpStructure product fold (distinct from survival toFeePips)
+  let
+    φXmu = mkFeePips 100
+    φMmu = mkFeePips 3000
+    fsMu = mkFeeStructure φXmu φMmu
+    prodManual =
+      FeeFactorX96 $
+        mulX96
+          (unFeeFactorX96 (feeFactor φXmu))
+          (unFeeFactorX96 (feeFactor φMmu))
+  assertEqual
+    "markUpFactors FeeStructure"
+    [φXmu, φMmu]
+    (markUpFactors fsMu)
+  assertEqual
+    "markupPhiX / markupPhiM"
+    (φXmu, φMmu)
+    (markupPhiX fsMu, markupPhiM fsMu)
+  assertEqual
+    "foldMarkUpFactor = ∏ feeFactor"
+    prodManual
+    (foldMarkUpFactor fsMu)
+  assertEqual
+    "foldMarkUpFactor ≠ toFeePips survival composite (non-degenerate)"
+    True
+    (toFeePips fsMu /= mkFeePips 0 && foldMarkUpFactor fsMu /= feeFactor (toFeePips fsMu))
 
   -- ExpectedReturn / ReturnFromKappa
   let

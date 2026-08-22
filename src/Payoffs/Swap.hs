@@ -10,6 +10,7 @@ module Payoffs.Swap
   , mkSwap
   , survivalFactorX96
   , scalePayoffX96
+  , swapFromMarkUp
   , swapFromFeeStructure
   , expectedReturnWeightX96
   , swapFromExpectedReturn
@@ -24,9 +25,10 @@ import Payoffs.Payoff (Payoff(..), subPayoff)
 import Payoffs.Savings (savingsPayoff)
 import Pricing.ExpectedReturn
   ( ExpectedReturn(..)
-  , ReturnFromKappa(..)
+  , returnFromKappaTwoSided
   )
-import Pricing.FeeStructure (FeeStructure(..))
+import Pricing.FeeStructure (FeeStructure)
+import Pricing.MarkUpStructure (TwoSidedMarkUp(..))
 import Pricing.InterestPriceMap (InterestPriceMap, priceTickAt)
 import Pricing.InterestSqrt
   ( InterestSqrtX96
@@ -70,15 +72,25 @@ scalePayoffX96 :: Integer -> PayoffX96 -> PayoffX96
 scalePayoffX96 f (PayoffX96 y) = PayoffX96 (mulX96 y f)
 
 -- | Pay = Linear×(1-φ_X); Receive = Savings×(1-φ_M).
+swapFromMarkUp
+  :: TwoSidedMarkUp a
+  => a
+  -> Swap 'Pay 'Receive SqrtPriceX96 InterestSqrtX96
+swapFromMarkUp mu =
+  let
+    φX = markupPhiX mu
+    φM = markupPhiM mu
+  in
+    mkSwap
+      (Payoff $ \s ->
+          scalePayoffX96 (survivalFactorX96 φX) (linearPayoff s))
+      (Payoff $ \sr ->
+          scalePayoffX96 (survivalFactorX96 φM) (savingsPayoff sr))
+
 swapFromFeeStructure
   :: FeeStructure
   -> Swap 'Pay 'Receive SqrtPriceX96 InterestSqrtX96
-swapFromFeeStructure (FeeStructure φX φM) =
-  mkSwap
-    (Payoff $ \s ->
-        scalePayoffX96 (survivalFactorX96 φX) (linearPayoff s))
-    (Payoff $ \sr ->
-        scalePayoffX96 (survivalFactorX96 φM) (savingsPayoff sr))
+swapFromFeeStructure = swapFromMarkUp
 
 -- | Mixture weight \(w\) as Q96 fraction from \(r^e\) pips.
 expectedReturnWeightX96 :: ExpectedReturn -> Integer
@@ -90,10 +102,11 @@ expectedReturnWeightX96 (ExpectedReturn φ) =
 
 -- | Same leg shapes as 'swapFromFeeStructure'; weight applied at mixture eval.
 swapFromExpectedReturn
-  :: ExpectedReturn
-  -> FeeStructure
+  :: TwoSidedMarkUp a
+  => ExpectedReturn
+  -> a
   -> Swap 'Pay 'Receive SqrtPriceX96 InterestSqrtX96
-swapFromExpectedReturn _re fs = swapFromFeeStructure fs
+swapFromExpectedReturn _re mu = swapFromMarkUp mu
 
 -- | Same-u net: \(Y_{\mathrm{recv}}-Y_{\mathrm{pay}}\).
 runSwapNet
@@ -134,8 +147,9 @@ runSwapAlongTenorMixture ipm re (Swap (Leg pay) (Leg recv)) t =
 
 -- | \(\kappa\) + FeeStructure → ExpectedReturn → same legs as fee-structure swap.
 swapParameterized
-  :: KappaCoordinate
-  -> FeeStructure
+  :: TwoSidedMarkUp a
+  => KappaCoordinate
+  -> a
   -> Swap 'Pay 'Receive SqrtPriceX96 InterestSqrtX96
-swapParameterized κ fs =
-  swapFromExpectedReturn (returnFromKappa κ fs) fs
+swapParameterized κ mu =
+  swapFromExpectedReturn (returnFromKappaTwoSided κ mu) mu
