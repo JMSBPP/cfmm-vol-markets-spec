@@ -41,6 +41,7 @@ Workflow: see `AGENTS.md` / `CLAUDE.md` / `QWEN.md` (classify → branch → iss
 | 19 | `feat` | — | — | open (no GitHub issue yet) |
 | 20 | `feat` | — | — | open (no GitHub issue yet) |
 | 21 | `docs`→`feat` | — | — | open (no GitHub issue yet) |
+| 22 | `docs` | [#28](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/28) | — | open |
 
 ### Pricing / returns / fee-revenue
 
@@ -94,10 +95,17 @@ r_{\Delta Q_{\mathrm{trans}}}^{e}
    - Have `TickLiquidity`; **no** \(V(t)\) volume yet — brainstorm: volume type, ξ/liquidity workaround, or fitted u88-dimensional parameter (\(88=24+64\))
    - No GitHub issue yet
 
-21. **Parametric \(r_{\Delta Q_{\mathrm{arb}}}^{e}(\sigma_{IV},\sigma^{e})\)** (+ scalar \(\beta\)) — `docs` then `feat`
+21. **Parametric \(r_{\Delta Q_{\mathrm{arb}}}^{e}(\sigma_{IV},\sigma^{e})\)** — `docs` then `feat`
    - Endogenous arb expected return; \(\sigma^{e}\) = private vol expectation
-   - Depends on #20; brainstorm functional form before implement
+   - Depends on #20 and **#22** (\(\beta\) meaning pinned); brainstorm functional form before implement
    - No GitHub issue yet
+
+22. **Understand \(\beta\) in the \(r_{\Delta Q}^{e}\) affine split** — `docs` — [#28](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/28)
+   - Canonical split (README): \(r_{\Delta Q}^{e}=r_{\Delta Q_{\mathrm{trans}}}^{e}+\beta\cdot r_{\Delta Q_{\mathrm{arb}}}^{e}(\sigma_{IV},\sigma^{e})\)
+   - **Disambiguate** \(\beta\) from other repo uses: CES \(\beta=\eta\) (CPMM elasticity), AdaptiveStremia/MEV \(\beta_j\) (logistic centers) — not the same symbol economically
+   - Brainstorm: what object is \(\beta\) (scalar weight? pool parameter? function of \(\kappa\)/\(\phi\)/liquidity?); units; bounds; who sets it; relation to measure \(m(\cdot)\) and \(\mathbb E[m\cdot\pi]\)
+   - Deliverable: short design note (spec in `docs/superpowers/specs/`) before #21 implement; may stay notes-only if no code twin warranted this cycle
+   - Prereq for composing full \(r_{\Delta Q}^{e}\) and unblocking #6
 
 Later (not opened yet): compose \(r_{\Delta Q}^{e}\) from #19+#21; wire into parametrized \(\pi^{\Delta Q}/\pi^{\phi}\); then unblock #6.
 
