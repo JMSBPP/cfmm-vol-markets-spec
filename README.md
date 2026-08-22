@@ -284,13 +284,16 @@ and realizations:
 	\end{aligned}
 \]
 
-Where \(\delta_{\text{trans}}\) is now pinned dimensionally as:
+Where \(\delta_{\text{trans}}\) is pinned as (spec `docs/superpowers/specs/2026-08-22-scratchpad-rarb-trans-flow-design.md`; TODO #23):
 
 \[
 	\begin{aligned}
-		\delta_{\text{trans}} (t)\, &\equiv \Big [ \frac{u(t)}{\pi_{\text{trans}}^{\Delta Q}}\Big]
+		\delta_{\text{trans}} (t)\, &\equiv \frac{\nu_{\text{trans}}(t)}{\pi_{\text{trans}}^{\Delta Q}(t)},
+		\qquad V(t)=L(i(t))\,e^{u(t)},\quad u=\ln(V/L)
 	\end{aligned}
 \]
+
+\(\nu_{\text{trans}}\) derived from `refs/volume_path.gms` (\(g=\nu_{\text{trans}}/V\)); \(\pi_{\text{trans}}^{\Delta Q}\) parametrized only by exogenous \(r_{\Delta Q_{\mathrm{trans}}}^{e}\).
 
 
 
