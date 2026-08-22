@@ -42,6 +42,7 @@ Workflow: see `AGENTS.md` / `CLAUDE.md` / `QWEN.md` (classify → branch → iss
 | 20 | `feat` | — | — | open (no GitHub issue yet) |
 | 21 | `docs`→`feat` | [#31](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/31) | — | open |
 | 22 | `docs` | [#28](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/28) | — | open |
+| 23 | `feat` | [#34](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/34) | — | open |
 
 ### Pricing / returns / fee-revenue
 
@@ -108,6 +109,14 @@ r_{\Delta Q_{\mathrm{trans}}}^{e}
    - Brainstorm: what object is \(\beta\) (scalar weight? pool parameter? function of \(\kappa\)/\(\phi\)/liquidity?); units; bounds; who sets it; relation to measure \(m(\cdot)\) and \(\mathbb E[m\cdot\pi]\)
    - Deliverable: short design note (spec in `docs/superpowers/specs/`) before #21 implement; may stay notes-only if no code twin warranted this cycle
    - Prereq for composing full \(r_{\Delta Q}^{e}\) and unblocking #6
+
+23. **\(\nu_{\mathrm{trans}}\) from `volume_path.gms` (prover-native \(u\leftrightarrow\nu\))** — `feat` — [#34](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/34)
+   - Spec: `docs/superpowers/specs/2026-08-22-scratchpad-rarb-trans-flow-design.md` §3 (option **B** approved)
+   - Shock: \(V=\bar L e^u\), \(\delta^\*\) → `volTgtWad`, `txlVolumeRate`; \(u=\ln(V/\bar L)=\ln\kappa\) at prover boundary
+   - Derive \(\nu_{\mathrm{trans}}=\sum\sqrt{\bar p|\Delta Q_X\Delta Q_M|}\) from JSON `dQx`/`dQM`; \(g=\nu_{\mathrm{trans}}/V\)
+   - Golden table \(g(\delta^\*,\kappa,\bar\phi,\ldots)\) from GAMS grid (`make test-gams`); option A (exogenous \(\nu\)) **pre-prover stub only**
+   - Prereq for #7 \(\delta_{\mathrm{trans}}=\nu_{\mathrm{trans}}/\pi_{\mathrm{trans}}^{\Delta Q}\) beyond stub; complements RARB Slice 1 (#19 trans tag)
+   - Reads: `refs/volume_path.gms`, `refs/VOLUME_PATH.md`, `refs/MEV_TAX_MODEL_ONE_NOTES.md`
 
 Later (not opened yet): compose \(r_{\Delta Q}^{e}\) from #19+#21; wire into parametrized \(\pi^{\Delta Q}/\pi^{\phi}\); then unblock #6.
 
