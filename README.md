@@ -119,6 +119,7 @@ src/
 │   ├── Stremia.hs
 │   ├── AdaptiveStremia.hs
 │   ├── FeeStructure.hs
+│   ├── MarkUpStructure.hs
 │   ├── ExpectedReturn.hs
 │   ├── DiscountFactor.hs   // planned (TODO #17): parametric m(·)
 │   ├── InterestSqrt.hs
@@ -264,9 +265,9 @@ Adaptive markup (stub): \(\phi(\Theta_\phi;\sigma^2,\nu)\) in `AdaptiveStremia`.
 \phi \equiv 1-(1-\phi_M)(1-\phi_X)
 \]
 
-- `compositeFeePips` / `toFeePips` implement the survival composite above
+- `Pricing.FeeStructure`: bag `{φ_X, φ_M}`; survival `toFeePips` → \(1-(1-\phi_M)(1-\phi_X)\)
+- `Pricing.MarkUpStructure`: markup bag class; `foldMarkUpFactor` = \(\prod_i(1+m_i)\); `TwoSidedMarkUp` exposes φ_X/φ_M; `FeeStructure` implements both; survival `toFeePips` unchanged
 - `FeePips` is a `Monoid` (same survival stack); `FeeStructure` is not
-- **Planned** (`MarkUpStructure`, TODO #8): separate markup product fold \(\prod_i(1+m_i)\) — do **not** conflate with `toFeePips`
 
 ### Swap survival legs
 
