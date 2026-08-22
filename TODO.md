@@ -15,6 +15,9 @@
 5. ~~**Parametrized fee capture** \(\pi^\phi(r_\phi^e)\)~~ — `feat` — [#1](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/1) / [#14](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/14)
    - `feeRevenueExpectedReturn` (\(r_\phi^e=\phi\cdot r^e\)); `runFeeCaptureAlongTenorMixture`
 
+6. ~~**`MarkUpStructure` superclass; `FeeStructure` as instance**~~ — `feat` — [#4](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/4) / [#17](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/17)
+   - `Pricing.MarkUpStructure` + `TwoSidedMarkUp`; Swap / `ReturnFromKappa` / capture migrate to polymorphic markup; survival `toFeePips` unchanged
+
 ---
 
 ## Open
@@ -25,7 +28,6 @@ Workflow: see `AGENTS.md` / `CLAUDE.md` / `QWEN.md` (classify → branch → iss
 |------|------|-------|-----|--------|
 | 6 | `feat` | [#2](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/2) | [#15](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/15) | **blocked** (prereqs 17–21) |
 | 7 | `feat` | [#3](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/3) | [#16](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/16) | open |
-| 8 | `feat` | [#4](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/4) | [#17](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/17) | open |
 | 9 | `feat` | [#5](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/5) | [#18](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/18) | open |
 | 10 | `refactor` | [#6](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/6) | [#19](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/19) | open |
 | 11 | `refactor` | [#7](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/7) | [#20](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/20) | open |
@@ -52,12 +54,6 @@ Workflow: see `AGENTS.md` / `CLAUDE.md` / `QWEN.md` (classify → branch → iss
    - Distinct from payoff \(\pi^\phi\); scope in `refs/VOLATILITY_INTRUMENTS_MEV.md`
    - Decide: scalar control return type vs leave in notes only
    - **Notation:** keep scratchpad \(r^\phi\) / \(r_{\Delta Q_{\mathrm{trans}}}^{e}\) language; do **not** adopt MEV-doc \(\Delta\pi_{\mathrm{trans}}/\pi_{\mathrm{trans}}\) labels (wrong)
-
-8. **`MarkUpStructure` superclass; `FeeStructure` as instance** — `feat` — [#4](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/4)
-   - `FeeStructure` today is a concrete bag `{φ_X, φ_M}`
-   - Introduce a class (name pin: `MarkUpStructure`) that abstracts markup bags; `FeeStructure` implements it
-   - Goal: other markup shapes (one-sided, adaptive Θ-driven, …) share `ReturnFromKappa` / capture constructors without hard-wiring `FeeStructure`
-   - Brainstorm before implement (typeclass vs data family vs newtype hierarchy)
 
 9. **`AdaptiveStremia` body** — `feat` — [#5](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/5) — still stub \(\phi(\Theta_\phi;\sigma^2,\nu)\)
 
