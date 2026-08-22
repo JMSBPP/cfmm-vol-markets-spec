@@ -120,6 +120,7 @@ src/
 │   ├── AdaptiveStremia.hs
 │   ├── FeeStructure.hs
 │   ├── ExpectedReturn.hs
+│   ├── DiscountFactor.hs   // planned (TODO #17): parametric m(·)
 │   ├── InterestSqrt.hs
 │   └── InterestPriceMap.hs
 ├── Trading/
@@ -225,162 +226,171 @@ Hop B atlas (two-sided ticks \(i\in[-160,150]\), \(\Delta=10\), \(\iota=32\); Y 
 
 
 
-Note from VOLATILITY_INSTRUMENTS.md 
+Note from VOLATILITY_INSTRUMENTS.md — canonical fee / return algebra (aligned with shipped code + `TODO.md` planned split).
 
-We have:
+### Stremia bid/ask (linear \(P\); sqrt via \(\sqrt{1+\phi}\))
 
 \[
-	\begin{aligned}
-		p_{\varphi}^{\text{(ask)}} \, &= (1+ \phi) p_{\varphi} \\
-		p_{\varphi}^{\text{(bid)}} \, &= \frac{p_{\varphi}}{1+\phi}
-	\end{aligned}
+p_{\varphi}^{(\mathrm{ask})} = (1+\phi)\,p_{\varphi},
+\qquad
+p_{\varphi}^{(\mathrm{bid})} = \frac{p_{\varphi}}{1+\phi}
 \]
 
+Atlas map: \(p_{\varphi} \to p_{1/2}\).
 
-And we have \(p_{\varphi} \to p_{1/2}\)
-
-Done: \(p_{1/2}^{(\mathrm{bid/ask})}\) —
+**Shipped** — \(p_{1/2}^{(\mathrm{bid/ask})}\):
 - payoffs: `Pricing.Stremia.nakedAskQ96` / `nakedBidQ96` (linear \(P\times(1+\phi)\))
 - quotes: `Trading.PriceImpact.askSqrtPriceX96` / `bidSqrtPriceX96` (\(s\sqrt{1+\phi}\))
 - `Trading.Quote`: mid+bid/ask `SqrtPriceX96` → \(\phi_M\leftarrow\phi(\mathrm{ask})\), \(\phi_X\leftarrow\phi(\mathrm{bid})\) (may differ)
 - equal-φ special case: `feePipsFromBidAsk mid bid ask` (agree ≤1 pip)
-- composite: `compositeFeePips φ_M φ_X` for \(\phi\equiv 1-(1-\phi_M)(1-\phi_X)\)
-- `Pricing.FeeStructure`: bag `{φ_X, φ_M}`; `toFeePips` → \(1-(1-\phi_M)(1-\phi_X)\)
-- `FeePips` is a `Monoid` (survival stack \(1-(1-\phi_1)(1-\phi_2)\)); `FeeStructure` is not
-- AdaptiveStremia stub: \(\phi(\Theta_\phi;\sigma^2,\nu)\)
-- Done: Def 45 `kappaAt (Maybe EtaX96) XiX96 LiquidityChunk` → `KappaCoordinate` / `KappaTick`
-  - `TickLiquidity` at chunk lo/hi (geometric \(L\); \(L_{\mathrm{hi}}/L_{\mathrm{lo}}=\xi\))
-  - `Nothing` η → `BASE_ETA` (½) ⇒ trading base \(1/\Delta\) on geometric book (Thm 43)
-  - **Encoding C (shipped):** `KappaTick` rung index on uniform lattice \(\kappa_j=j/N\), \(N=255\); Def 45 real κ then `snapKappaTick`
-  - **B retired:** `KappaPips` Word8 quantize removed
-- Done: `Pricing.ExpectedReturn` — `ReturnFromKappa` on `FeeStructure` \(((1-\kappa)\phi_X+\kappa\phi_M)\) and `FeePips` \((\kappa\phi,\,r(0)=0)\); `runSwapAlongTenorMixture` = \((1-w)Y_{\mathrm{pay}}+w Y_{\mathrm{recv}}\)
-- Done: `Payoffs.TransactionalFeeCapture` — \(\pi^\phi=\phi_X P+\phi_M I\); sum along tenor; accounting identity with Swap (capture+survival≡naked); plots `fee-capture-*-vs-*.png`
-- Done: `feeRevenueExpectedReturn` / `runFeeCaptureAlongTenorMixture` — \(\pi^\phi(r_\phi^e)\) with \(r_\phi^e=\phi\cdot r^e\)
-- **VISIBLE:** future `ExpectedReturn <>` Realized/other expecteds supplies \(r(0)\); ref \(r^\phi=\phi\,\delta_{\mathrm{trans}}\) still open
-- plot: `outputs/Payoffs/Returns/stremia-bid-ask.png` — mid + ask/bid `ReturnY`
-- plot: `outputs/Payoffs/Returns/stremia-fee-vs-return.png` — FeePips vs ReturnPips (ask / bid / \(r=\phi\))
-- plot: `outputs/Payoffs/Returns/stremia-fee-rate-vs-sqrt.png` — FeePips vs quote SqrtPriceX96 (bid left / ask right of mid)
+- plots: `outputs/Payoffs/Returns/stremia-bid-ask.png`, `stremia-fee-vs-return.png`, `stremia-fee-rate-vs-sqrt.png`
 
-Note:
-
-There is already \(\phi (\Theta_{\phi}; \sigma^2, \nu)\) the `AdaptiveStremia`
-
-And we have, given a `Quote` objetc wich containts this bid and ask:
+Given a `Quote` with bid/ask on \(p_{1/2}\):
 
 \[
-	\begin{aligned}
-		( \phi (p_{1/2}^{(\text{ask})}), \phi (p_{1/2}^{(\text{bid})}) )
-	\end{aligned}
+\bigl(\phi(p_{1/2}^{(\mathrm{ask})}),\;\phi(p_{1/2}^{(\mathrm{bid})})\bigr)
+\quad\Longrightarrow\quad
+\phi_M \leftarrow \phi(\mathrm{ask}),\;
+\phi_X \leftarrow \phi(\mathrm{bid})
 \]
 
-Then we do the assignment:
+Adaptive markup (stub): \(\phi(\Theta_\phi;\sigma^2,\nu)\) in `AdaptiveStremia`.
+
+### Fee bag (survival composite)
 
 \[
-	\begin{aligned}
-		\phi_M \leftarrow \phi (p_{1/2}^{(\text{ask})}) \\
-		\phi_X \leftarrow \phi (p_{1/2}^{(\text{bid})})
-	\end{aligned}
-\]
-
-Since we have the return coordinate \(r(\phi)\). Note that the curvature enters as the
-parameter:
-
-\[
-	\begin{aligned}
-		\phi \leftarrow \phi (\Theta_{\phi}; \sigma^2, \nu) \\
-		\phi \equiv 1 - (1 - \phi_M) (1 - \phi_X) \\
-		r (\kappa_{\varphi} ; \phi_X, \phi_M) = (1\, - \, \kappa_{\varphi}) \, \phi_M+ \kappa_{\varphi} \, \phi_X
-	\end{aligned}
-\]
-> **VISIBLE:** κ is a coordinate discretization like ticks (**encoding C shipped**): `KappaTick` / `KappaSpacing` (\(N=255\)). B (`KappaPips`) retired. `ExpectedReturn` / \(\pi^{\Delta Q}(r^e)\) mixture and `TransactionalFeeCapture` (base + \(\pi^\phi(r_\phi^e)\)) shipped; next return `<>` / ref \(r^\phi=\phi\delta_{\mathrm{trans}}\).
-
-Consider the expected return of the swap payoff :
-
-\[
-r^e_{\pi^{\Delta Q}}
-\equiv
-\mathbb E\left[m_{\Delta Q} \cdot \pi^{\Delta Q}\right],
+\mathrm{FeeStructure} = \{\phi_X,\phi_M\},
 \qquad
-P_{1/2},I(r_{1/2})<0
-
+\phi \equiv 1-(1-\phi_M)(1-\phi_X)
 \]
 
-Such taht it parametrizes the swap payoff:
+- `compositeFeePips` / `toFeePips` implement the survival composite above
+- `FeePips` is a `Monoid` (same survival stack); `FeeStructure` is not
+- **Planned** (`MarkUpStructure`, TODO #8): separate markup product fold \(\prod_i(1+m_i)\) — do **not** conflate with `toFeePips`
+
+### Swap survival legs
 
 \[
+\pi^{\Delta Q}_{\mathrm{pay}} = P_{1/2}(1-\phi_X),
+\qquad
+\pi^{\Delta Q}_{\mathrm{recv}} = I(r_{1/2})(1-\phi_M)
+\]
 
-\pi^{\Delta Q}(r^e_{\pi^{\Delta Q}};,\cdot)
+(`Payoffs.Swap.swapFromFeeStructure`; net along tenor: recv − pay.)
+
+### κ expected return (shipped)
+
+Lattice \(\kappa_j = j/N\), \(N=255\) — **encoding C**: `KappaTick` / `KappaSpacing`; B (`KappaPips`) retired. Def 45 `kappaAt (Maybe EtaX96) XiX96 LiquidityChunk` → `KappaCoordinate`.
+
+\[
+r(\kappa;\phi_X,\phi_M)
 =
+(1-\kappa)\,\phi_X + \kappa\,\phi_M
+\]
 
-(1-r^e_{\pi^{\Delta Q}}),
-P_{1/2}(1-\phi_X)
+Composite survival fee when needed: \(\phi \equiv 1-(1-\phi_M)(1-\phi_X)\) (`toFeePips`).
+
+
+| Index | Role | Expected return |
+|-------|------|-----------------|
+| \(m(\Delta Q)\) | swap / \(\Delta Q\) channel | \(r^e_{\pi^{\Delta Q}} \equiv \mathbb E[m(\Delta Q)\cdot \pi^{\Delta Q}]\) |
+| \(m(\phi,\Delta Q)\) | fee revenue via swap leg | \(\mathbb E[m(\phi,\Delta Q)\cdot \pi^{\Delta Q}]\) |
+| \(m(\phi)\) | fee revenue on \(\pi^\phi\) directly | \(r_\phi^e \equiv \mathbb E[m(\phi)\cdot \pi^\phi]\) |
+
+General price form (fee leg): \(\mathbb E^{\mathbb{Q}}[m\cdot \pi^{\varphi}]\) (see flow decomposition below).
+
+### Parametrized swap \(\pi^{\Delta Q}(r^e)\) (shipped mixture; measure TODO #17–#18)
+
+\[
+r^e_{\pi^{\Delta Q}} \equiv \mathbb E\!\left[m(\Delta Q)\cdot \pi^{\Delta Q}\right]
+\]
+
+\[
+\pi^{\Delta Q}(r^e;\cdot)
+=
+(1-r^e)\,P_{1/2}(1-\phi_X)
 +
-r^e_{\pi^{\Delta Q}},
-I(r_{1/2})(1-\phi_M)
-
+r^e\,I(r_{1/2})(1-\phi_M)
 \]
-
-Once a return is obtaianed from a payoff, we have that is parametrzied by the cruvature OR Ot moves on it. This calls for the kappa coordinate discretization as first class priority and such that the constructor of the payoff is parametric enough to allow for different constructions. In this case a return is obtaied from a FeeStructure:
 
 \[
-r(\kappa_\varphi;\phi_x,\phi_y)
+\pi^\phi(p_{1/2}, r_{1/2}; \phi_X, \phi_M)
 =
-
-(1-\kappa_\varphi)\phi_x
-+
-\kappa_\varphi\phi_y
+\phi_X P_{1/2} + \phi_M I(r_{1/2})
 \]
 
-Then the affine expression immediately below/right is (In this case the return takes a FeePips)
+(`Payoffs.TransactionalFeeCapture`; sum along tenor; accounting identity: capture + survival swap leg ≡ naked \(P\) / \(I\), ≤1 X96; plots `fee-capture-*-vs-*.png`.)
 
-\[
-r(\kappa_\varphi;\phi)
-=
-r(0)+\kappa_\varphi\phi
-\]
+### Parametrized fee capture \(\pi^\phi(r_\phi^e)\) (shipped mixture; full measure TODO #17–#18)
 
-Now consider the expected fee revenue return:
+With \(\phi = \texttt{toFeePips}(\{\phi_X,\phi_M\})\) (survival composite):
 
 \[
 r_\phi^e
 =
-\mathbb E\left[\phi\cdot\pi^{\Delta Q}\right] = \phi \cdot r^e_{\pi^{\Delta Q}}
+\mathbb E\!\left[m(\phi,\Delta Q)\cdot \pi^{\Delta Q}\right]
+\qquad\text{(via swap channel)}
 \]
 
-Considering \(\phi= \phi_M\otimes\phi_X\).
-
-Now we obtained the equivalent parametrized expected fee revenue as:
-
 \[
-\pi^\phi(r_\phi^e;,\cdot)
+r_\phi^e
 =
-(1-r_\phi^e),
-\phi_X P_{1/2}
+\mathbb E\!\left[m(\phi)\cdot \pi^\phi\right]
+\qquad\text{(direct fee-revenue payoff)}
+\]
+
+**Shipped shortcut** (scalar mixture weight, no `DiscountFactor` yet):
+
+\[
+r_\phi^e = \phi\cdot r^e_{\pi^{\Delta Q}}
+\]
+
+\[
+\pi^\phi(r_\phi^e;\cdot)
+=
+(1-r_\phi^e)\,\phi_X P_{1/2}
 +
-r_\phi^e,\cdot \phi_M I(r_{1/2})
+r_\phi^e\,\phi_M I(r_{1/2})
 \]
 
+(`feeRevenueExpectedReturn` / `runFeeCaptureAlongTenorMixture`.)
 
-We have:
+### Ref transactional return (open — TODO #7)
 
 \[
-	\begin{aligned}
-		\Delta Q \, &= \, \mathbb{I}_{\Delta Q} \, \Delta Q_X + (1 - \mathbb{I}_{\Delta Q}) \, \Delta Q_M
-	\end{aligned}
+r^\phi = \phi\,\delta_{\mathrm{trans}}
 \]
 
+Distinct from payoff \(\pi^\phi\). Use scratchpad \(r^\phi\) / \(r_{\Delta Q_{\mathrm{trans}}}^{e}\) notation only — **not** MEV-doc \(\Delta\pi_{\mathrm{trans}}/\pi_{\mathrm{trans}}\) (wrong). See `refs/VOLATILITY_INTRUMENTS_MEV.md` for economics only.
 
-Then:
+### Expected return split (planned — TODO #17–#21; prereq for #6)
 
 \[
-	\begin{aligned}
-		\Delta \pi^{\phi} \,& = \, \phi (\Theta_{\phi}; \sigma^2, \nu) \, \cdot \, \Delta Q \\
-		\int_{N} \, \Delta \pi^{\phi} \, \Delta N \, &= \, \int_{N} \,  \Big (\phi (\Theta_{\phi}; \sigma^2, \nu) \, \cdot \, \Delta Q\Big) \, \cdot \Delta N \\
-		\frac{\Delta \pi^{\varphi}}{\Delta N} \leftarrow \int_{N} \, \Delta \pi^{\phi} \, \Delta N \\
-         \frac{\Delta \pi^{\varphi}}{\Delta N} \, \equiv p_{\pi^{\varphi}}\equiv \, \mathbb{E}^{\mathbb{Q}} \, \Big [m \cdot \pi^{\varphi}\Big]
-	\end{aligned}
+r_{\Delta Q}^{e}
+=
+r_{\Delta Q_{\mathrm{trans}}}^{e}
++
+\beta\cdot r_{\Delta Q_{\mathrm{arb}}}^{e}(\sigma_{IV},\sigma^{e})
 \]
 
+Measure: parametric \(m(\Delta Q)\), \(m(\phi,\Delta Q)\), \(m(\phi)\) via `DiscountFactor` / `Expectation` (TODO #17–#18). \(\sigma_{IV}\) stand-in: \(\sigma_{IV}(t)=2\phi\sqrt{V(t)/L(i(t))}\) (have `TickLiquidity`; no \(V(t)\) volume yet — u88 / ξ workaround TBD).
 
+### Flow decomposition and fee price
 
+\[
+\Delta Q = \mathbb{I}_{\Delta Q}\,\Delta Q_X + (1-\mathbb{I}_{\Delta Q})\,\Delta Q_M
+\]
+
+\[
+\begin{aligned}
+\Delta \pi^{\phi} &= \phi(\Theta_{\phi}; \sigma^2, \nu)\cdot \Delta Q \\
+\int_{N} \Delta \pi^{\phi}\,\Delta N
+&= \int_{N} \bigl(\phi(\Theta_{\phi}; \sigma^2, \nu)\cdot \Delta Q\bigr)\,\Delta N \\
+\frac{\Delta \pi^{\varphi}}{\Delta N}
+&\leftarrow \int_{N} \Delta \pi^{\phi}\,\Delta N \\
+\frac{\Delta \pi^{\varphi}}{\Delta N}
+&\equiv p_{\pi^{\varphi}}
+\equiv \mathbb{E}^{\mathbb{Q}}\!\left[m\cdot \pi^{\varphi}\right]
+\end{aligned}
+\]
 
