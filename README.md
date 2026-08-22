@@ -143,6 +143,8 @@ src/
 │   ├── VolatilityGrid.hs
 │   ├── VolTermStructure.hs
 │   ├── TickVolatility.hs
+│   ├── ExpectedVolatility.hs
+│   ├── ImpliedVolatility.hs   // σ_IV minimal (TODO #20 full u-map)
 │   └── CevField.hs
 ├── TickPath.hs
 ├── SqrtGrid.hs
@@ -372,7 +374,7 @@ r_{\Delta Q}^{e}
 r_{\Delta Q_{\mathrm{trans}}}^{e}
 +
 \beta\cdot r_{\Delta Q_{\mathrm{arb}}}^{e}(\sigma_{IV},\sigma^{e})
-\]
+\] (RARB)
 
 Measure: parametric \(m(\Delta Q)\), \(m(\phi,\Delta Q)\), \(m(\phi)\) via `DiscountFactor` / `Expectation` (TODO #17–#18).
 
@@ -401,6 +403,29 @@ Off-equilibrium \(V(t)\) is unobserved (rates-only model). Carry \(u(t)\); obser
 | T2 | u88 encodes same \(u\) | optional EVM packing |
 
 Arb leg: \(r_{\Delta Q_{\mathrm{arb}}}^{e}=g(\sigma_{\mathrm{IV}}-\sigma^{e})\) with weight \(\beta\) (TODO #21–#22). \(\sigma^{e}=\mathbb{E}^{\mathbb{Q}}[\bar\sigma_X]\) — `ExpectedVolatility` + `VolHorizon` (WINDOW default \| tenor-aligned); spec `docs/superpowers/specs/2026-08-22-scratchpad-expected-volatility-design.md`. See `cfmm-options/IMPLIED_VOLATILITY.md` for \(\Sigma=\sigma\times\sigma_{\mathrm{IV}}\).
+
+
+Now expectations allow us to parametrize swwap payoff and define payoff of transactional traders and arbitragurs from the **RARB** equation.
+
+Now we can connect to the realied return variables \(r^{\phi}\) wher from the imprted on refs/ module:
+
+The rate:
+
+\[
+	\begin{aligned}
+		r^{\phi} = \phi \cdot \delta_{\text{trans}}
+	\end{aligned}
+\]
+
+Where \(\delta_{\text{trans}}\) is now pinned dimensionally as:
+
+\[
+	\begin{aligned}
+		\delta_{\text{trans}} (t)\, &\equiv \Big [ \frac{u(t)}{\pi_{\text{trans}}^{\Delta Q}}\Big]
+	\end{aligned}
+\]
+
+**Shipped (Slice 1, TODO #21):** `Volatility.ExpectedVolatility` — `expectedVolatilityUniformTenor`, `expectedVolatilityWindowStub`, `VolHorizon`; `Volatility.ImpliedVolatility` (minimal newtype); `volGap`. Plan: `docs/superpowers/plans/2026-08-22-scratchpad-expected-volatility.md`.
 
 ### Flow decomposition and fee price
 
