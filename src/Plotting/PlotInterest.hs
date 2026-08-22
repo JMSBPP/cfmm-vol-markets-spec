@@ -1,7 +1,7 @@
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 
-module Payoffs.PlotInterest
+module Plotting.PlotInterest
   ( InterestPlot(..)
   , plotInterestFunction
   , interestFunctionLayout
@@ -13,7 +13,7 @@ import Data.Colour.Names
 import Graphics.Rendering.Chart.Backend.Cairo
 import Graphics.Rendering.Chart.Easy
 
-import Payoffs.PlotSqrt (PlotY(..))
+import Plotting.PlotSqrt (PlotY(..))
 import Payoffs.Return (mkReturn, unReturnPips)
 import Payoffs.Savings (savingsPayoff)
 import Pricing.InterestSqrt

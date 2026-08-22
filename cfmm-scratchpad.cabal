@@ -35,26 +35,25 @@ library
       Liquidity.LiquidityGrid
       Liquidity.TickLiquidity
       OptionRatio
+      Panoptic.MintPlan
+      Panoptic.NId
       Payoffs.CashSecuredPut
+      Payoffs.CLMMPosition
       Payoffs.CoveredCall
-      Payoffs.CPMMPosition
       Payoffs.Forward
       Payoffs.Linear
       Payoffs.Log
-      Payoffs.MintPlan
-      Payoffs.NId
       Payoffs.Payoff
-      Payoffs.PlotInterest
-      Payoffs.PlotSqrt
       Payoffs.RangeAccrualNote
       Payoffs.Return
       Payoffs.Savings
       Payoffs.Swap
-      Payoffs.TargetVega
       Payoffs.TransactionalFeeCapture
       Payoffs.VariancePortfolio
       Payoffs.VolatilityCall
-      PlotUtils
+      Plotting.PlotInterest
+      Plotting.PlotSqrt
+      Plotting.PlotUtils
       Pricing.AdaptiveStremia
       Pricing.ExpectedReturn
       Pricing.FeeStructure
@@ -65,6 +64,7 @@ library
       SqrtGrid
       State
       StrikeX96
+      TargetVega
       TickPath
       Trading.KappaCoordinate
       Trading.PriceImpact
@@ -119,7 +119,7 @@ test-suite cfmm-scratchpad-test
       Paths_cfmm_scratchpad
   hs-source-dirs:
       test
-  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N -Wno-name-shadowing -Wno-type-defaults -Wno-gadt-mono-local-binds
   build-depends:
       Chart
     , Chart-cairo

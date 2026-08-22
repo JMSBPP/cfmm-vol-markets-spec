@@ -1,6 +1,6 @@
 {-# LANGUAGE PatternSynonyms #-}
 
-module Payoffs.PlotSqrt
+module Plotting.PlotSqrt
   ( PlotY(..)
   , plotSqrtFunction
   , sqrtFunctionLayout
