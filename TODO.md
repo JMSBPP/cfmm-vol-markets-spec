@@ -91,9 +91,10 @@ r_{\Delta Q_{\mathrm{trans}}}^{e}
    - No GitHub issue yet
 
 20. **\(\sigma_{IV}\) stand-in** — `feat`
-   - Raw Kristensen: \(\sigma_{IV}(t)=2\phi\sqrt{V(t)/L(i(t))}\)
-   - Have `TickLiquidity`; **no** \(V(t)\) volume yet — brainstorm: volume type, ξ/liquidity workaround, or fitted u88-dimensional parameter (\(88=24+64\))
-   - No GitHub issue yet
+   - Latent \(u=\ln(V/L)\); read \(\sigma_{\mathrm{IV}}=2\phi e^{u/2}\); T0 calibration pin from \((\sigma_X,\phi)\)
+   - Spec: `docs/superpowers/specs/2026-08-22-scratchpad-sigma-iv-latent-u-design.md`
+   - Module `Volatility.ImpliedVolatility` (T0); T1 observer / T2 u88 deferred
+   - No GitHub issue yet (open when plan approved)
 
 21. **Parametric \(r_{\Delta Q_{\mathrm{arb}}}^{e}(\sigma_{IV},\sigma^{e})\)** — `docs` then `feat`
    - Endogenous arb expected return; \(\sigma^{e}\) = private vol expectation
