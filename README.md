@@ -238,7 +238,6 @@ r_\phi^e
 \]
 
 
-
 \(r^e_{\pi^{\Delta Q}} \equiv \mathbb E[m(\Delta Q)\cdot \pi^{\Delta Q}]\)
 \[
 r_{\Delta Q}^{e}
@@ -284,8 +283,7 @@ and realizations:
 	\end{aligned}
 \]
 
-Where \(\delta_{\text{trans}}\) is pinned as (spec `docs/superpowers/specs/2026-08-22-scratchpad-rarb-trans-flow-design.md`; TODO #23):
-
+Where:
 \[
 	\begin{aligned}
 		\delta_{\text{trans}} (t)\, &\equiv \frac{\nu_{\text{trans}}(t)}{\pi_{\text{trans}}^{\Delta Q}(t)},
@@ -296,10 +294,26 @@ Where \(\delta_{\text{trans}}\) is pinned as (spec `docs/superpowers/specs/2026-
 \(\nu_{\text{trans}}\) derived from `refs/volume_path.gms` (\(g=\nu_{\text{trans}}/V\)); \(\pi_{\text{trans}}^{\Delta Q}\) parametrized only by exogenous \(r_{\Delta Q_{\mathrm{trans}}}^{e}\).
 
 
+Payoff decomposition (spec `docs/superpowers/specs/2026-08-22-scratchpad-pi-varphi-lvr-decomposition-design.md`; TODO #24):
+
+\[
+\pi^{c|p} + \pi^{\mathrm{RAN}} \equiv \pi^{\varphi} \equiv \pi^{\phi} - \pi^{\mathrm{LVR}}
+\]
+
+\[
+\pi^{\phi}=\pi^{\phi}\!\bigl(\pi_{\mathrm{trans}}^{\Delta Q}(r_{\mathrm{trans}}^{e})\bigr),
+\qquad
+\pi^{\mathrm{LVR}}=\pi^{\mathrm{LVR}}\!\bigl(\pi_{\mathrm{arb}}^{\Delta Q}(r_{\mathrm{arb}}^{e})\bigr),
+\qquad
+\pi^{\varphi}=\pi^{\phi}-\pi^{\mathrm{LVR}}.
+\]
+
+\(\pi_{\mathrm{trans}}^{\Delta Q}\) exogenous (#19); \(\pi_{\mathrm{arb}}^{\Delta Q}\) from vol gap (#21). Returns: \(r^{\varphi}=r^{\phi}-r^{\mathrm{LVR}}\) (MEV \(\mathcal{N}_\pi\)).
+
+**Roles:** GAMS \(\{\Delta Q_X,\Delta Q_M,\Delta s\}\) are **path utilities** to hit \(\delta_{\mathrm{trans}}^\*/r^{\phi}\); arb targets \(\sigma_{\mathrm{IV}}-\sigma^{e}\). Net CLMM/CPMM \(\pi^{\varphi}=f(\pi^{\phi}(\pi_{\mathrm{trans}})-\pi^{\mathrm{LVR}}(\pi_{\mathrm{arb}}))\). Roadmap: `docs/superpowers/specs/2026-08-22-scratchpad-channel-roles-roadmap.md`.
 
 
-
-### Flow decomposition and fee price
+## Flow decomposition and fee price
 
 \[
 \Delta Q = \mathbb{I}_{\Delta Q}\,\Delta Q_X + (1-\mathbb{I}_{\Delta Q})\,\Delta Q_M

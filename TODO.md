@@ -22,6 +22,9 @@
 
 ## Open
 
+**Role roadmap (read first):** `docs/superpowers/specs/2026-08-22-scratchpad-channel-roles-roadmap.md`  
+— Lane A = trans targets via GAMS path utilities (\(\Delta Q,\Delta s\) transient); Lane B = arb via vol-spread; Lane C = \(\pi^{\varphi}=\pi^{\phi}-\pi^{\mathrm{LVR}}\). Issue numbers ≠ execution priority.
+
 Workflow: see `AGENTS.md` / `CLAUDE.md` / `QWEN.md` (classify → branch → issue → PR → cross-comment).
 
 | TODO | Type | Issue | PR | Status |
@@ -43,6 +46,7 @@ Workflow: see `AGENTS.md` / `CLAUDE.md` / `QWEN.md` (classify → branch → iss
 | 21 | `docs`→`feat` | [#31](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/31) | — | open |
 | 22 | `docs` | [#28](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/28) | — | open |
 | 23 | `feat` | [#34](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/34) | — | open |
+| 24 | `docs`→`feat` | [#35](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/35) | — | open |
 
 ### Pricing / returns / fee-revenue
 
@@ -117,6 +121,12 @@ r_{\Delta Q_{\mathrm{trans}}}^{e}
    - Golden table \(g(\delta^\*,\kappa,\bar\phi,\ldots)\) from GAMS grid (`make test-gams`); option A (exogenous \(\nu\)) **pre-prover stub only**
    - Prereq for #7 \(\delta_{\mathrm{trans}}=\nu_{\mathrm{trans}}/\pi_{\mathrm{trans}}^{\Delta Q}\) beyond stub; complements RARB Slice 1 (#19 trans tag)
    - Reads: `refs/volume_path.gms`, `refs/VOLUME_PATH.md`, `refs/MEV_TAX_MODEL_ONE_NOTES.md`
+
+24. **\(\pi^{\varphi}=\pi^{\phi}-\pi^{\mathrm{LVR}}\) decomposition** — `docs`→`feat` — [#35](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/35)
+   - Spec: `docs/superpowers/specs/2026-08-22-scratchpad-pi-varphi-lvr-decomposition-design.md`
+   - \(\pi^{c|p}+\pi^{\mathrm{RAN}}\equiv\pi^{\varphi}\) (CLMM); \(\pi^{\varphi}=\pi^{\phi}(\pi_{\mathrm{trans}}^{\Delta Q})-\pi^{\mathrm{LVR}}(\pi_{\mathrm{arb}}^{\Delta Q})\)
+   - \(\pi^{\mathrm{arb}}\equiv\pi_{\mathrm{arb}}^{\Delta Q}\) (#21); LVR = normalized return read off arb leg; \(r^{\varphi}=r^{\phi}-r^{\mathrm{LVR}}\)
+   - Depends: RARB trans tag (#19), arb mixture (#21); CLMM identity test vs `CLMMPosition`
 
 Later (not opened yet): compose \(r_{\Delta Q}^{e}\) from #19+#21; wire into parametrized \(\pi^{\Delta Q}/\pi^{\phi}\); then unblock #6.
 
