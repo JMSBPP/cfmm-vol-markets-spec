@@ -14,7 +14,7 @@
 
 Pin **mathematically valid** implied-volatility algebra when nominal volume \(V(t)\) is unobserved. Recover Kristensen \(\sigma_{\mathrm{IV}}=2\phi\sqrt{V/L}\) by introducing latent \(u(t):=\ln(V(t)/L(i(t)))\), not by invalid log-difference approximations in the README WIP block.
 
-**Out of scope this spec:** `DiscountFactor` / measure \(m(\cdot)\) (#17), full \(g(\sigma_{\mathrm{IV}}-\sigma^{e})\) (#21), β weight (#22), on-chain u88 packing implementation (#20 T2 code).
+**Out of scope this spec:** `DiscountFactor` / measure \(m(\cdot)\) (#17), full \(g(\sigma_{\mathrm{IV}}-\sigma^{e})\) (#21), β weight (#22), on-chain u88 packing implementation (#20 T2 code). See `docs/superpowers/specs/2026-08-22-scratchpad-expected-volatility-design.md` for \(\sigma^{e}\).
 
 ---
 

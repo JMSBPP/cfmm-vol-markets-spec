@@ -40,7 +40,7 @@ Workflow: see `AGENTS.md` / `CLAUDE.md` / `QWEN.md` (classify → branch → iss
 | 18 | `feat` | — | — | open (no GitHub issue yet) |
 | 19 | `feat` | — | — | open (no GitHub issue yet) |
 | 20 | `feat` | — | — | open (no GitHub issue yet) |
-| 21 | `docs`→`feat` | — | — | open (no GitHub issue yet) |
+| 21 | `docs`→`feat` | [#31](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/31) | — | open |
 | 22 | `docs` | [#28](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/28) | — | open |
 
 ### Pricing / returns / fee-revenue
@@ -96,10 +96,11 @@ r_{\Delta Q_{\mathrm{trans}}}^{e}
    - Module `Volatility.ImpliedVolatility` (T0); T1 observer / T2 u88 deferred
    - No GitHub issue yet (open when plan approved)
 
-21. **Parametric \(r_{\Delta Q_{\mathrm{arb}}}^{e}(\sigma_{IV},\sigma^{e})\)** — `docs` then `feat`
-   - Endogenous arb expected return; \(\sigma^{e}\) = private vol expectation
-   - Depends on #20 and **#22** (\(\beta\) meaning pinned); brainstorm functional form before implement
-   - No GitHub issue yet
+21. **Parametric \(r_{\Delta Q_{\mathrm{arb}}}^{e}(\sigma_{IV},\sigma^{e})\)** — `docs` then `feat` — [#31](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/31)
+   - \(\sigma^{e}\) = risk-neutral expectation of realized vol (`ExpectedVolatility` + `VolHorizon`: WINDOW \| tenor); spec `docs/superpowers/specs/2026-08-22-scratchpad-expected-volatility-design.md`
+   - Arb gap \(\sigma_{\mathrm{IV}}-\sigma^{e}\); \(g(\cdot)\) functional form; full \(\mathbb{E}^{\mathbb{Q}}\) via #17–#18
+   - Depends on #20; **#22** (\(\beta\)) before compose
+   - No GitHub issue yet (open when plan approved)
 
 22. **Understand \(\beta\) in the \(r_{\Delta Q}^{e}\) affine split** — `docs` — [#28](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/28)
    - Canonical split (README): \(r_{\Delta Q}^{e}=r_{\Delta Q_{\mathrm{trans}}}^{e}+\beta\cdot r_{\Delta Q_{\mathrm{arb}}}^{e}(\sigma_{IV},\sigma^{e})\)
