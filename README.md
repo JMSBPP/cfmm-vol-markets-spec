@@ -400,7 +400,7 @@ Off-equilibrium \(V(t)\) is unobserved (rates-only model). Carry \(u(t)\); obser
 | T1 | \(\Delta u\approx(\hat\epsilon_{V/L}-1)\,\Delta\ln L\) along tenor | \(\kappa_L\) liquidity growth — **not** fee-mix `KappaCoordinate` \(\kappa\) |
 | T2 | u88 encodes same \(u\) | optional EVM packing |
 
-Arb leg: \(r_{\Delta Q_{\mathrm{arb}}}^{e}=g(\sigma_{\mathrm{IV}}-\sigma^{e})\) with weight \(\beta\) (TODO #21–#22). See `cfmm-options/IMPLIED_VOLATILITY.md` for \(\Sigma=\sigma\times\sigma_{\mathrm{IV}}\).
+Arb leg: \(r_{\Delta Q_{\mathrm{arb}}}^{e}=g(\sigma_{\mathrm{IV}}-\sigma^{e})\) with weight \(\beta\) (TODO #21–#22). \(\sigma^{e}=\mathbb{E}^{\mathbb{Q}}[\bar\sigma_X]\) — `ExpectedVolatility` + `VolHorizon` (WINDOW default \| tenor-aligned); spec `docs/superpowers/specs/2026-08-22-scratchpad-expected-volatility-design.md`. See `cfmm-options/IMPLIED_VOLATILITY.md` for \(\Sigma=\sigma\times\sigma_{\mathrm{IV}}\).
 
 ### Flow decomposition and fee price
 
