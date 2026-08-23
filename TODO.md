@@ -109,7 +109,7 @@ r_{\Delta Q_{\mathrm{trans}}}^{e}
    - \(\sigma^{e}\) = risk-neutral expectation of realized vol (`ExpectedVolatility` + `VolHorizon`: WINDOW \| tenor); spec `docs/superpowers/specs/2026-08-22-scratchpad-expected-volatility-design.md`
    - **Slice 1 merged (PR #33):** `ExpectedVolatility` uniform tenor + window stub, minimal `ImpliedVolatility`, `volGap`
    - Remaining: Slice 2+; arb gap \(g(\cdot)\); full \(\mathbb{E}^{\mathbb{Q}}\) via #17–#18
-   - **Definition pinned (README, 2026-08-23):** \(r_{\Delta Q_{\mathrm{arb}}}^{e}\equiv\Lambda(\gamma(u-u^{\star}(\sigma^{e})))=\Lambda(2\gamma\ln(\sigma_{IV}/\sigma^{e}))\), \(u^{\star}=2\ln(\sigma^{e}/2\phi)\); \(\Lambda\) = anchor sigmoid; \(\gamma\) free scale. Vol-gap channel (↑ in \(\phi\)); LVR band-crossing ↓ in \(\phi\) ⇒ \(\partial_{(r_{\mathrm{trans}}^{e},r_{\mathrm{arb}}^{e})}\) and \(1-g\) stay distinct
+   - **Definition pinned (README, 2026-08-23):** \(r_{\Delta Q_{\mathrm{arb}}}^{e}\equiv\Lambda(\gamma(u-u^{\star}(\sigma^{e})))=\Lambda(2\gamma\ln(\sigma_{IV}/\sigma^{e}))\), \(u^{\star}=2\ln(\sigma^{e}/2\phi)\); \(\Lambda\) = anchor sigmoid; \(\gamma\) free scale. Vol-gap channel (↑ in \(\phi\)); LVR band-crossing ↓ in \(\phi\) ⇒ \(\partial_{(r_{\mathrm{trans}}^{e},r_{\mathrm{arb}}^{e})}\) and \(1-\big[\nu_{\mathrm{trans}}/\nu\big]\) stay distinct
    - `feat`: `ImpliedVolatility`/`ExpectedVolatility` → \(u^{\star}\) → `volGap` → \(\Lambda\) (reuse `AdaptiveStremia` sigmoid); orthogonality lemma to Aristotle alongside #35
    - Depends on #20; **#22** (\(\beta\)) before compose
 
@@ -123,8 +123,8 @@ r_{\Delta Q_{\mathrm{trans}}}^{e}
 23. **\(\nu_{\mathrm{trans}}\) from `volume_path.gms` (prover-native \(u\leftrightarrow\nu\))** — `feat` — [#34](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/34)
    - Spec: `docs/superpowers/specs/2026-08-22-scratchpad-rarb-trans-flow-design.md` §3 (option **B** approved)
    - Shock: \(V=\bar L e^u\), \(\delta^\*\) → `volTgtWad`, `txlVolumeRate`; \(u=\ln(V/\bar L)=\ln\kappa\) at prover boundary
-   - Derive \(\nu_{\mathrm{trans}}=\sum\sqrt{\bar p|\Delta Q_X\Delta Q_M|}\) from JSON `dQx`/`dQM`; \(g=\nu_{\mathrm{trans}}/V\)
-   - Golden table \(g(\delta^\*,\kappa,\bar\phi,\ldots)\) from GAMS grid (`make test-gams`); option A (exogenous \(\nu\)) **pre-prover stub only**
+   - Derive \(\nu_{\mathrm{trans}}=\sum\sqrt{\bar p|\Delta Q_X\Delta Q_M|}\) from JSON `dQx`/`dQM`; \(\big[\nu_{\mathrm{trans}}/\nu\big]\) read as an atomic given value (not a computed ratio)
+   - Golden table \(\big[\nu_{\mathrm{trans}}/\nu\big](\delta^\*,\kappa,\bar\phi,\ldots)\) from GAMS grid (`make test-gams`); option A (exogenous \(\nu\)) **pre-prover stub only**
    - Prereq for #7 \(\delta_{\mathrm{trans}}=\nu_{\mathrm{trans}}/\pi_{\mathrm{trans}}^{\Delta Q}\) beyond stub; complements RARB Slice 1 Lane B (#19 `TransactionalReturn`)
    - Reads: `refs/volume_path.gms`, `refs/VOLUME_PATH.md`, `refs/MEV_TAX_MODEL_ONE_NOTES.md`
 
