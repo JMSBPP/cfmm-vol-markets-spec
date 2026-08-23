@@ -388,11 +388,13 @@ Objective (anchor \(e^{\sigma} = |\pi^{\sigma} - \hat{\pi^{\sigma}}|\)): \(\pi^{
 
 \]
 
-LVR connector — volume share only. LVR per unit of arb volume is the price gap captured crossing the fee band, a function of \(\sigma\sqrt{\Delta t}/\phi\) and the chunk geometry, not of which token the arb delivers; with the anchor's per-unit \(\lambda_{\mathrm{ARB}}\):
+LVR connector — volume share only, rate-only (no level \(\nu\) is observed in this model; only \(u = \ln(V/L)\), the atomic shares, and returns). LVR per unit of arb share is the price gap captured crossing the fee band; its vol-over-fee argument is read from state as \(\sigma_{\mathrm{IV}}/\phi = 2e^{u/2}\), so it is a function of \((u, \phi)\) and the chunk geometry, not of which token the arb delivers. With the anchor's \(\lambda_{\mathrm{ARB}}\) as a return and the MEV normalizer \(\mathcal{N}_\pi\):
 
 \[
 	\begin{aligned}
-		\pi^{\mathrm{LVR}}(\mathcal{LC}_{\mathrm{leg}}) \, &= \, \Big[\tfrac{\nu_{\mathrm{arb}}}{\nu}\Big] \, \nu \, \lambda_{\mathrm{ARB}}\big(\sigma\sqrt{\Delta t}/\phi;\, \mathcal{LC}_{\mathrm{leg}}\big)
+		r^{\mathrm{LVR}}(\mathcal{LC}_{\mathrm{leg}}) \, &= \, \Big[\tfrac{\nu_{\mathrm{arb}}}{\nu}\Big] \, \lambda_{\mathrm{ARB}}\big(u, \phi;\, \mathcal{LC}_{\mathrm{leg}}\big), \qquad
+		\pi^{\mathrm{LVR}} \, = \, \mathcal{N}_\pi^{-1} \, r^{\mathrm{LVR}}, \qquad
+		r^{\varphi} \, = \, r^{\phi} - r^{\mathrm{LVR}}
 	\end{aligned}
 \]
 
