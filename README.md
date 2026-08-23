@@ -6,7 +6,7 @@ The sqrt-coordinate range payoff is
 
 \[
 	\begin{aligned}
-		\pi^{\text{RA}}(\kappa, r; p_{1/2}) =
+		\pi^{\text{RA}}(k_{1/2}, r; p_{1/2}) =
 			\begin{cases}
 		0, & p_{1/2} < k_{1/2}/\sqrt{r}, \\[4pt]
 		\dfrac{2\cdot p_{1/2} k_{1/2} \sqrt{r} - p_{1/2}^2r - k_{1/2}^2}{r-1}, & k_{1/2}/\sqrt{r} \le p_{1/2} < k_{1/2}, \\[8pt]
@@ -33,20 +33,24 @@ The **contractual** volatility payoff is as defined on VOLATILITY_INSTRUMENTS:
 
 And the option-replica volatility payoff is the **4-leg Panoptic position** (`MintPlan` = `PanopticTokenId` + `LiquidityChunk`), built on Uniswap liquidity positions. Objects, in the order the code constructs them:
 
-**Liquidity chunk** (`Liquidity.LiquidityChunk.createChunk`):
+**Liquidity chunk** (`Liquidity.LiquidityChunk.createChunk`); \(\mathcal{C}\) is the chunk, \(\ell\) is reserved for the LDF below:
 
 \[
 	\begin{aligned}
-		\ell \, &\equiv \, (i^{-}, \, i^{+}, \, L), \qquad i^{-} < i^{+}, \quad 0 < L < 2^{128}, \qquad
-		p_{1/2}(i) \, \equiv \, 1.0001^{\,i/2}
+		\mathcal{C} \, &\equiv \, (i^{-}, \, i^{+}, \, L), \qquad i^{-} < i^{+}, \quad 0 < L < 2^{128}, \qquad
+		p_{1/2}(i) \, \equiv \, 1.0001^{\,i/2} \\
+		k_{1/2}(i^{-}, i^{+}) \, &\equiv \, \sqrt{p_{1/2}(i^{-}) \, p_{1/2}(i^{+})}, \qquad
+		r(i^{-}, i^{+}) \, \equiv \, \frac{p(i^{+})}{p(i^{-})} \, = \, 1.0001^{\,i^{+} - i^{-}}
 	\end{aligned}
 \]
 
-**\(\pi^{\varphi}\) as a function of a chunk** — the Uniswap V3 position value held by the SFPM (linear in \(L\), concave in \(p_{1/2}\)):
+\(r(i^{-},i^{+})\) is the Kristensen width ratio; the Panoptic 7-bit per-leg field \(\mathrm{or}(k)\) below is a different object (size multiplier) and keeps its own symbol.
+
+**\(\pi^{\varphi}\) as a function of a chunk** — the Uniswap V3 position **principal** held by the SFPM (linear in \(L\), concave in \(p_{1/2}\)):
 
 \[
 	\begin{aligned}
-		\pi^{\varphi}(\ell;\, p_{1/2}) \, &\equiv \,
+		\pi^{\varphi}(\mathcal{C};\, p_{1/2}) \, &\equiv \,
 		\begin{cases}
 			L \, p_{1/2}^{2} \Big( \dfrac{1}{p_{1/2}(i^{-})} - \dfrac{1}{p_{1/2}(i^{+})} \Big), & p_{1/2} < p_{1/2}(i^{-}) \\[8pt]
 			L \Big( 2 p_{1/2} - p_{1/2}(i^{-}) - \dfrac{p_{1/2}^{2}}{p_{1/2}(i^{+})} \Big), & p_{1/2}(i^{-}) \le p_{1/2} < p_{1/2}(i^{+}) \\[8pt]
@@ -55,15 +59,37 @@ And the option-replica volatility payoff is the **4-leg Panoptic position** (`Mi
 	\end{aligned}
 \]
 
-CLMM identity (TODO #24, `CLMMPosition`): with \(\kappa_{1/2} = \sqrt{p_{1/2}(i^{-}) \, p_{1/2}(i^{+})}\), \(r = p(i^{+})/p(i^{-})\),
+Checked (2026-08-23) against `v3-periphery/libraries/PositionValue.sol`: `principal(nfpm, tokenId, √P)` = `LiquidityAmounts.getAmountsForLiquidity(√P, √P(i⁻), √P(i⁺), L)`; valuing `amount0·P + amount1` in its three branches reproduces the three cases above exactly. `total = principal + fees`: `fees()` is \(\pi^{\phi}\); `principal` is the concave chunk value whose gap to the rebalancing benchmark is \(\pi^{\mathrm{LVR}}\) — LVR is embedded in `principal` as that concavity gap, not booked as a line item. So `total` is the on-chain reading of \(\pi^{\phi} - \pi^{\mathrm{LVR}}\) up to the benchmark. Algebra Integral periphery `PositionValue` is a fork of this library: same math asserted, not re-checked locally.
+
+**Tick additivity and LDF.** A chunk is a sum of single-tick-spacing chunks, so with the unit single-tick value \(\pi^{\varphi}_{1}(i;\, p_{1/2}) \equiv \pi^{\varphi}\big((i, i+\Delta, 1);\, p_{1/2}\big)\):
 
 \[
 	\begin{aligned}
-		\pi^{\varphi}(\ell;\, p_{1/2}) \, &= \, L \cdot c(\kappa, r) \, \Big[ \pi^{c|p}(\kappa) + \pi^{\mathrm{RAN}}(\kappa, r) \Big]
+		\pi^{\varphi}(\mathcal{C};\, p_{1/2}) \, &= \, L \sum_{i = i^{-}}^{i^{+} - \Delta} \pi^{\varphi}_{1}(i;\, p_{1/2})
+		\, = \, \bar L \sum_{i} \ell_{U}(i) \, \pi^{\varphi}_{1}(i;\, p_{1/2}), \qquad \ell_{U}(i) = \frac{\mathbb{1}[i^{-} \le i < i^{+}]}{(i^{+} - i^{-})/\Delta}, \quad \bar L = L \, \frac{i^{+} - i^{-}}{\Delta}
 	\end{aligned}
 \]
 
-> OPEN: the normalization \(c(\kappa,r)\) between `CLMMPosition` (unit, \(\kappa\)-normalized) and the Uniswap \(L\)-normalized form above is the CLMM identity test of TODO #24 — asserted here, not verified. The entry point is the full \(\pi^{\varphi} = \pi^{c|p}+\pi^{\mathrm{RAN}}\), **not** \(\pi^{c|p}\) alone: \(\pi^{c|p} = \min(P,K)\) is width-blind; the Panoptic `width` field enters only through \(\pi^{\mathrm{RAN}}\).
+i.e. a Uniswap chunk is the **uniform LDF**. Generalizing to a Bunni-v2 liquidity density \(\ell(i) \ge 0\), \(\sum_i \ell(i) = 1\), with the geometric kernel \(\ell_{\mathcal{G}}(\xi, \iota;\, i)\) and convex mixtures of kernels:
+
+\[
+	\begin{aligned}
+		\pi^{\varphi}(\ell, \bar L;\, p_{1/2}) \, &\equiv \, \bar L \sum_{i} \ell(i) \, \pi^{\varphi}_{1}(i;\, p_{1/2}), \qquad
+		\ell \, = \, \sum_{g} w_g \, \ell_{\mathcal{G}}(\xi_g, \iota_g;\, i), \quad w_g \ge 0, \; \sum_g w_g = 1
+	\end{aligned}
+\]
+
+(`Liquidity.LiquidityDensity`; Def 45 `kappaAt (Maybe EtaX96) XiX96 LiquidityChunk` is the \(\xi\)-side of this.) So the range-level normalization \(c(\cdot,\cdot)\) is gone: the object that carries shape is \(\ell\), and \(\pi^{\varphi}\) is linear in it.
+
+CLMM identity (TODO #24, `CLMMPosition`), now stated per tick:
+
+\[
+	\begin{aligned}
+		\pi^{\varphi}_{1}(i;\, p_{1/2}) \, &\overset{?}{=} \, c_{\Delta} \, \Big[ \pi^{c|p}\big(k_{1/2}(i, i+\Delta)\big) + \pi^{\mathrm{RAN}}\big(k_{1/2}(i, i+\Delta), \, r(i, i+\Delta)\big) \Big]
+	\end{aligned}
+\]
+
+> DESIGN CLAIM — to be proved (Aristotle / Lean), not asserted. \(c_{\Delta}\) is a single constant per tick spacing (not a function of the range), which is the whole content of the claim; if it fails, the `CLMMPosition` unit payoff and the Uniswap unit payoff differ by more than scale and #24's CLMM identity test is the place that surfaces it. The entry point is the full \(\pi^{c|p} + \pi^{\mathrm{RAN}}\), **not** \(\pi^{c|p}\) alone: \(\pi^{c|p} = \min(P, K)\) is width-blind; width enters only through \(\pi^{\mathrm{RAN}}\).
 
 **Leg geometry** (`Volatility.VolOrder.legIntervals`): from \((i_L, i_U)\) (width/skew about \(i^{\star}\), `tickBucketFromVolOrder`) and split points \(m_P, m_C\) (`volOrderSplitPoints`):
 
@@ -80,7 +106,7 @@ CLMM identity (TODO #24, `CLMMPosition`): with \(\kappa_{1/2} = \sqrt{p_{1/2}(i^
 \[
 	\begin{aligned}
 		L_k \, &\equiv \, \Lambda \Big( i_k^{-}, \, i_k^{+}; \; \mathrm{or}(k) \cdot \Delta Q_{\upsilon} \Big), \qquad
-		\ell_k \, \equiv \, (i_k^{-}, \, i_k^{+}, \, L_k)
+		\mathcal{C}_k \, \equiv \, (i_k^{-}, \, i_k^{+}, \, L_k)
 	\end{aligned}
 \]
 
@@ -90,21 +116,21 @@ where \(\Lambda\) is the Uniswap amount\(\to\)liquidity map over the leg range (
 
 \[
 	\begin{aligned}
-		\hat{\pi^{\sigma}}(p_{1/2}) \, &\equiv \, \sum_{k=0}^{3} \, \Big[ \pi^{\varphi}\big(\ell_k;\, p^{\star}_{1/2}\big) \, - \, \pi^{\varphi}\big(\ell_k;\, p_{1/2}\big) \Big]
+		\hat{\pi^{\sigma}}(p_{1/2}) \, &\equiv \, \sum_{k=0}^{3} \, \Big[ \pi^{\varphi}\big(\mathcal{C}_k;\, p^{\star}_{1/2}\big) \, - \, \pi^{\varphi}\big(\mathcal{C}_k;\, p_{1/2}\big) \Big]
 	\end{aligned}
 \]
 
-Legs are OTM at \(p^{\star}\), so \(\pi^{\varphi}(\ell_k; p^{\star}_{1/2})\) is a constant per leg: \(L_k \big(p_{1/2}(i_k^{+}) - p_{1/2}(i_k^{-})\big)\) for puts, \(L_k \, p^{\star} \big(1/p_{1/2}(i_k^{-}) - 1/p_{1/2}(i_k^{+})\big)\) for calls. This is the bridge \(\hat{\pi^{\sigma}} = f(\pi^{\varphi})\): \(f\) is \(x \mapsto \sum_k [\mathrm{const}_k - x_k]\) on the leg vector \(\big(\pi^{\varphi}(\ell_k)\big)_k\), convex in \(p_{1/2}\) because each \(-\pi^{\varphi}(\ell_k)\) is. Substituting \(\pi^{\varphi} = \pi^{\phi} - \pi^{\mathrm{LVR}}\):
+Legs are OTM at \(p^{\star}\), so \(\pi^{\varphi}(\mathcal{C}_k; p^{\star}_{1/2})\) is a constant per leg: \(L_k \big(p_{1/2}(i_k^{+}) - p_{1/2}(i_k^{-})\big)\) for puts, \(L_k \, p^{\star} \big(1/p_{1/2}(i_k^{-}) - 1/p_{1/2}(i_k^{+})\big)\) for calls. This is the bridge \(\hat{\pi^{\sigma}} = f(\pi^{\varphi})\): \(f\) is \(x \mapsto \sum_k [\mathrm{const}_k - x_k]\) on the leg vector \(\big(\pi^{\varphi}(\mathcal{C}_k)\big)_k\), convex in \(p_{1/2}\) because each \(-\pi^{\varphi}(\mathcal{C}_k)\) is. Substituting \(\pi^{\varphi} = \pi^{\phi} - \pi^{\mathrm{LVR}}\):
 
 \[
 	\begin{aligned}
-		\hat{\pi^{\sigma}} \, &= \, \sum_{k=0}^{3} \, \Big[ \pi^{\mathrm{LVR}}(\ell_k) \, - \, \pi^{\phi}(\ell_k) \Big] \, + \, \sum_{k=0}^{3} \pi^{\varphi}\big(\ell_k;\, p^{\star}_{1/2}\big)
+		\hat{\pi^{\sigma}} \, &= \, \sum_{k=0}^{3} \, \Big[ \pi^{\mathrm{LVR}}(\mathcal{C}_k) \, - \, \pi^{\phi}(\mathcal{C}_k) \Big] \, + \, \sum_{k=0}^{3} \pi^{\varphi}\big(\mathcal{C}_k;\, p^{\star}_{1/2}\big)
 	\end{aligned}
 \]
 
 Long vol = LVR extracted from the borrowed chunks minus the fees forgone (streamia) on them.
 
-Remarks (not definitions): (i) shipped Hop A/B \(\Delta Q_{\upsilon}\big[N_{\mathrm{id}}(F - \mathrm{Log}) + R\big]\) (`VariancePortfolio`) is the Carr–Madan continuum limit of the 4-leg sum; (ii) MEV \(\sum_i L(i)\,\pi^{\varphi}(i)\) is the **short** side of this same book, hence not ground truth for \(\hat{\pi^{\sigma}}\). Gaps in code: `volOrderToMintPlan` builds one envelope chunk \((i_L, i_U, \Delta Q_{\upsilon})\), not four \(\ell_k\); \(\Lambda\) and \(\mathrm{or}(k) \to L_k\) are not implemented (`OptionRatio.hs` TODO).
+Remarks (not definitions): (i) shipped Hop A/B \(\Delta Q_{\upsilon}\big[N_{\mathrm{id}}(F - \mathrm{Log}) + R\big]\) (`VariancePortfolio`) is the Carr–Madan continuum limit of the 4-leg sum; (ii) MEV \(\sum_i L(i)\,\pi^{\varphi}(i)\) is the **short** side of this same book, hence not ground truth for \(\hat{\pi^{\sigma}}\). Gaps in code: `volOrderToMintPlan` builds one envelope chunk \((i_L, i_U, \Delta Q_{\upsilon})\), not four \(\mathcal{C}_k\); \(\Lambda\) and \(\mathrm{or}(k) \to L_k\) are not implemented (`OptionRatio.hs` TODO).
 
 ## PRICING GEOMETRY
 
