@@ -109,6 +109,8 @@ r_{\Delta Q_{\mathrm{trans}}}^{e}
    - \(\sigma^{e}\) = risk-neutral expectation of realized vol (`ExpectedVolatility` + `VolHorizon`: WINDOW \| tenor); spec `docs/superpowers/specs/2026-08-22-scratchpad-expected-volatility-design.md`
    - **Slice 1 merged (PR #33):** `ExpectedVolatility` uniform tenor + window stub, minimal `ImpliedVolatility`, `volGap`
    - Remaining: Slice 2+; arb gap \(g(\cdot)\); full \(\mathbb{E}^{\mathbb{Q}}\) via #17–#18
+   - **Definition pinned (README, 2026-08-23):** \(r_{\Delta Q_{\mathrm{arb}}}^{e}\equiv\Lambda(\gamma(u-u^{\star}(\sigma^{e})))=\Lambda(2\gamma\ln(\sigma_{IV}/\sigma^{e}))\), \(u^{\star}=2\ln(\sigma^{e}/2\phi)\); \(\Lambda\) = anchor sigmoid; \(\gamma\) free scale. Vol-gap channel (↑ in \(\phi\)); LVR band-crossing ↓ in \(\phi\) ⇒ \(\beta\) and \(1-g\) stay distinct
+   - `feat`: `ImpliedVolatility`/`ExpectedVolatility` → \(u^{\star}\) → `volGap` → \(\Lambda\) (reuse `AdaptiveStremia` sigmoid); orthogonality lemma to Aristotle alongside #35
    - Depends on #20; **#22** (\(\beta\)) before compose
 
 22. **Understand \(\beta\) in the \(r_{\Delta Q}^{e}\) affine split** — `docs` — [#28](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/28)

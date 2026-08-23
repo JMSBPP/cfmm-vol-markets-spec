@@ -357,6 +357,19 @@ u^\star(t)=2\ln\!\Big(\frac{\sigma \, (t)}{2\phi(\,;\sigma \, (t))}\Big).
 \]
 
 
+Parametric arb return (TODO #21): the \([0,1]\) measure of \(\sigma/\phi\) — vol gained per unit of markup paid, \(\sigma_{\mathrm{IV}}/\phi = 2e^{u/2}\) — through the anchor's sigmoid \(\Lambda\) (VOLATILITY_INSTRUMENTS), evaluated at \(\sigma^{e}\):
+
+\[
+	\begin{aligned}
+		r_{\Delta Q_{\mathrm{arb}}}^{e}(\sigma_{\mathrm{IV}}, \sigma^{e}) \, &\equiv \, \Lambda\big(\gamma \, (u - u^{\star}(\sigma^{e}))\big), \qquad
+		u^{\star}(\sigma^{e}) = 2\ln\!\Big(\frac{\sigma^{e}}{2\phi}\Big) \\[4pt]
+		&= \, \Lambda\Big(2\gamma \, \ln \frac{\sigma_{\mathrm{IV}}}{\sigma^{e}}\Big) \qquad \text{(since } \sigma_{\mathrm{IV}} = 2\phi e^{u/2}\text{)}
+	\end{aligned}
+\]
+
+\(= \tfrac12\) at \(u = u^{\star}\) (state IV-consistent); \(\to 1\) when volume/liquidity implies more vol than the markup prices (arb-rich); \(\to 0\) when the markup over-prices it. \(\gamma\) is the single free scale (absorbs \(\sqrt{\Delta t}\)). Increasing in \(\phi\) at fixed \(\sigma^{e}\) — this is the **vol-gap** channel of the arb swap leg; LVR accrual (price-arb band crossing, \(\sigma\sqrt{\Delta t}/\phi\)) is **decreasing** in \(\phi\), so \(\beta\) (arb-leg weight, #22) and \(1-g\) (realized arb volume share) remain distinct parameters. Splitter: \((r^{e}, \beta)\) ex-ante, \((r^{e}, 1-g)\) ex-post; orthogonality \(\partial\pi^{\phi}/\partial\beta = 0\), \(\partial\pi^{\mathrm{LVR}}/\partial r^{e} = 0\) (Aristotle claim, #35-style).
+
+
 geometry:
 
 Lattice \(\kappa_j = j/N\), \(N=255\) — **encoding C**: `KappaTick` / `KappaSpacing`; B (`KappaPips`) retired. Def 45 `kappaAt (Maybe EtaX96) XiX96 LiquidityChunk` → `KappaCoordinate`.
