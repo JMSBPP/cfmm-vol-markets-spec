@@ -52,7 +52,7 @@ Unit chunk at tick \(i\) (tick spacing \(\Delta_i\); units handled on the EVM di
 	\end{aligned}
 \]
 
-\(r(i^{-},i^{+})\) is the width ratio. The 7-bit per-leg field \(\mathrm{or}(k)\) below is a different object (size multiplier) and keeps its own symbol.
+\(r(i^{-},i^{+})\) is the width ratio. The 7-bit per-leg field \(\mathrm{or}(\mathrm{leg})\) below is a different object (size multiplier) and keeps its own symbol.
 
 **\(\pi^{\varphi}\) of a chunk** — the Uniswap V3 position principal held by the SFPM (`PositionValue.principal`; linear in \(L\), concave in \(p_{1/2}\)):
 
@@ -104,21 +104,21 @@ Unit chunk at tick \(i\) (tick spacing \(\Delta_i\); units handled on the EVM di
 
 \[
 	\begin{aligned}
-		(i_k^{-}, i_k^{+})_{k=0}^{3} \, &= \, \big[ i_L, m_P \big), \; \big[ m_P, i^{\star} \big), \; \big[ i^{\star}, m_C \big), \; \big[ m_C, i_U \big] \\
-		\texttt{tokenType}(k) \, &= \, 0 \;\; (\text{put}), \; k \in \{0,1\}; \qquad 1 \;\; (\text{call}), \; k \in \{2,3\} \\
-		\texttt{isLong}(k) \, &= \, 1 \qquad \forall k
+		(i_{\mathrm{leg}}^{-}, i_{\mathrm{leg}}^{+})_{\mathrm{leg}=0}^{3} \, &= \, \big[ i_L, m_P \big), \; \big[ m_P, i^{\star} \big), \; \big[ i^{\star}, m_C \big), \; \big[ m_C, i_U \big] \\
+		\texttt{tokenType}(\mathrm{leg}) \, &= \, 0 \;\; (\text{put}), \; \mathrm{leg} \in \{0,1\}; \qquad 1 \;\; (\text{call}), \; \mathrm{leg} \in \{2,3\} \\
+		\texttt{isLong}(\mathrm{leg}) \, &= \, 1 \qquad \forall \, \mathrm{leg}
 	\end{aligned}
 \]
 
-**Per-leg option ratio and leg chunk** (`optionRatio` field, \(\mathrm{or}(k) \in \{1, \dots, 127\}\)); \(\Delta Q_{\upsilon}\) = SFPM `positionSize` = `targetVegaFromMint`:
+**Per-leg option ratio and leg chunk** (`optionRatio` field, \(\mathrm{or}(\mathrm{leg}) \in \{1, \dots, 127\}\)); \(\Delta Q_{\upsilon}\) = SFPM `positionSize` = `targetVegaFromMint`:
 \[
 	\begin{aligned}
-		L_k \, &\equiv \,
+		L_{\mathrm{leg}} \, &\equiv \,
 		\begin{cases}
-			\dfrac{\mathrm{or}(k) \cdot \Delta Q_{\upsilon}}{p_{1/2}(i_k^{+}) \, - \, p_{1/2}(i_k^{-})}, & \texttt{tokenType}(k) = 0 \;\; (\text{put; notional in token1}) \\[10pt]
-			\dfrac{\mathrm{or}(k) \cdot \Delta Q_{\upsilon}}{1/p_{1/2}(i_k^{-}) \, - \, 1/p_{1/2}(i_k^{+})}, & \texttt{tokenType}(k) = 1 \;\; (\text{call; notional in token0})
+			\dfrac{\mathrm{or}(\mathrm{leg}) \cdot \Delta Q_{\upsilon}}{p_{1/2}(i_{\mathrm{leg}}^{+}) \, - \, p_{1/2}(i_{\mathrm{leg}}^{-})}, & \texttt{tokenType}(\mathrm{leg}) = 0 \;\; (\text{put; notional in token1}) \\[10pt]
+			\dfrac{\mathrm{or}(\mathrm{leg}) \cdot \Delta Q_{\upsilon}}{1/p_{1/2}(i_{\mathrm{leg}}^{-}) \, - \, 1/p_{1/2}(i_{\mathrm{leg}}^{+})}, & \texttt{tokenType}(\mathrm{leg}) = 1 \;\; (\text{call; notional in token0})
 		\end{cases} \\[6pt]
-		\mathcal{LC}_k \, &\equiv \, (i_k^{-}, \, i_k^{+}, \, L_k)
+		\mathcal{LC}_{\mathrm{leg}} \, &\equiv \, (i_{\mathrm{leg}}^{-}, \, i_{\mathrm{leg}}^{+}, \, L_{\mathrm{leg}})
 	\end{aligned}
 \]
 
@@ -128,17 +128,17 @@ These are the Uniswap `getLiquidityForAmount1` / `getLiquidityForAmount0` invers
 
 \[
 	\begin{aligned}
-		\hat{\pi^{\sigma}}(p_{1/2}) \, &\equiv \, \sum_{k=0}^{3} \, \Big[ \pi^{\varphi}\big(\mathcal{LC}_k;\, p^{\star}_{1/2}\big) \, - \, \pi^{\varphi}\big(\mathcal{LC}_k;\, p_{1/2}\big) \Big]
+		\hat{\pi^{\sigma}}(p_{1/2}) \, &\equiv \, \sum_{\mathrm{leg}=0}^{3} \, \Big[ \pi^{\varphi}\big(\mathcal{LC}_{\mathrm{leg}};\, p^{\star}_{1/2}\big) \, - \, \pi^{\varphi}\big(\mathcal{LC}_{\mathrm{leg}};\, p_{1/2}\big) \Big]
 	\end{aligned}
 \]
 
-Legs are OTM at \(p^{\star}\), so \(\pi^{\varphi}(\mathcal{LC}_k; p^{\star}_{1/2})\) is a constant per leg: \(L_k \big(p_{1/2}(i_k^{+}) - p_{1/2}(i_k^{-})\big)\) for puts, \(L_k \, p^{\star} \big(1/p_{1/2}(i_k^{-}) - 1/p_{1/2}(i_k^{+})\big)\) for calls. 
+Legs are OTM at \(p^{\star}\), so \(\pi^{\varphi}(\mathcal{LC}_{\mathrm{leg}}; p^{\star}_{1/2})\) is a constant per leg: \(L_{\mathrm{leg}} \big(p_{1/2}(i_{\mathrm{leg}}^{+}) - p_{1/2}(i_{\mathrm{leg}}^{-})\big)\) for puts, \(L_{\mathrm{leg}} \, p^{\star} \big(1/p_{1/2}(i_{\mathrm{leg}}^{-}) - 1/p_{1/2}(i_{\mathrm{leg}}^{+})\big)\) for calls. 
 
 Substituting \(\pi^{\varphi} = \pi^{\phi} - \pi^{\mathrm{LVR}}\):
 
 \[
 	\begin{aligned}
-		\hat{\pi^{\sigma}} \, &= \, \sum_{k=0}^{3} \, \Big[ \pi^{\mathrm{LVR}}(\mathcal{LC}_k) \, - \, \pi^{\phi}(\mathcal{LC}_k) \Big] \, + \, \sum_{k=0}^{3} \pi^{\varphi}\big(\mathcal{LC}_k;\, p^{\star}_{1/2}\big)
+		\hat{\pi^{\sigma}} \, &= \, \sum_{\mathrm{leg}=0}^{3} \, \Big[ \pi^{\mathrm{LVR}}(\mathcal{LC}_{\mathrm{leg}}) \, - \, \pi^{\phi}(\mathcal{LC}_{\mathrm{leg}}) \Big] \, + \, \sum_{\mathrm{leg}=0}^{3} \pi^{\varphi}\big(\mathcal{LC}_{\mathrm{leg}};\, p^{\star}_{1/2}\big)
 	\end{aligned}
 \]
 
