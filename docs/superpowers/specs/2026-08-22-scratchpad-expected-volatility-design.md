@@ -1,6 +1,6 @@
 # Scratchpad ExpectedVolatility σ^e — design
 
-**Status:** draft — awaiting user review (plan TBD; TODO #21)  
+**Status:** done — plan `docs/superpowers/plans/2026-08-22-scratchpad-expected-volatility.md` (Slice 1)  
 **Date:** 2026-08-22  
 **Repo:** `cfmm-theory` / package `scratchpad/`  
 **Brainstorm:** σ^e as risk-neutral expectation of realized vol; dual horizon (WINDOW + tenor)  

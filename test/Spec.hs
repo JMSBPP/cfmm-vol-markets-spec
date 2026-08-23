@@ -205,7 +205,7 @@ import State (pattern SQRT_PRICE_1_4, pattern SQRT_PRICE_4_1)
 import StrikeX96 (StrikeX96(..))
 import Data.Vector ((!))
 import qualified Data.Vector as V
-import TickPath (TickPath(..), mkTickPath)
+import TickPath (TickPath(..), mkTickPath, pathLength, ticks)
 import Payoffs.VolatilityCall
   ( mkVolStrike
   , payoff
@@ -230,8 +230,21 @@ import Volatility.TickVolatility
   , VolatilityAverage(..)
   , averageVolatility
   , rangeAlongPath
+  , unVolatilityAverage
   , volatilityOnRange
   )
+import Volatility.ExpectedVolatility
+  ( ExpectedVolatility(..)
+  , expectedVolatilityUniformTenor
+  , expectedVolatilityWindowStub
+  , realizedVolatilityFromAverage
+  , tenorTickPath
+  , unExpectedVolatility
+  , unRealizedVolatility
+  , unVolGap
+  , volGap
+  )
+import Volatility.ImpliedVolatility (impliedVolatilityFromAverage)
 import Volatility.VolatilityGrid (gammaCoordinate)
 
 assertThrows :: forall a. String -> a -> IO ()
@@ -655,6 +668,55 @@ main = do
     "constant path ⇒ rangeAlongPath all 0"
     (V.replicate 7 (RangeVolatility 0))
     constantRanges
+
+  -- ExpectedVolatility Slice 1
+  let volAvg0 = VolatilityAverage 0
+  assertEqual
+    "realizedVolatilityFromAverage round-trip"
+    0
+    (unRealizedVolatility (realizedVolatilityFromAverage volAvg0))
+  assertEqual
+    "expectedVolatilityWindowStub = realized (Slice 1 stub)"
+    0
+    (unExpectedVolatility (expectedVolatilityWindowStub volAvg0))
+  let
+    ipmTen = mkInterestPriceMap 1 0
+    t0Vol = mkInterestTick 0
+    t7Vol = mkInterestTick 7
+    flatPathVol = TickPath 8 (V.replicate 8 0)
+    evFlat = expectedVolatilityUniformTenor ipmTen t0Vol t0Vol
+    path07 = tenorTickPath ipmTen t0Vol t7Vol
+  assertEqual
+    "tenorTickPath t0→t7 length"
+    8
+    (pathLength path07)
+  assertEqual
+    "tenorTickPath t0 tick"
+    0
+    (ticks path07 ! 0)
+  assertEqual
+    "tenorTickPath t7 tick"
+    7
+    (ticks path07 ! 7)
+  assertEqual
+    "uniform tenor flat t0=t0 ⇒ σ^e=0"
+    0
+    (unExpectedVolatility evFlat)
+  assertEqual
+    "uniform tenor flat matches averageVolatility constant path"
+    (unVolatilityAverage (averageVolatility flatPathVol))
+    (unExpectedVolatility (expectedVolatilityUniformTenor ipmTen t0Vol t0Vol))
+  let
+    ivGap = impliedVolatilityFromAverage (VolatilityAverage 100)
+    evGap = ExpectedVolatility 40
+  assertEqual
+    "volGap σ_IV − σ^e"
+    60
+    (unVolGap (volGap ivGap evGap))
+  assertEqual
+    "volGap zero when equal"
+    0
+    (unVolGap (volGap ivGap (ExpectedVolatility 100)))
 
   let
     bookPath = TickPath 8 (V.generate 8 (\x -> x * 10))

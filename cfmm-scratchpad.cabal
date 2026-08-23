@@ -71,6 +71,8 @@ library
       Trading.PriceImpact
       Trading.Quote
       Volatility.CevField
+      Volatility.ExpectedVolatility
+      Volatility.ImpliedVolatility
       Volatility.TickVolatility
       Volatility.VolatilityGrid
       Volatility.VolOrder
