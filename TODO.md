@@ -47,6 +47,7 @@ Workflow: see `AGENTS.md` / `CLAUDE.md` / `QWEN.md` (classify → branch → iss
 | 22 | `docs` | [#28](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/28) | — | open |
 | 23 | `feat` | [#34](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/34) | — | open |
 | 24 | `docs`→`feat` | [#35](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/35) | — | open |
+| 25 | `docs`→`feat` | [#36](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/36) | — | open |
 
 ### Pricing / returns / fee-revenue
 
@@ -127,6 +128,14 @@ r_{\Delta Q_{\mathrm{trans}}}^{e}
    - \(\pi^{c|p}+\pi^{\mathrm{RAN}}\equiv\pi^{\varphi}\) (CLMM); \(\pi^{\varphi}=\pi^{\phi}(\pi_{\mathrm{trans}}^{\Delta Q})-\pi^{\mathrm{LVR}}(\pi_{\mathrm{arb}}^{\Delta Q})\)
    - \(\pi^{\mathrm{arb}}\equiv\pi_{\mathrm{arb}}^{\Delta Q}\) (#21); LVR = normalized return read off arb leg; \(r^{\varphi}=r^{\phi}-r^{\mathrm{LVR}}\)
    - Depends: RARB trans tag (#19), arb mixture (#21); CLMM identity test vs `CLMMPosition`
+
+25. **\(\pi^{\sigma}=f(\pi^{\varphi})\) — Panoptic/Haskell bridge (not MEV Σ)** — `docs`→`feat` — [#36](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/36)
+   - **Ground truth:** shipped Hop A/B — \(\pi^{\sigma}=\Delta Q_{v}\cdot\Pi^{\sigma}_{\mathrm{opt}}\) with
+     \(\Pi^{\sigma}_{\mathrm{opt}}=N_{\mathrm{id}}\bigl((P-P^{\star})/P^{\star}-\ln(P/P^{\star})\bigr)+R\) (`VariancePortfolio` / `MintPlan` → `targetVegaFromMint`)
+   - **Open:** identify how \(\pi^{\varphi}\) (CLMM / fee−LVR, #24) enters \(\Pi_{\mathrm{opt}}\) / \(R\) / the book — board claim \(\pi^{\sigma}=f(\pi^{\varphi})\); MEV \(\sum L(i)\pi^{\varphi}(i)\) is **not** ground truth
+   - Spec pointer: `cfmm-theory/docs/superpowers/specs/2026-08-19-scratchpad-target-vega-replication-design.md` (≡^R OPEN); roadmap roles doc
+   - Depends: #24 (net \(\pi^{\varphi}\)); uses existing `VariancePortfolio` / `CLMMPosition`
+   - Deliverable: design note pinning \(f\) from Haskell; then code/tests if warranted
 
 Later (not opened yet): compose \(r_{\Delta Q}^{e}\) from #19+#21; wire into parametrized \(\pi^{\Delta Q}/\pi^{\phi}\); then unblock #6.
 

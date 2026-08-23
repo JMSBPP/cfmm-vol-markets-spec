@@ -112,15 +112,19 @@ r_{\Delta Q}^{e}
 
 Refactor / hygiene can interleave anytime (low semantic impact): **#10–#13, #16**.
 
-| Wave | Goal | TODOs |
-|------|------|-------|
-| **1 — Trans controls** | Parametrize \(\pi_{\mathrm{trans}}^{\Delta Q}\); keep GAMS as path prover | #19, then #7 stub |
-| **2 — Prover bridge** | Transients → \(\nu_{\mathrm{trans}}\), \(g\); pin \(\delta_{\mathrm{trans}}\) | #23 |
-| **3 — Vol / arb controls** | \(\sigma_{IV}\), \(\sigma^{e}\), gap → \(r_{\mathrm{arb}}^{e}\), \(\pi_{\mathrm{arb}}^{\Delta Q}\) | #20, #21 Slice 1–2, #22 |
-| **4 — Net \(\pi^{\varphi}\)** | Fee − LVR; CLMM check | #24 |
-| **5 — Measure + compose** | \(\mathbb{E}^{\mathbb{Q}}\); unblock #6 | #17, #18, #6 |
-| **Parallel** | Adaptive fee body consuming \(\nu\) | #9 (after #23 enough for \(\nu\)) |
-| **Side** | Liquidity / Panoptic density | #14, #15 |
+| Wave | Goal | TODOs | Start when |
+|------|------|-------|------------|
+| **0** | Merge in-flight σ^e Slice 1 + docs | PR [#33](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/33) / #21 Slice 1 | now |
+| **1 — Trans controls** | Parametrize \(\pi_{\mathrm{trans}}^{\Delta Q}\); GAMS stays path prover | **#19** (open issue), then **#7** stub [#3](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/3) | after Wave 0 |
+| **2 — Prover bridge** | Transients → \(\nu_{\mathrm{trans}}\), \(g\); pin \(\delta_{\mathrm{trans}}\) | **#23** [#34](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/34) | after #19 |
+| **3 — Vol / arb controls** | \(\sigma_{IV}\), \(\sigma^{e}\), gap → \(r_{\mathrm{arb}}^{e}\), \(\pi_{\mathrm{arb}}^{\Delta Q}\) | **#20**, **#21** feat, **#22** [#28](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/28) | after Wave 1 (can overlap Wave 2) |
+| **4 — Net \(\pi^{\varphi}\)** | Fee − LVR; CLMM check | **#24** [#35](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/35) | after #19 + #21 arb leg enough |
+| **5 — \(\pi^{\sigma}=f(\pi^{\varphi})\)** | Pin Panoptic \(f\) linking \(\Pi_{\mathrm{opt}}\) to \(\pi^{\varphi}\) | **#25** | after #24 |
+| **6 — Measure + compose** | \(\mathbb{E}^{\mathbb{Q}}\); unblock #6 | **#17**, **#18**, **#6** [#2](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/2) | after Waves 3–4 |
+| **Parallel** | Adaptive fee body consuming \(\nu\) | **#9** [#5](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/5) | after #23 enough for \(\nu\) |
+| **Side** | Liquidity / Panoptic density | **#14**, **#15** | anytime |
+
+**First code issue to open and execute:** TODO **#19** (exogenous \(r_{\Delta Q_{\mathrm{trans}}}^{e}\)).
 
 ---
 
@@ -142,4 +146,5 @@ Refactor / hygiene can interleave anytime (low semantic impact): **#10–#13, #1
 > **GAMS invents swaps to hit \(\delta_{\mathrm{trans}}\) / \(r^{\phi}\).**  
 > **Arb invents returns to hit \(\sigma_{IV}-\sigma^{e}\).**  
 > **CLMM \(\pi^{\varphi}\) is fee(trans) − LVR(arb).**  
+> **\(\pi^{\sigma}=\Delta Q_{v}\cdot\Pi^{\sigma}_{\mathrm{opt}}\) (Panoptic); \(f(\pi^{\varphi})\) is open (#25).**  
 > **\(\Delta Q,\Delta s\) are never the story — targets and net \(\pi^{\varphi}\) are.**
