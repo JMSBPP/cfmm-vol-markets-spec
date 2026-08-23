@@ -345,14 +345,14 @@ Weights in (RARB), both in \([0,1]\):
 
 \[
 	\begin{aligned}
-		\beta \, &\equiv \, \partial_{(r_{\Delta Q_{\mathrm{trans}}}^{e},\, r_{\Delta Q_{\mathrm{arb}}}^{e})} \, = \, \frac{\partial \, r_{\Delta Q}^{e}}{\partial \, r_{\Delta Q_{\mathrm{arb}}}^{e}}\bigg|_{r_{\Delta Q_{\mathrm{trans}}}^{e}}
-		\qquad \text{(ex-ante weight of the arb leg in the net-swap return; TODO \#22)} \\[4pt]
+		\partial_{(r_{\Delta Q_{\mathrm{trans}}}^{e},\, r_{\Delta Q_{\mathrm{arb}}}^{e})} \, &\equiv \, \frac{\partial \, r_{\Delta Q}^{e}}{\partial \, r_{\Delta Q_{\mathrm{arb}}}^{e}}\bigg|_{r_{\Delta Q_{\mathrm{trans}}}^{e}}
+		\qquad \text{(ex-ante weight of the arb leg in the net-swap return; TODO \#22 — a definition by role, its formula is the open item)} \\[4pt]
 		g \, &\equiv \, \frac{\nu_{\mathrm{trans}}}{V}, \qquad V = L(i(t))\,e^{u(t)}, \qquad 1 - g = \frac{\nu_{\mathrm{arb}}}{V}
 		\qquad \text{(ex-post transactional share of volume; `refs/volume_path.gms`, TODO \#23)}
 	\end{aligned}
 \]
 
-so (RARB) reads \(r_{\Delta Q}^{e} = r_{\Delta Q_{\mathrm{trans}}}^{e} + \beta \, r_{\Delta Q_{\mathrm{arb}}}^{e}(\sigma_{\mathrm{IV}}, \sigma^{e})\); \(\beta\) is the ex-ante counterpart of the realized \(1-g\).
+\(\partial_{(r_{\Delta Q_{\mathrm{trans}}}^{e},\, r_{\Delta Q_{\mathrm{arb}}}^{e})}\) is the ex-ante counterpart of the realized \(1-g\). Note \(g \ne \delta_{\mathrm{trans}}\): \(g = \nu_{\mathrm{trans}}/V\) is a share of total volume, \(\delta_{\mathrm{trans}} = \nu_{\mathrm{trans}}/\pi^{\Delta Q}_{\mathrm{trans}}\) is turnover of the transactional leg; they are linked by \(g = \delta_{\mathrm{trans}}\,\pi^{\Delta Q}_{\mathrm{trans}}/V\), and only \(g\) carries the trans/arb split.
 
 Parametric arb return (TODO #21): the \([0,1]\) measure of \(\sigma/\phi\) — vol gained per unit of markup paid, \(\sigma_{\mathrm{IV}}/\phi = 2e^{u/2}\) — through the anchor's sigmoid \(\Lambda\) (VOLATILITY_INSTRUMENTS), evaluated at \(\sigma^{e}\):
 
@@ -364,7 +364,7 @@ Parametric arb return (TODO #21): the \([0,1]\) measure of \(\sigma/\phi\) — v
 	\end{aligned}
 \]
 
-\(= \tfrac12\) at \(u = u^{\star}\) (state IV-consistent); \(\to 1\) when volume/liquidity implies more vol than the markup prices (arb-rich); \(\to 0\) when the markup over-prices it. \(\gamma\) is the single free scale (absorbs \(\sqrt{\Delta t}\)). Increasing in \(\phi\) at fixed \(\sigma^{e}\) — this is the **vol-gap** channel of the arb swap leg; LVR accrual (price-arb band crossing, \(\sigma\sqrt{\Delta t}/\phi\)) is **decreasing** in \(\phi\), so \(\beta\) (arb-leg weight, #22) and \(1-g\) (realized arb volume share) remain distinct parameters. Splitter: \((r^{e}, \beta)\) ex-ante, \((r^{e}, 1-g)\) ex-post; orthogonality \(\partial\pi^{\phi}/\partial\beta = 0\), \(\partial\pi^{\mathrm{LVR}}/\partial r^{e} = 0\) (Aristotle claim, #35-style).
+\(= \tfrac12\) at \(u = u^{\star}\) (state IV-consistent); \(\to 1\) when volume/liquidity implies more vol than the markup prices (arb-rich); \(\to 0\) when the markup over-prices it. \(\gamma\) is the single free scale (absorbs \(\sqrt{\Delta t}\)). Increasing in \(\phi\) at fixed \(\sigma^{e}\) — this is the **vol-gap** channel of the arb swap leg; LVR accrual (price-arb band crossing, \(\sigma\sqrt{\Delta t}/\phi\)) is **decreasing** in \(\phi\), so \(\partial_{(r_{\Delta Q_{\mathrm{trans}}}^{e},\, r_{\Delta Q_{\mathrm{arb}}}^{e})}\) (arb-leg weight, #22) and \(1-g\) (realized arb volume share) remain distinct parameters. Splitter: \((r^{e}, \partial_{(r_{\Delta Q_{\mathrm{trans}}}^{e},\, r_{\Delta Q_{\mathrm{arb}}}^{e})})\) ex-ante, \((r^{e}, 1-g)\) ex-post; orthogonality \(\partial\pi^{\phi}/\partial\,\partial_{(r_{\Delta Q_{\mathrm{trans}}}^{e},\, r_{\Delta Q_{\mathrm{arb}}}^{e})} = 0\), \(\partial\pi^{\mathrm{LVR}}/\partial r^{e} = 0\) (Aristotle claim, #35-style).
 
 
 geometry:
