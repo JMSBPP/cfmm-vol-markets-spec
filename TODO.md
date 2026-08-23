@@ -43,7 +43,7 @@ Workflow: see `AGENTS.md` / `CLAUDE.md` / `QWEN.md` (classify → branch → iss
 | 18 | `feat` | — | — | open (no GitHub issue yet) |
 | 19 | `feat` | — | — | open (no GitHub issue yet) |
 | 20 | `feat` | — | — | open (no GitHub issue yet) |
-| 21 | `docs`→`feat` | [#31](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/31) | — | open |
+| 21 | `docs`→`feat` | [#31](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/31) | [#33](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/33) | open — **Slice 1 merged**; Slice 2+ remain |
 | 22 | `docs` | [#28](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/28) | — | open |
 | 23 | `feat` | [#34](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/34) | — | open |
 | 24 | `docs`→`feat` | [#35](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/35) | — | open |
@@ -102,11 +102,11 @@ r_{\Delta Q_{\mathrm{trans}}}^{e}
    - Module `Volatility.ImpliedVolatility` (T0); T1 observer / T2 u88 deferred
    - No GitHub issue yet (open when plan approved)
 
-21. **Parametric \(r_{\Delta Q_{\mathrm{arb}}}^{e}(\sigma_{IV},\sigma^{e})\)** — `docs` then `feat` — [#31](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/31)
+21. **Parametric \(r_{\Delta Q_{\mathrm{arb}}}^{e}(\sigma_{IV},\sigma^{e})\)** — `docs` then `feat` — [#31](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/31) / [#33](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/33)
    - \(\sigma^{e}\) = risk-neutral expectation of realized vol (`ExpectedVolatility` + `VolHorizon`: WINDOW \| tenor); spec `docs/superpowers/specs/2026-08-22-scratchpad-expected-volatility-design.md`
-   - Arb gap \(\sigma_{\mathrm{IV}}-\sigma^{e}\); \(g(\cdot)\) functional form; full \(\mathbb{E}^{\mathbb{Q}}\) via #17–#18
+   - **Slice 1 merged (PR #33):** `ExpectedVolatility` uniform tenor + window stub, minimal `ImpliedVolatility`, `volGap`
+   - Remaining: Slice 2+; arb gap \(g(\cdot)\); full \(\mathbb{E}^{\mathbb{Q}}\) via #17–#18
    - Depends on #20; **#22** (\(\beta\)) before compose
-   - No GitHub issue yet (open when plan approved)
 
 22. **Understand \(\beta\) in the \(r_{\Delta Q}^{e}\) affine split** — `docs` — [#28](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/28)
    - Canonical split (README): \(r_{\Delta Q}^{e}=r_{\Delta Q_{\mathrm{trans}}}^{e}+\beta\cdot r_{\Delta Q_{\mathrm{arb}}}^{e}(\sigma_{IV},\sigma^{e})\)
