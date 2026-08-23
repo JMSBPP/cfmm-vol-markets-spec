@@ -290,30 +290,6 @@ And given adaptive markup (stub): \(\phi(\Theta_\phi;\sigma^2,\nu)\) in `Adaptiv
 \pi^{\Delta Q}_{\mathrm{recv}} = I(r_{1/2})(1-\phi_M)
 \]
 
-From where for any admissible expected return, it parametrizes the net-swap payoff:
-
-\[
-	\begin{aligned}
-        \pi^{\Delta Q}(r^e;\cdot)
-         &=  \, (1-r^e)\,\pi^{\Delta Q}_{\mathrm{pay}} \, + \, r^e\, \pi^{\Delta Q}_{\mathrm{recv}}\\
-		 \\
-        &= \, (1-r^e)\,P_{1/2}(1-\phi_X)
-        +
-        r^e\,I(r_{1/2})(1-\phi_M)
-
-	\end{aligned}
-\]
-
-
-\[
-\pi^\phi(r_\phi^e;\cdot)
-=
-(1-r_\phi^e)\,\phi_X P_{1/2}
-+
-r_\phi^e\,\phi_M I(r_{1/2})
-\]
-
-
 where for returns we have expectations, where expectd transactional return is estimated /computed fro =m exogenous transactional demand inputs :
 
 
@@ -347,12 +323,12 @@ Weights in (RARB), both in \([0,1]\):
 	\begin{aligned}
 		\partial_{(r_{\Delta Q_{\mathrm{trans}}}^{e},\, r_{\Delta Q_{\mathrm{arb}}}^{e})} \, &\equiv \, \frac{\partial \, r_{\Delta Q}^{e}}{\partial \, r_{\Delta Q_{\mathrm{arb}}}^{e}}\bigg|_{r_{\Delta Q_{\mathrm{trans}}}^{e}}
 		\qquad \text{(ex-ante weight of the arb leg in the net-swap return; TODO \#22 — a definition by role, its formula is the open item)} \\[4pt]
-		\Big[\tfrac{\nu_{\mathrm{trans}}}{\nu}\Big] \, &\in [0,1], \qquad 1 - \Big[\tfrac{\nu_{\mathrm{trans}}}{\nu}\Big] = \frac{\nu_{\mathrm{arb}}}{\nu}
+		\Big[\tfrac{\nu_{\mathrm{trans}}}{\nu}\Big] \, &\in [0,1], \qquad \Big[\tfrac{\nu_{\mathrm{arb}}}{\nu}\Big] = 1 - \Big[\tfrac{\nu_{\mathrm{trans}}}{\nu}\Big]
 		\qquad \text{(ex-post transactional share of volume, an \textbf{atomic given value} — brackets mean it is read, not computed as a ratio; `refs/volume_path.gms`, TODO \#23)}
 	\end{aligned}
 \]
 
-\(\partial_{(r_{\Delta Q_{\mathrm{trans}}}^{e},\, r_{\Delta Q_{\mathrm{arb}}}^{e})}\) is the ex-ante counterpart of the realized \(1-\Big[\tfrac{\nu_{\mathrm{trans}}}{\nu}\Big]\). Note \Big[\tfrac{\nu_{\mathrm{trans}}}{\nu}\Big] \(\ne \delta_{\mathrm{trans}}\): the bracket is a share of total volume, \(\delta_{\mathrm{trans}} = \nu_{\mathrm{trans}}/\pi^{\Delta Q}_{\mathrm{trans}}\) is turnover of the transactional leg; only the bracket carries the trans/arb split.
+\(\partial_{(r_{\Delta Q_{\mathrm{trans}}}^{e},\, r_{\Delta Q_{\mathrm{arb}}}^{e})}\) is the ex-ante counterpart of the realized \(\Big[\tfrac{\nu_{\mathrm{arb}}}{\nu}\Big]\). Note \Big[\tfrac{\nu_{\mathrm{trans}}}{\nu}\Big] \(\ne \delta_{\mathrm{trans}}\): the bracket is a share of total volume, \(\delta_{\mathrm{trans}} = \nu_{\mathrm{trans}}/\pi^{\Delta Q}_{\mathrm{trans}}\) is turnover of the transactional leg; only the bracket carries the trans/arb split.
 
 Parametric arb return (TODO #21): the \([0,1]\) measure of \(\sigma/\phi\) — vol gained per unit of markup paid, \(\sigma_{\mathrm{IV}}/\phi = 2e^{u/2}\) — through the anchor's sigmoid \(\Lambda\) (VOLATILITY_INSTRUMENTS), evaluated at \(\sigma^{e}\):
 
@@ -364,7 +340,47 @@ Parametric arb return (TODO #21): the \([0,1]\) measure of \(\sigma/\phi\) — v
 	\end{aligned}
 \]
 
-\(= \tfrac12\) at \(u = u^{\star}\) (state IV-consistent); \(\to 1\) when volume/liquidity implies more vol than the markup prices (arb-rich); \(\to 0\) when the markup over-prices it. \(\gamma\) is the single free scale (absorbs \(\sqrt{\Delta t}\)). Increasing in \(\phi\) at fixed \(\sigma^{e}\) — this is the **vol-gap** channel of the arb swap leg; LVR accrual (price-arb band crossing, \(\sigma\sqrt{\Delta t}/\phi\)) is **decreasing** in \(\phi\), so \(\partial_{(r_{\Delta Q_{\mathrm{trans}}}^{e},\, r_{\Delta Q_{\mathrm{arb}}}^{e})}\) (arb-leg weight, #22) and \(1-\Big[\tfrac{\nu_{\mathrm{trans}}}{\nu}\Big]\) (realized arb volume share) remain distinct parameters. Splitter: \((r^{e}, \partial_{(r_{\Delta Q_{\mathrm{trans}}}^{e},\, r_{\Delta Q_{\mathrm{arb}}}^{e})})\) ex-ante, \((r^{e}, 1-\Big[\tfrac{\nu_{\mathrm{trans}}}{\nu}\Big])\) ex-post; orthogonality \(\partial\pi^{\phi}/\partial\,\partial_{(r_{\Delta Q_{\mathrm{trans}}}^{e},\, r_{\Delta Q_{\mathrm{arb}}}^{e})} = 0\), \(\partial\pi^{\mathrm{LVR}}/\partial r^{e} = 0\) (Aristotle claim, #35-style).
+\(= \tfrac12\) at \(u = u^{\star}\) (state IV-consistent); \(\to 1\) when volume/liquidity implies more vol than the markup prices (arb-rich); \(\to 0\) when the markup over-prices it. \(\gamma\) is the single free scale (absorbs \(\sqrt{\Delta t}\)). Increasing in \(\phi\) at fixed \(\sigma^{e}\) — this is the **vol-gap** channel of the arb swap leg; LVR accrual (price-arb band crossing, \(\sigma\sqrt{\Delta t}/\phi\)) is **decreasing** in \(\phi\), so \(\partial_{(r_{\Delta Q_{\mathrm{trans}}}^{e},\, r_{\Delta Q_{\mathrm{arb}}}^{e})}\) (arb-leg weight, #22) and \(\Big[\tfrac{\nu_{\mathrm{arb}}}{\nu}\Big]\) (realized arb volume share) remain distinct parameters. Splitter: \((r^{e}, \partial_{(r_{\Delta Q_{\mathrm{trans}}}^{e},\, r_{\Delta Q_{\mathrm{arb}}}^{e})})\) ex-ante, \((r^{e}, \Big[\tfrac{\nu_{\mathrm{arb}}}{\nu}\Big])\) ex-post; orthogonality \(\partial\pi^{\phi}/\partial\,\partial_{(r_{\Delta Q_{\mathrm{trans}}}^{e},\, r_{\Delta Q_{\mathrm{arb}}}^{e})} = 0\), \(\partial\pi^{\mathrm{LVR}}/\partial r^{e} = 0\) (Aristotle claim, #35-style).
+
+
+
+Net-swap payoff by flow type, then by token side (two nested \([0,1]\) weights — the bracket is the flow-type share, \(r^{e}\) the token-side weight; neither replaces the other):
+
+\[
+	\begin{aligned}
+		\pi^{\Delta Q} \, &= \, \Big[\tfrac{\nu_{\mathrm{trans}}}{\nu}\Big] \, \pi^{\Delta Q}_{\mathrm{trans}}\big(r_{\Delta Q_{\mathrm{trans}}}^{e}\big) \, + \, \Big[\tfrac{\nu_{\mathrm{arb}}}{\nu}\Big] \, \pi^{\Delta Q}_{\mathrm{arb}}\big(r_{\Delta Q_{\mathrm{arb}}}^{e}(\sigma_{\mathrm{IV}}, \sigma^{e})\big), \qquad \Big[\tfrac{\nu_{\mathrm{trans}}}{\nu}\Big] + \Big[\tfrac{\nu_{\mathrm{arb}}}{\nu}\Big] = 1
+	\end{aligned}
+\]
+
+For solving for the tax the parameter is \Big[\tfrac{\nu_{\mathrm{arb}}}{\nu}\Big] read directly: \(\tau_{\mathrm{MEV}}\) moves the arb share and \(\nu_{\mathrm{arb}}\), not \(r_{\Delta Q_{\mathrm{trans}}}^{e}\) — so \(\pi^{\phi}\) (token side + volume) and \(\pi^{\mathrm{LVR}}\) (arb share) separate, and the vol-gap parametrization \(r_{\Delta Q_{\mathrm{arb}}}^{e}\) stays as the inner weight of the arb leg.
+
+
+From where for any admissible expected return, it parametrizes the net-swap payoff:
+
+
+
+
+\[
+	\begin{aligned}
+        \pi^{\Delta Q}(r^e;\cdot)
+         &=  \, (1-r^e)\,\pi^{\Delta Q}_{\mathrm{pay}} \, + \, r^e\, \pi^{\Delta Q}_{\mathrm{recv}}\\
+		 \\
+        &= \, (1-r^e)\,P_{1/2}(1-\phi_X)
+        +
+        r^e\,I(r_{1/2})(1-\phi_M)
+
+	\end{aligned}
+\]
+
+
+\[
+\pi^\phi(r_\phi^e;\cdot)
+=
+(1-r_\phi^e)\,\phi_X P_{1/2}
++
+r_\phi^e\,\phi_M I(r_{1/2})
+\]
+
 
 
 geometry:
@@ -403,6 +419,17 @@ Payoff decomposition (spec `docs/superpowers/specs/2026-08-22-scratchpad-pi-varp
 \[
 \pi^{c|p} + \pi^{\mathrm{RAN}} \equiv \pi^{\varphi} \equiv \pi^{\phi} - \pi^{\mathrm{LVR}}
 \]
+
+Objective (anchor \(e^{\sigma} = |\pi^{\sigma} - \hat{\pi^{\sigma}}|\)): \(\pi^{\sigma} = \Delta Q_{\upsilon}(\sigma - \sigma_K)^{+}\) is \(\tau_{\mathrm{MEV}}\)-free, so all \(\tau_{\mathrm{MEV}}\) dependence of \(e^{\sigma}\) runs through the replica, along one explicit chain:
+
+\[
+	\begin{aligned}
+		\tau_{\mathrm{MEV}} \;\to\; \Big[\tfrac{\nu_{\mathrm{arb}}}{\nu}\Big](\tau_{\mathrm{MEV}}) \;\to\; \pi^{\mathrm{LVR}}(\mathcal{LC}_{\mathrm{leg}}) \;\to\; \pi^{\varphi}(\mathcal{LC}_{\mathrm{leg}}) = \pi^{\phi} - \pi^{\mathrm{LVR}} \;\to\; \hat{\pi^{\sigma}} = \sum_{\mathrm{leg}=0}^{3} \Big[ \pi^{\varphi}(\mathcal{LC}_{\mathrm{leg}}; p^{\star}_{1/2}) - \pi^{\varphi}(\mathcal{LC}_{\mathrm{leg}}; p_{1/2}) \Big] \\[6pt]
+		\inf_{\tau_{\mathrm{MEV}}} \, e^{\sigma}(\tau_{\mathrm{MEV}}) \, &= \, \inf_{\tau_{\mathrm{MEV}}} \, \Big| \pi^{\sigma} - \hat{\pi^{\sigma}}\big(\Big[\tfrac{\nu_{\mathrm{arb}}}{\nu}\Big](\tau_{\mathrm{MEV}})\big) \Big|
+	\end{aligned}
+\]
+
+First-order condition = the anchor's direct + gate split of \(\partial \hat{\pi^{\sigma}} / \partial \tau_{\mathrm{MEV}}\), the gate term being \(\partial \Big[\tfrac{\nu_{\mathrm{arb}}}{\nu}\Big] / \partial \tau_{\mathrm{MEV}}\). Every input to the replica is now explicit: \(\mathcal{LC}_{\mathrm{leg}}\) (geometry, \(\mathrm{or}(\mathrm{leg})\), \(\Delta Q_{\upsilon}\)), \(r^{e}\) (token side), \Big[\tfrac{\nu_{\mathrm{arb}}}{\nu}\Big] (flow type), \(r_{\Delta Q_{\mathrm{arb}}}^{e}(\sigma_{\mathrm{IV}}, \sigma^{e})\) (vol gap), \(\phi\).
 
 \[
 \pi^{\phi}=\pi^{\phi}\!\bigl(\pi_{\mathrm{trans}}^{\Delta Q}(r_{\mathrm{trans}}^{e})\bigr),
