@@ -136,7 +136,7 @@ Refactor / hygiene can interleave anytime (low semantic impact): **#10–#13, #1
 | \(\pi^{\Delta Q}(r^e)\) mixture | Done |
 | `CLMMPosition` = call\|put + RAN | Done |
 | `MarkUpStructure` | Done |
-| \(\sigma^{e}\) Slice 1 stub | In flight (PR #33 / TODO #21) |
+| \(\sigma^{e}\) Slice 1 stub | **Merged** PR [#33](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/33) |
 | `volume_path.gms` prover | In `refs/` — **path utility**, not Haskell payoff |
 
 ---
