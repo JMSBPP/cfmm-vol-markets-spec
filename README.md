@@ -1,3 +1,28 @@
+# PRICE_GRID
+
+Fee-deformed sqrt-price quotes; the chunk bounds are identified with them: \(p_{1/2}^{(\mathrm{bid})} \equiv p_{1/2}^{(\mathrm{bid})}\), \(p_{1/2}^{(\mathrm{ask})} \equiv p_{1/2}^{(\mathrm{ask})}\), and bid/ask notation is used throughout.
+
+\[
+p_{1/2}^{(\mathrm{ask})} = \sqrt{1+\phi} \,p_{1/2},
+\qquad
+p_{1/2}^{(\mathrm{bid})} = \frac{p_{1/2}}{\sqrt{1+\phi}}
+\]
+
+Given a `Quote` with bid/ask on \(p_{1/2}\):
+
+\[
+\bigl(\phi(p_{1/2}^{(\mathrm{ask})}),\;\phi(p_{1/2}^{(\mathrm{bid})})\bigr)
+\quad\Longrightarrow\quad
+\phi_M \leftarrow \phi(p_{1/2}^{(\mathrm{ask})}),\;
+\phi_X \leftarrow \phi(p_{1/2}^{(\mathrm{bid})})
+\]
+
+Under the fee rule:
+
+
+\[
+\phi \equiv 1-(1-\phi_M)(1-\phi_X)
+\]
 
 # RANGE_ACCRUAL_NOTE
 
@@ -38,9 +63,9 @@ And the option-replica volatility payoff is the **4-leg Panoptic position**
 \[
 	\begin{aligned}
 		\mathcal{LC} \, &\equiv \, (i^{-}, \, i^{+}, \, L), \qquad i^{-} < i^{+}, \quad 0 < L < 2^{128}, \qquad
-		p_{1/2}(i) \, \equiv \, 1.0001^{\,i/2} \\
-		k_{1/2}(i^{-}, i^{+}) \, &\equiv \, \sqrt{p_{1/2}(i^{-}) \, p_{1/2}(i^{+})}, \qquad
-		r(i^{-}, i^{+}) \, \equiv \, \frac{p(i^{+})}{p(i^{-})} \, = \, 1.0001^{\,i^{+} - i^{-}}
+		p_{1/2}(i) \, \equiv \, 1.0001^{\,i/2}, \quad p_{1/2}^{(\mathrm{bid})} \equiv p_{1/2}(i^{-}), \; p_{1/2}^{(\mathrm{ask})} \equiv p_{1/2}(i^{+}) \\
+		k_{1/2}(i^{-}, i^{+}) \, &\equiv \, \sqrt{p_{1/2}^{(\mathrm{bid})} \, p_{1/2}^{(\mathrm{ask})}}, \qquad
+		r(i^{-}, i^{+}) \, \equiv \, \frac{p^{(\mathrm{ask})}}{p^{(\mathrm{bid})}} \, = \, 1.0001^{\,i^{+} - i^{-}}
 	\end{aligned}
 \]
 
@@ -60,9 +85,9 @@ Unit chunk at tick \(i\) (tick spacing \(\Delta_i\); units handled on the EVM di
 	\begin{aligned}
 		\pi^{\varphi}(\mathcal{LC};\, p_{1/2}) \, &\equiv \,
 		\begin{cases}
-			L \, p_{1/2}^{2} \Big( \dfrac{1}{p_{1/2}(i^{-})} - \dfrac{1}{p_{1/2}(i^{+})} \Big), & p_{1/2} < p_{1/2}(i^{-}) \\[8pt]
-			L \Big( 2 p_{1/2} - p_{1/2}(i^{-}) - \dfrac{p_{1/2}^{2}}{p_{1/2}(i^{+})} \Big), & p_{1/2}(i^{-}) \le p_{1/2} < p_{1/2}(i^{+}) \\[8pt]
-			L \Big( p_{1/2}(i^{+}) - p_{1/2}(i^{-}) \Big), & p_{1/2} \ge p_{1/2}(i^{+})
+			L \, p_{1/2}^{2} \Big( \dfrac{1}{p_{1/2}^{(\mathrm{bid})}} - \dfrac{1}{p_{1/2}^{(\mathrm{ask})}} \Big), & p_{1/2} < p_{1/2}^{(\mathrm{bid})} \\[8pt]
+			L \Big( 2 p_{1/2} - p_{1/2}^{(\mathrm{bid})} - \dfrac{p_{1/2}^{2}}{p_{1/2}^{(\mathrm{ask})}} \Big), & p_{1/2}^{(\mathrm{bid})} \le p_{1/2} < p_{1/2}^{(\mathrm{ask})} \\[8pt]
+			L \Big( p_{1/2}^{(\mathrm{ask})} - p_{1/2}^{(\mathrm{bid})} \Big), & p_{1/2} \ge p_{1/2}^{(\mathrm{ask})}
 		\end{cases}
 	\end{aligned}
 \]
@@ -115,8 +140,8 @@ Unit chunk at tick \(i\) (tick spacing \(\Delta_i\); units handled on the EVM di
 	\begin{aligned}
 		L_{\mathrm{leg}} \, &\equiv \,
 		\begin{cases}
-			\dfrac{\mathrm{or}(\mathrm{leg}) \cdot \Delta Q_{\upsilon}}{p_{1/2}(i_{\mathrm{leg}}^{+}) \, - \, p_{1/2}(i_{\mathrm{leg}}^{-})}, & \texttt{tokenType}(\mathrm{leg}) = 0 \;\; (\text{put; notional in token1}) \\[10pt]
-			\dfrac{\mathrm{or}(\mathrm{leg}) \cdot \Delta Q_{\upsilon}}{1/p_{1/2}(i_{\mathrm{leg}}^{-}) \, - \, 1/p_{1/2}(i_{\mathrm{leg}}^{+})}, & \texttt{tokenType}(\mathrm{leg}) = 1 \;\; (\text{call; notional in token0})
+			\dfrac{\mathrm{or}(\mathrm{leg}) \cdot \Delta Q_{\upsilon}}{p_{1/2}^{(\mathrm{ask})}(\mathrm{leg}) \, - \, p_{1/2}^{(\mathrm{bid})}(\mathrm{leg})}, & \texttt{tokenType}(\mathrm{leg}) = 0 \;\; (\text{put; notional in token1}) \\[10pt]
+			\dfrac{\mathrm{or}(\mathrm{leg}) \cdot \Delta Q_{\upsilon}}{1/p_{1/2}^{(\mathrm{bid})}(\mathrm{leg}) \, - \, 1/p_{1/2}^{(\mathrm{ask})}(\mathrm{leg})}, & \texttt{tokenType}(\mathrm{leg}) = 1 \;\; (\text{call; notional in token0})
 		\end{cases} \\[6pt]
 		\mathcal{LC}_{\mathrm{leg}} \, &\equiv \, (i_{\mathrm{leg}}^{-}, \, i_{\mathrm{leg}}^{+}, \, L_{\mathrm{leg}})
 	\end{aligned}
@@ -132,7 +157,7 @@ These are the Uniswap `getLiquidityForAmount1` / `getLiquidityForAmount0` invers
 	\end{aligned}
 \]
 
-Legs are OTM at \(p^{\star}\), so \(\pi^{\varphi}(\mathcal{LC}_{\mathrm{leg}}; p^{\star}_{1/2})\) is a constant per leg: \(L_{\mathrm{leg}} \big(p_{1/2}(i_{\mathrm{leg}}^{+}) - p_{1/2}(i_{\mathrm{leg}}^{-})\big)\) for puts, \(L_{\mathrm{leg}} \, p^{\star} \big(1/p_{1/2}(i_{\mathrm{leg}}^{-}) - 1/p_{1/2}(i_{\mathrm{leg}}^{+})\big)\) for calls. 
+Legs are OTM at \(p^{\star}\), so \(\pi^{\varphi}(\mathcal{LC}_{\mathrm{leg}}; p^{\star}_{1/2})\) is a constant per leg: \(L_{\mathrm{leg}} \big(p_{1/2}^{(\mathrm{ask})}(\mathrm{leg}) - p_{1/2}^{(\mathrm{bid})}(\mathrm{leg})\big)\) for puts, \(L_{\mathrm{leg}} \, p^{\star} \big(1/p_{1/2}^{(\mathrm{bid})}(\mathrm{leg}) - 1/p_{1/2}^{(\mathrm{ask})}(\mathrm{leg})\big)\) for calls. 
 
 Substituting \(\pi^{\varphi} = \pi^{\phi} - \pi^{\mathrm{LVR}}\):
 
@@ -247,28 +272,6 @@ src/
 
 
 ```
-
-\[
-p_{1/2}^{(\mathrm{ask})} = \sqrt{1+\phi} \,p_{1/2},
-\qquad
-p_{1/2}^{(\mathrm{bid})} = \frac{p_{1/2}}{\sqrt{1+\phi}}
-\]
-
-Given a `Quote` with bid/ask on \(p_{1/2}\):
-
-\[
-\bigl(\phi(p_{1/2}^{(\mathrm{ask})}),\;\phi(p_{1/2}^{(\mathrm{bid})})\bigr)
-\quad\Longrightarrow\quad
-\phi_M \leftarrow \phi(p_{1/2}^{(\mathrm{ask})}),\;
-\phi_X \leftarrow \phi(p_{1/2}^{(\mathrm{bid})})
-\]
-
-Under the fee rule:
-
-
-\[
-\phi \equiv 1-(1-\phi_M)(1-\phi_X)
-\]
 
 
 And given adaptive markup (stub): \(\phi(\Theta_\phi;\sigma^2,\nu)\) in `AdaptiveStremia`.
@@ -408,5 +411,46 @@ The return parameter \(r_{\Delta Q_{\mathrm{arb}}}^{e}\) does not appear: it par
 \pi^{\varphi}=\pi^{\phi}-\pi^{\mathrm{LVR}}.
 \]
 
+## MODEL_CLOSURE
 
+Exact functional forms for \(\pi^{\phi}(\pi^{\Delta Q}_{\mathrm{trans}}(r^{e}_{\mathrm{trans}}))\) and \(\pi^{\mathrm{LVR}}(\pi^{\Delta Q}_{\mathrm{arb}}(r^{e}_{\mathrm{arb}}))\). Both channels have the same shape — a token-side mixture weighted by \(r^{e}\) — which is what closes the model.
 
+**1. Fee channel (exact, no new object).** With the legs \(\pi^{\Delta Q}_{\mathrm{pay}} = P_{1/2}(1-\phi_X)\), \(\pi^{\Delta Q}_{\mathrm{recv}} = I(r_{1/2})(1-\phi_M)\), the fee on each leg is gross minus net:
+
+\[
+	\begin{aligned}
+		\pi^{\phi}\big(\pi^{\Delta Q}_{\mathrm{trans}}(r^{e}_{\mathrm{trans}})\big) \, &= \, (1-r^{e}_{\mathrm{trans}}) \, \frac{\phi_X}{1-\phi_X} \, \pi^{\Delta Q}_{\mathrm{pay}} \, + \, r^{e}_{\mathrm{trans}} \, \frac{\phi_M}{1-\phi_M} \, \pi^{\Delta Q}_{\mathrm{recv}} \\[4pt]
+		\phi_X = \phi_M = \phi \;\Rightarrow\; \pi^{\phi} \, &= \, \frac{\phi}{1-\phi} \, \pi^{\Delta Q}_{\mathrm{trans}} \qquad \text{(independent of } r^{e}\text{)}; \qquad r^{\phi} = \phi \, \delta_{\mathrm{trans}}
+	\end{aligned}
+\]
+
+**2. LVR channel (same shape; two new primitives).** Split the anchor's \(\lambda_{\mathrm{ARB}}\) by token side exactly as the fee is split:
+
+\[
+	\begin{aligned}
+		\lambda_{\mathrm{ARB}}(u, \phi;\, \mathcal{LC}_{\mathrm{leg}}) \, &= \, (1-r^{e}_{\mathrm{arb}}) \, \lambda_X(u, \phi_X;\, \mathcal{LC}_{\mathrm{leg}}) \, + \, r^{e}_{\mathrm{arb}} \, \lambda_M(u, \phi_M;\, \mathcal{LC}_{\mathrm{leg}}) \\[4pt]
+		r^{\mathrm{LVR}} \, &= \, \Big[\tfrac{\nu_{\mathrm{arb}}}{\nu}\Big] \, \lambda_{\mathrm{ARB}}, \qquad \pi^{\mathrm{LVR}} = \mathcal{N}_\pi^{-1} \, r^{\mathrm{LVR}}
+	\end{aligned}
+\]
+
+\(\lambda_X, \lambda_M\) (per-token LVR rates) are the only new primitives. Candidate, band-crossing in state units — zero until implied vol exceeds the fee (\(\sigma_{\mathrm{IV}}/\phi = 2e^{u/2} > 1\)), linear beyond, \(\chi\) the chunk's in-range exposure from the three-piece \(\pi^{\varphi}(\mathcal{LC}; p_{1/2})\):
+
+\[
+	\begin{aligned}
+		\lambda_{X/M}(u, \phi_{X/M};\, \mathcal{LC}_{\mathrm{leg}}) \, &\overset{?}{=} \, \phi_{X/M} \, \big( 2e^{u/2} - 1 \big)^{+} \cdot \chi(\mathcal{LC}_{\mathrm{leg}})
+	\end{aligned}
+\]
+
+> DESIGN CLAIM — not derived; needs the #24 CLMM identity and an Aristotle / empirical check. Convention: LVR is the arb's **after-fee** profit, so the fee paid by arbs is netted inside \(\lambda_{X/M}\) and \(\pi^{\phi}\) stays transactional-only.
+
+**3. Closure.** Every symbol on the right is observed or defined above except \(\lambda_X, \lambda_M\); the tax enters only through the bracket:
+
+\[
+	\begin{aligned}
+		r^{\varphi} \, &= \, \phi \, \delta_{\mathrm{trans}} \, - \, \Big[\tfrac{\nu_{\mathrm{arb}}}{\nu}\Big] \Big[ (1-r^{e}_{\mathrm{arb}}) \, \lambda_X + r^{e}_{\mathrm{arb}} \, \lambda_M \Big], \qquad
+		\pi^{\varphi} = \mathcal{N}_\pi^{-1} \, r^{\varphi} \\[4pt]
+		\hat{\pi^{\sigma}} \, &= \, \sum_{\mathrm{leg}=0}^{3} \Big[ \pi^{\varphi}(\mathcal{LC}_{\mathrm{leg}};\, p^{\star}_{1/2}) - \pi^{\varphi}(\mathcal{LC}_{\mathrm{leg}};\, p_{1/2}) \Big]
+	\end{aligned}
+\]
+
+Inputs: \(\phi_{X/M}\) (`Quote`), \(\delta_{\mathrm{trans}}\) (#7/#23), \Big[\tfrac{\nu_{\mathrm{arb}}}{\nu}\Big] (atomic), \(r^{e}_{\mathrm{arb}} = \Lambda(\gamma(u - u^{\star}))\) (#21), \(u\), \(\mathcal{LC}_{\mathrm{leg}}\) (#25).
