@@ -314,25 +314,9 @@ r_\phi^e\,\phi_M I(r_{1/2})
 \]
 
 
-where for returns we have expectations:
-
-> This is corrected, the formula is for prices
-\[
-p^{\phi}
-=
-\mathbb E\!\left[m(\phi,\Delta Q)\cdot \pi^{\Delta Q}\right]
-\qquad\text{(via swap channel)}
-\]
-
-\[
-r_\phi^e
-=
-\mathbb E\!\left[m(\phi)\cdot \pi^\phi\right]
-\qquad\text{(direct fee-revenue payoff)}
-\]
+where for returns we have expectations, where expectd transactional return is estimated /computed fro =m exogenous transactional demand inputs :
 
 
-\(r^e_{\pi^{\Delta Q}} \equiv \mathbb E[m(\Delta Q)\cdot \pi^{\Delta Q}]\)
 \[
 r_{\Delta Q}^{e}
 =
@@ -356,6 +340,19 @@ where:
 u^\star(t)=2\ln\!\Big(\frac{\sigma \, (t)}{2\phi(\,;\sigma \, (t))}\Big).
 \]
 
+
+Weights in (RARB), both in \([0,1]\):
+
+\[
+	\begin{aligned}
+		\beta \, &\equiv \, \partial_{(r_{\Delta Q_{\mathrm{trans}}}^{e},\, r_{\Delta Q_{\mathrm{arb}}}^{e})} \, = \, \frac{\partial \, r_{\Delta Q}^{e}}{\partial \, r_{\Delta Q_{\mathrm{arb}}}^{e}}\bigg|_{r_{\Delta Q_{\mathrm{trans}}}^{e}}
+		\qquad \text{(ex-ante weight of the arb leg in the net-swap return; TODO \#22)} \\[4pt]
+		g \, &\equiv \, \frac{\nu_{\mathrm{trans}}}{V}, \qquad V = L(i(t))\,e^{u(t)}, \qquad 1 - g = \frac{\nu_{\mathrm{arb}}}{V}
+		\qquad \text{(ex-post transactional share of volume; `refs/volume_path.gms`, TODO \#23)}
+	\end{aligned}
+\]
+
+so (RARB) reads \(r_{\Delta Q}^{e} = r_{\Delta Q_{\mathrm{trans}}}^{e} + \beta \, r_{\Delta Q_{\mathrm{arb}}}^{e}(\sigma_{\mathrm{IV}}, \sigma^{e})\); \(\beta\) is the ex-ante counterpart of the realized \(1-g\).
 
 Parametric arb return (TODO #21): the \([0,1]\) measure of \(\sigma/\phi\) — vol gained per unit of markup paid, \(\sigma_{\mathrm{IV}}/\phi = 2e^{u/2}\) — through the anchor's sigmoid \(\Lambda\) (VOLATILITY_INSTRUMENTS), evaluated at \(\sigma^{e}\):
 
