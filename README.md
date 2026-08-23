@@ -328,7 +328,7 @@ Weights in (RARB), both in \([0,1]\):
 	\end{aligned}
 \]
 
-\(\partial_{(r_{\Delta Q_{\mathrm{trans}}}^{e},\, r_{\Delta Q_{\mathrm{arb}}}^{e})}\) is the ex-ante counterpart of the realized \(\Big[\tfrac{\nu_{\mathrm{arb}}}{\nu}\Big]\). Note \Big[\tfrac{\nu_{\mathrm{trans}}}{\nu}\Big] \(\ne \delta_{\mathrm{trans}}\): the bracket is a share of total volume, \(\delta_{\mathrm{trans}} = \nu_{\mathrm{trans}}/\pi^{\Delta Q}_{\mathrm{trans}}\) is turnover of the transactional leg; only the bracket carries the trans/arb split.
+\(\partial_{(r_{\Delta Q_{\mathrm{trans}}}^{e},\, r_{\Delta Q_{\mathrm{arb}}}^{e})}\) is the ex-ante counterpart of the realized \(\Big[\tfrac{\nu_{\mathrm{arb}}}{\nu}\Big]\). Note \(\Big[\tfrac{\nu_{\mathrm{trans}}}{\nu}\Big]\) \(\ne \delta_{\mathrm{trans}}\): the bracket is a share of total volume, \(\delta_{\mathrm{trans}} = \nu_{\mathrm{trans}}/\pi^{\Delta Q}_{\mathrm{trans}}\) is turnover of the transactional leg; only the bracket carries the trans/arb split.
 
 Parametric arb return (TODO #21): the \([0,1]\) measure of \(\sigma/\phi\) — vol gained per unit of markup paid, \(\sigma_{\mathrm{IV}}/\phi = 2e^{u/2}\) — through the anchor's sigmoid \(\Lambda\) (VOLATILITY_INSTRUMENTS), evaluated at \(\sigma^{e}\):
 
@@ -355,53 +355,6 @@ Net-swap payoff by flow type, then by token side (two nested \([0,1]\) weights �
 For solving for the tax the parameter is \Big[\tfrac{\nu_{\mathrm{arb}}}{\nu}\Big] read directly: \(\tau_{\mathrm{MEV}}\) moves the arb share and \(\nu_{\mathrm{arb}}\), not \(r_{\Delta Q_{\mathrm{trans}}}^{e}\) — so \(\pi^{\phi}\) (token side + volume) and \(\pi^{\mathrm{LVR}}\) (arb share) separate, and the vol-gap parametrization \(r_{\Delta Q_{\mathrm{arb}}}^{e}\) stays as the inner weight of the arb leg.
 
 
-From where for any admissible expected return, it parametrizes the net-swap payoff:
-
-
-
-
-\[
-	\begin{aligned}
-        \pi^{\Delta Q}(r^e;\cdot)
-         &=  \, (1-r^e)\,\pi^{\Delta Q}_{\mathrm{pay}} \, + \, r^e\, \pi^{\Delta Q}_{\mathrm{recv}}\\
-		 \\
-        &= \, (1-r^e)\,P_{1/2}(1-\phi_X)
-        +
-        r^e\,I(r_{1/2})(1-\phi_M)
-
-	\end{aligned}
-\]
-
-
-\[
-\pi^\phi(r_\phi^e;\cdot)
-=
-(1-r_\phi^e)\,\phi_X P_{1/2}
-+
-r_\phi^e\,\phi_M I(r_{1/2})
-\]
-
-
-
-geometry:
-
-Lattice \(\kappa_j = j/N\), \(N=255\) — **encoding C**: `KappaTick` / `KappaSpacing`; B (`KappaPips`) retired. Def 45 `kappaAt (Maybe EtaX96) XiX96 LiquidityChunk` → `KappaCoordinate`.
-
-
-\[
-r^{\phi}(\kappa;\phi_X,\phi_M)
-=
-(1-\kappa)\,\phi_X + \kappa\,\phi_M
-\]
-
-
-and realizations:
-
-\[
-	\begin{aligned}
-		r^{\phi} = \phi \cdot \delta_{\text{trans}}
-	\end{aligned}
-\]
 
 Where:
 \[
@@ -424,12 +377,26 @@ Objective (anchor \(e^{\sigma} = |\pi^{\sigma} - \hat{\pi^{\sigma}}|\)): \(\pi^{
 
 \[
 	\begin{aligned}
-		\tau_{\mathrm{MEV}} \;\to\; \Big[\tfrac{\nu_{\mathrm{arb}}}{\nu}\Big](\tau_{\mathrm{MEV}}) \;\to\; \pi^{\mathrm{LVR}}(\mathcal{LC}_{\mathrm{leg}}) \;\to\; \pi^{\varphi}(\mathcal{LC}_{\mathrm{leg}}) = \pi^{\phi} - \pi^{\mathrm{LVR}} \;\to\; \hat{\pi^{\sigma}} = \sum_{\mathrm{leg}=0}^{3} \Big[ \pi^{\varphi}(\mathcal{LC}_{\mathrm{leg}}; p^{\star}_{1/2}) - \pi^{\varphi}(\mathcal{LC}_{\mathrm{leg}}; p_{1/2}) \Big] \\[6pt]
-		\inf_{\tau_{\mathrm{MEV}}} \, e^{\sigma}(\tau_{\mathrm{MEV}}) \, &= \, \inf_{\tau_{\mathrm{MEV}}} \, \Big| \pi^{\sigma} - \hat{\pi^{\sigma}}\big(\Big[\tfrac{\nu_{\mathrm{arb}}}{\nu}\Big](\tau_{\mathrm{MEV}})\big) \Big|
+		\tau_{\mathrm{MEV}} \;\to\; \Big[\tfrac{\nu_{\mathrm{arb}}}{\nu}\Big](\tau_{\mathrm{MEV}}) \;\to\; \pi^{\mathrm{LVR}}(\mathcal{LC}_{\mathrm{leg}}) \;\to\; \pi^{\varphi}(\mathcal{LC}_{\mathrm{leg}}) = \pi^{\phi} - \pi^{\mathrm{LVR}} \;\to\; \hat{\pi^{\sigma}} = \sum_{\mathrm{leg}=0}^{3} \Big[ \pi^{\varphi}(\mathcal{LC}_{\mathrm{leg}}; p^{\star}_{1/2}) - \pi^{\varphi}(\mathcal{LC}_{\mathrm{leg}}; p_{1/2}) \Big] 
 	\end{aligned}
 \]
 
-First-order condition = the anchor's direct + gate split of \(\partial \hat{\pi^{\sigma}} / \partial \tau_{\mathrm{MEV}}\), the gate term being \(\partial \Big[\tfrac{\nu_{\mathrm{arb}}}{\nu}\Big] / \partial \tau_{\mathrm{MEV}}\). Every input to the replica is now explicit: \(\mathcal{LC}_{\mathrm{leg}}\) (geometry, \(\mathrm{or}(\mathrm{leg})\), \(\Delta Q_{\upsilon}\)), \(r^{e}\) (token side), \Big[\tfrac{\nu_{\mathrm{arb}}}{\nu}\Big] (flow type), \(r_{\Delta Q_{\mathrm{arb}}}^{e}(\sigma_{\mathrm{IV}}, \sigma^{e})\) (vol gap), \(\phi\).
+\[
+	\begin{aligned}
+	\inf_{\tau_{\mathrm{MEV}}} \, e^{\sigma}(\tau_{\mathrm{MEV}}) \, &= \, \inf_{\tau_{\mathrm{MEV}}} \, \Big| \pi^{\sigma} - \hat{\pi^{\sigma}}\big(\Big[\tfrac{\nu_{\mathrm{arb}}}{\nu}\Big](\tau_{\mathrm{MEV}})\big) \Big|
+	\end{aligned}
+
+\]
+
+LVR connector — volume share only. LVR per unit of arb volume is the price gap captured crossing the fee band, a function of \(\sigma\sqrt{\Delta t}/\phi\) and the chunk geometry, not of which token the arb delivers; with the anchor's per-unit \(\lambda_{\mathrm{ARB}}\):
+
+\[
+	\begin{aligned}
+		\pi^{\mathrm{LVR}}(\mathcal{LC}_{\mathrm{leg}}) \, &= \, \Big[\tfrac{\nu_{\mathrm{arb}}}{\nu}\Big] \, \nu \, \lambda_{\mathrm{ARB}}\big(\sigma\sqrt{\Delta t}/\phi;\, \mathcal{LC}_{\mathrm{leg}}\big)
+	\end{aligned}
+\]
+
+The return parameter \(r_{\Delta Q_{\mathrm{arb}}}^{e}\) does not appear: it parametrizes \(\pi^{\Delta Q}_{\mathrm{arb}}\) (what the LP is left holding after the arb swap) and enters the replica only through the legs' token composition (the \(p^{\star}\) constants) — second order for \(e^{\sigma}\). For the tax exercise one parameter suffices: the chain above never touches \(r_{\Delta Q_{\mathrm{arb}}}^{e}\); hold it at its IV-consistent value \(\tfrac12\) (or the observed value) and optimize over \Big[\tfrac{\nu_{\mathrm{arb}}}{\nu}\Big] alone. Two parameters are the model (they make \(\pi^{\phi}\) and \(\pi^{\mathrm{LVR}}\) orthogonal), one parameter is the tax FOC.
 
 \[
 \pi^{\phi}=\pi^{\phi}\!\bigl(\pi_{\mathrm{trans}}^{\Delta Q}(r_{\mathrm{trans}}^{e})\bigr),
@@ -439,27 +406,5 @@ First-order condition = the anchor's direct + gate split of \(\partial \hat{\pi^
 \pi^{\varphi}=\pi^{\phi}-\pi^{\mathrm{LVR}}.
 \]
 
-\(\pi_{\mathrm{trans}}^{\Delta Q}\) exogenous (#19); \(\pi_{\mathrm{arb}}^{\Delta Q}\) from vol gap (#21). Returns: \(r^{\varphi}=r^{\phi}-r^{\mathrm{LVR}}\) (MEV \(\mathcal{N}_\pi\)).
 
-**Roles:** GAMS \(\{\Delta Q_X,\Delta Q_M,\Delta s\}\) are **path utilities** to hit \(\delta_{\mathrm{trans}}^\*/r^{\phi}\); arb targets \(\sigma_{\mathrm{IV}}-\sigma^{e}\). Net CLMM/CPMM \(\pi^{\varphi}=f(\pi^{\phi}(\pi_{\mathrm{trans}})-\pi^{\mathrm{LVR}}(\pi_{\mathrm{arb}}))\). Roadmap: `docs/superpowers/specs/2026-08-22-scratchpad-channel-roles-roadmap.md`.
-
-
-## Flow decomposition and fee price
-
-\[
-\Delta Q = \mathbb{I}_{\Delta Q}\,\Delta Q_X + (1-\mathbb{I}_{\Delta Q})\,\Delta Q_M
-\]
-
-\[
-\begin{aligned}
-\Delta \pi^{\phi} &= \phi(\Theta_{\phi}; \sigma^2, \nu)\cdot \Delta Q \\
-\int_{N} \Delta \pi^{\phi}\,\Delta N
-&= \int_{N} \bigl(\phi(\Theta_{\phi}; \sigma^2, \nu)\cdot \Delta Q\bigr)\,\Delta N \\
-\frac{\Delta \pi^{\varphi}}{\Delta N}
-&\leftarrow \int_{N} \Delta \pi^{\phi}\,\Delta N \\
-\frac{\Delta \pi^{\varphi}}{\Delta N}
-&\equiv p_{\pi^{\varphi}}
-\equiv \mathbb{E}^{\mathbb{Q}}\!\left[m\cdot \pi^{\varphi}\right]
-\end{aligned}
-\]
 
