@@ -27,6 +27,21 @@
 
 Workflow: see `AGENTS.md` / `CLAUDE.md` / `QWEN.md` (classify → branch → issue → PR → cross-comment).
 
+**Execution order — objective: close the \(\lambda_{X/M}\) claim (README `MODEL_CLOSURE` §2), 2026-08-23.** Dependency order, not issue number:
+
+| Step | Issue | Delivers for the claim | Gate |
+|---|---|---|---|
+| 1 | #35 (TODO 24) | \(\chi(\mathcal{LC})\) via per-tick CLMM identity | `CLMMPosition` witness test → Aristotle |
+| 2 | #36 (TODO 25 `feat`) | four \(\mathcal{LC}_{\mathrm{leg}}\), \(\mathrm{or}(\mathrm{leg})\to L_{\mathrm{leg}}\) in Haskell | Hop B vs 4-leg sum |
+| 3 | #34 (TODO 23) + TODO 19/20 | \(u\), atomic \([\nu_{\mathrm{arb}}/\nu]\), \(\sigma_{IV}=2\phi e^{u/2}\) | `volume_path.gms` golden table |
+| 4 | #51 (TODO 26) | the claim: spec → ex-post LVR check → Aristotle statement | needs 1–3; Lean workspace (parent Phase 3) |
+| 5 | #3 (TODO 7) | \(r^{\phi}=\phi\delta_{\mathrm{trans}}\) — fee side of §3 | after 3 |
+| 6 | #31 (TODO 21 Slice 2) | \(r^e_{\mathrm{arb}}=\Lambda(\gamma(u-u^\star))\) — mixture weight | after 3 |
+| 7 | #28 (TODO 22) | ex-ante price of the bracket — downgraded | after 6 |
+| 8 | #2, #1, #5 (TODO 6, 5, 9) | expected-return composition, fee capture, stremia body | after 5 |
+| 9 | #10, #11 (TODO 14, 15) | LDF / density generalization | parked |
+| 10 | #6–#9, #12 | refactors / hygiene | parked |
+
 | TODO | Type | Issue | PR | Status |
 |------|------|-------|-----|--------|
 | 6 | `feat` | [#2](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/2) | [#15](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/15) | **blocked** (prereqs 17–21) |
@@ -142,6 +157,11 @@ r_{\Delta Q_{\mathrm{trans}}}^{e}
    - Spec pointer: `cfmm-theory/docs/superpowers/specs/2026-08-19-scratchpad-target-vega-replication-design.md` (≡^R OPEN); roadmap roles doc
    - Depends: #24 (net \(\pi^{\varphi}\)); uses existing `VariancePortfolio` / `CLMMPosition`
    - Deliverable: ~~design note pinning \(f\) from Haskell~~ (#38); then code/tests (a)–(d)
+
+26. **\(\lambda_{X/M}\) per-token LVR rate claim** — `docs`→`feat` — [#51](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/51)
+   - README `MODEL_CLOSURE` §2: \(\lambda_{X/M}(u,\phi_{X/M};\mathcal{LC}_{\mathrm{leg}})\overset{?}{=}\phi_{X/M}(2e^{u/2}-1)^+\chi(\mathcal{LC}_{\mathrm{leg}})\); LVR = arb after-fee profit
+   - Spec (define \(\chi\), derive/refute) → ex-post check (benchmark − `principal` along `TickPath`) → Aristotle statement with #35
+   - Depends: #35, #36 feat, #34 (+19/20); proof gated on parent `.planning` Phase 3
 
 Later (not opened yet): compose \(r_{\Delta Q}^{e}\) from #19+#21; wire into parametrized \(\pi^{\Delta Q}/\pi^{\phi}\); then unblock #6.
 
