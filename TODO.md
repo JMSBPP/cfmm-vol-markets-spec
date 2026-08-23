@@ -148,6 +148,7 @@ r_{\Delta Q_{\mathrm{trans}}}^{e}
    - \(\pi^{c|p}+\pi^{\mathrm{RAN}}\equiv\pi^{\varphi}\) (CLMM); \(\pi^{\varphi}=\pi^{\phi}(\pi_{\mathrm{trans}}^{\Delta Q})-\pi^{\mathrm{LVR}}(\pi_{\mathrm{arb}}^{\Delta Q})\)
    - \(\pi^{\mathrm{arb}}\equiv\pi_{\mathrm{arb}}^{\Delta Q}\) (#21); LVR = normalized return read off arb leg; \(r^{\varphi}=r^{\phi}-r^{\mathrm{LVR}}\)
    - Depends: RARB trans tag (#19), arb mixture (#21); CLMM identity test vs `CLMMPosition`
+   - **CLMM identity PROVED (2026-08-23):** \(\pi^{\varphi}(\mathrm{Id}_i[\mathcal{LC}];p)=\mathrm{amount}_0(\mathrm{Id}_i)\,[\pi^{c|p}+\pi^{\mathrm{RAN}}](p)\), \(r\) = sqrt-price ratio; normalization per \((i,\Delta_i)\) not per \(\Delta_i\). `Payoffs.ChunkPrincipal` + witness test. Remaining: \(\chi(\mathcal{LC})\) definition for #26; Aristotle transcription
 
 25. **\(\pi^{\sigma}=f(\pi^{\varphi})\) — Panoptic/Haskell bridge (not MEV Σ)** — ~~`docs`~~→`feat` — [#36](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/36) / docs half merged [#38](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/38) (2026-08-23)
    - **Ground truth:** shipped Hop A/B — \(\pi^{\sigma}=\Delta Q_{v}\cdot\Pi^{\sigma}_{\mathrm{opt}}\) with

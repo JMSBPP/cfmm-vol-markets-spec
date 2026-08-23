@@ -65,7 +65,7 @@ And the option-replica volatility payoff is the **4-leg Panoptic position**
 		\mathcal{LC} \, &\equiv \, (i^{-}, \, i^{+}, \, L), \qquad i^{-} < i^{+}, \quad 0 < L < 2^{128}, \qquad
 		p_{1/2}(i) \, \equiv \, 1.0001^{\,i/2}, \quad p_{1/2}^{(\mathrm{bid})} \equiv p_{1/2}(i^{-}), \; p_{1/2}^{(\mathrm{ask})} \equiv p_{1/2}(i^{+}) \\
 		k_{1/2}(i^{-}, i^{+}) \, &\equiv \, \sqrt{p_{1/2}^{(\mathrm{bid})} \, p_{1/2}^{(\mathrm{ask})}}, \qquad
-		r(i^{-}, i^{+}) \, \equiv \, \frac{p^{(\mathrm{ask})}}{p^{(\mathrm{bid})}} \, = \, 1.0001^{\,i^{+} - i^{-}}
+		r(i^{-}, i^{+}) \, \equiv \, \frac{p_{1/2}^{(\mathrm{ask})}}{p_{1/2}^{(\mathrm{bid})}} \, = \, 1.0001^{\,(i^{+} - i^{-})/2} \qquad \text{(sqrt-price ratio — the } r \text{ of } \pi^{\mathrm{RAN}}\text{)}
 	\end{aligned}
 \]
 
@@ -114,16 +114,16 @@ Unit chunk at tick \(i\) (tick spacing \(\Delta_i\); units handled on the EVM di
 	\begin{aligned}
 		\ell(\ell_{\mathcal{G}}, \omega;\, i) \, &\equiv \, \sum_{g} \omega_g \, \ell_{\mathcal{G}}(\iota_g;\, i \mid \xi^{\star}), \qquad \omega_g \ge 0, \; \sum_g \omega_g = 1, \quad \ell(i) \ge 0, \; \sum_i \ell(i) = 1
 	\end{aligned}
-\]
-
+CLMM identity (TODO #24 / #35, `CLMMPosition`) — **proved** (closed form, 2026-08-23; Haskell witness `Payoffs.ChunkPrincipal` + `test/Spec.hs`), exact for every \(p_{1/2}\) below, inside and above the range:
 
 \[
 	\begin{aligned}
-		\pi^{\varphi}\big(\mathrm{Id}_i[\mathcal{LC}];\, p_{1/2}\big) \, &\overset{?}{=} \, L_{\Delta_i} \, \Big[ \pi^{c|p}\big(k_{1/2}(i, i+\Delta_i)\big) + \pi^{\mathrm{RAN}}\big(k_{1/2}(i, i+\Delta_i), \, r(i, i+\Delta_i)\big) \Big]
+		\pi^{\varphi}\big(\mathrm{Id}_i[\mathcal{LC}];\, p_{1/2}\big) \, &= \, \mathrm{amount}_0\big(\mathrm{Id}_i[\mathcal{LC}]\big) \, \Big[ \pi^{c|p}\big(k_{1/2}(i, i+\Delta_i)\big) + \pi^{\mathrm{RAN}}\big(k_{1/2}(i, i+\Delta_i), \, r(i, i+\Delta_i)\big) \Big] \\[4pt]
+		\mathrm{amount}_0\big(\mathrm{Id}_i[\mathcal{LC}]\big) \, &= \, 1e18 \, \Big( \frac{1}{p_{1/2}^{(\mathrm{bid})}} - \frac{1}{p_{1/2}^{(\mathrm{ask})}} \Big)
 	\end{aligned}
 \]
 
-> DESIGN CLAIM — to be proved (Aristotle / Lean), not asserted. \(L_{\Delta_i}\) is a single liquidity constant per tick spacing (not a function of the range), which is the whole content of the claim; if it fails, the `CLMMPosition` unit payoff and the Uniswap unit payoff differ by more than scale and #24's CLMM identity test is the place that surfaces it. The entry point is the full \(\pi^{c|p} + \pi^{\mathrm{RAN}}\), **not** \(\pi^{c|p}\) alone: \(\pi^{c|p} = \min(P, K)\) is width-blind; width enters only through \(\pi^{\mathrm{RAN}}\).
+Proof sketch: with \(a = p^{(\mathrm{bid})}_{1/2}\), \(b = p^{(\mathrm{ask})}_{1/2}\), \(k_{1/2}\sqrt r = b\), \(k_{1/2}^2 = ab\), both RAN arms reduce to \((2pb - p^2 - ab)/(r-1)\) while the in-range principal is \((2pb - p^2 - ab)/b\); below range both are \(\propto p^2\); above, \(b - a\) vs \(ab\). The ratio is \(1/a - 1/b\) in all three pieces. So the normalization is the unit chunk's **token0 amount** (`getAmount0ForLiquidity`), a function of \((i, \Delta_i)\) — **not** one constant per tick spacing as first claimed — and `CLMMPosition` is the LP payoff per unit of token0 notional. The identity requires \(r\) to be the sqrt-price ratio (fixed above). The entry point is the full \(\pi^{c|p} + \pi^{\mathrm{RAN}}\), **not** \(\pi^{c|p}\) alone: \(\pi^{c|p} = \min(P, K)\) is width-blind; width enters only through \(\pi^{\mathrm{RAN}}\). Aristotle transcription still owed (#35, gated on the Lean workspace) — the hand proof is elementary algebra on three pieces.
 
 **Leg geometry** (`Volatility.VolOrder.legIntervals`): from \((i_L, i_U)\) (width/skew about \(i^{\star}\), `tickBucketFromVolOrder`) and split points \(m_P, m_C\) (`volOrderSplitPoints`):
 

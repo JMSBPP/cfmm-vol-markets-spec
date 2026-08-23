@@ -203,6 +203,8 @@ import SqrtGrid
   )
 import State (pattern SQRT_PRICE_1_4, pattern SQRT_PRICE_4_1)
 import StrikeX96 (StrikeX96(..))
+import qualified Payoffs.CLMMPosition as CLMM
+import Payoffs.ChunkPrincipal (chunkPrincipal, chunkAmount0, unitChunk)
 import Data.Vector ((!))
 import qualified Data.Vector as V
 import TickPath (TickPath(..), mkTickPath, pathLength, ticks)
@@ -887,6 +889,34 @@ main = do
       hopBIota
     )
   putStrLn "ok: hop B Π vs-gamma / vs-xi layouts"
+
+  -- TODO #24 / #35: per-tick CLMM identity (README MODEL_CLOSURE, 2026-08-23).
+  -- π^φ(Id_i[𝓛𝓒]; p) = amount0(Id_i) · [π^{c|p}(k½) + π^RAN(k½, r)] exactly,
+  -- with k½ = √(p^bid p^ask), r = p^ask/p^bid the SQRT-price ratio
+  -- (= 1.0001^{Δ_i/2}), for every p below / in / above the range.
+  -- The constant is the unit chunk's token0 amount — per (i, Δ_i), not per Δ_i.
+  let identityAt i di p =
+        let ch   = unitChunk i (mkTickSpacing di)
+            SqrtPriceX96 a = sqrtPriceX96 i
+            SqrtPriceX96 b = sqrtPriceX96 (i + di)
+            kRaw = floor (sqrt (fromInteger a * fromInteger b :: Double)) :: Integer
+            r    = fromInteger b / fromInteger a :: Double
+            clmm = CLMM.toPayoff (CLMM.fromCall (StrikeX96 kRaw) (OptionRatio r))
+            PayoffX96 lhs = chunkPrincipal ch p
+            PayoffX96 c   = Payoff.runPayoff clmm p
+            PayoffX96 am0 = chunkAmount0 ch
+            rhs  = (am0 * c) `div` Q96
+            tol  = max 1 (abs rhs `div` 1000000)  -- 1e-6 rel; X96 floors
+        in  if abs (lhs - rhs) <= tol
+              then pure ()
+              else error ("CLMM identity fails at i=" ++ show i ++ " Δ=" ++ show di
+                          ++ " p=" ++ show p ++ ": lhs=" ++ show lhs ++ " rhs=" ++ show rhs)
+  sequence_
+    [ identityAt i di (sqrtPriceX96 (i + off))
+    | (i, di) <- [(0, 10), (0, 60), (-3000, 200), (40000, 10), (-120000, 60)]
+    , off <- [-di, -1, 0, 1, di `div` 2, di - 1, di, di + 1, 3 * di]
+    ]
+  putStrLn "ok: per-tick CLMM identity π^φ(Id_i) = amount0 · CLMMPosition"
   let
     i0 = 0 :: Tick
     i1 = 10 :: Tick
