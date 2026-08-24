@@ -54,7 +54,12 @@ import Payoffs.CLMMPosition (chunkFromStrike, rhsPayoffLayout, scaledVsUnitLayou
 import Payoffs.Forward (AtmForward(..))
 import Payoffs.Log (nakedLogQ96, nakedLogTickQ96)
 import Panoptic.NId (MintPlan(..), fourLegSkeleton, mkNId, volOrderToMintPlan)
-import Payoffs.VolatilityReplica (legsLayout, replicaLayout)
+import Payoffs.VolatilityReplica (ErrorX96(..), legsLayout, replicaError, replicaLayout, windowTicks)
+import Panoptic.Binning (binToLegs, ladderFromVolOrder, mintPlanFromLadder, quantizationReport)
+import Payoffs.LadderPosition (ladderN1, ladderT1)
+import Volatility.VolOrder (VolOrder, mkVolOrder, mkVolRangeWidth, mkVolSkew)
+import Payoffs.VolatilityReplica (fourLegReplica)
+import Panoptic.NId (volOrderToTokenId)
 import Payoffs.LadderPosition (cOfS, ladderDensityLayout, ladderFromSpan, ladderLayout, ladderReturnQ96, logPortfolioQ96)
 import Volatility.VolOrder (fixtureSymmetricVolOrder)
 import TargetVega (mkTargetVega, positionSizeForTargetVega)
@@ -90,6 +95,7 @@ import SqrtGrid
   , mkTickSpacing
   , pattern Q96
   , sqrtPriceX96
+  , mulDiv
   )
 import State
   ( pattern SQRT_PRICE_1_4
@@ -455,6 +461,45 @@ main = do
   writePanel
     "outputs/Payoffs/Replica/t1-ladder-density.png"
     (Cell (ladderDensityLayout denCfg ladT1))
+
+  -- TODO #28.3: 𝓑 binning of the ξ* ladder into 4 legs; T2 vs T1 (both / N_1); width sweep.
+  let
+    voOf :: Int -> VolOrder
+    voOf s = mkVolOrder (mkVolRangeWidth (toInteger s) spacing10) (mkVolStrike Q96) (mkVolSkew 32768) (mkTargetVega (10 ^ (24 :: Int)))
+    vo4k   = voOf 4000
+    lad4k  = ladderFromVolOrder vo4k
+    plan4k = mintPlanFromLadder 0 lad4k vo4k
+    PayoffX96 n1B = ladderN1 lad4k
+    normBy y = PayoffX96 (mulDiv y Q96 n1B)
+    t1n p = let PayoffX96 y = Payoff.runPayoff (ladderT1 lad4k) p in normBy y
+    t2n p = let PayoffX96 y = Payoff.runPayoff (fourLegReplica plan4k (sqrtPriceX96 0)) p in normBy y
+    fixn p = let PayoffX96 y = Payoff.runPayoff (fourLegReplica (MintPlan (volOrderToTokenId vo4k 0 (1,2,3,4)) (mintChunk plan4k)) (sqrtPriceX96 0)) p in normBy y
+    (orsB, _) = binToLegs 8 lad4k vo4k
+    t2Cfg = SqrtPlot
+      { plotTitle  = "T2 = 𝓑(T1) 4-leg (or = " ++ show orsB ++ ") vs T1 ladder, both / N_1 (S=4000, Δ=10)"
+      , xAxisTitle = "sqrtPriceX96"
+      , yAxisTitle = "return (Q96)"
+      , xMin       = sqrtPriceX96 (-3000)
+      , xMax       = sqrtPriceX96 3000
+      }
+    fixCfg = retitleSqrt t2Cfg "fixture or = (1,2,3,4) vs T1 (for contrast)" "return (Q96)"
+  writePanel
+    "outputs/Payoffs/Replica/panel-t2-vs-t1.png"
+    (Beside
+      (Cell (sqrtFunctionLayout t2Cfg PayoffY [("T1 ladder", t1n), ("T2 = 𝓑(T1)", t2n)]))
+      (Cell (sqrtFunctionLayout fixCfg PayoffY [("T1 ladder", t1n), ("T2 fixture (1,2,3,4)", fixn)]))
+    )
+  -- width sweep: e^σ_W(𝓑) vs span S (stride 50 on 3× span)
+  let
+    sweep = [ (s, e)
+            | s <- [400, 1000, 2000, 4000, 8000]
+            , let vo = voOf s
+            , let lad = ladderFromVolOrder vo
+            , let ErrorX96 e = replicaError lad (mintPlanFromLadder 0 lad vo) (windowTicks vo 50) ]
+  putStrLn "width sweep S → e^σ_W(𝓑):"
+  mapM_ (\(s, e) -> putStrLn ("  S=" ++ show s ++ "  e=" ++ show (fromIntegral e / fromIntegral Q96 :: Double))) sweep
+  putStrLn "quantization report S=4000 (leg, or, relErr ppm, bound ppm):"
+  mapM_ print (quantizationReport lad4k vo4k)
 
   -- TODO #28.1 evidence: tick-quantized log (pre-#64, staircase) vs continuous
   -- lnQ96 on ±30 ticks, and their difference (bounded by ½ ln λ · Q96).

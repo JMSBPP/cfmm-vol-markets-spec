@@ -35,6 +35,7 @@ library
       Liquidity.LiquidityGrid
       Liquidity.TickLiquidity
       OptionRatio
+      Panoptic.Binning
       Panoptic.LegChunk
       Panoptic.MintPlan
       Panoptic.NId

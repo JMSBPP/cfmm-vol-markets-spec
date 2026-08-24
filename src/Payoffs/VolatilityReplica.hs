@@ -20,6 +20,9 @@ module Payoffs.VolatilityReplica
   , legPrincipal
   , legsLayout
   , replicaLayout
+  , ErrorX96(..)
+  , replicaError
+  , windowTicks
   ) where
 
 import Graphics.Rendering.Chart.Easy (Layout)
@@ -31,7 +34,9 @@ import Panoptic.NId (panopticTokenType)
 import qualified Payoffs.CLMMPosition as CLMM
 import qualified Payoffs.Payoff as Payoff
 import Plotting.PlotSqrt (PlotY(..), sqrtFunctionLayout)
-import SqrtGrid (PayoffX96(..), SqrtPlot, SqrtPriceX96(..), mulDiv, pattern Q96)
+import SqrtGrid (PayoffX96(..), SqrtPlot, SqrtPriceX96(..), Tick, integerSqrt, mulDiv, pattern Q96, sqrtPriceX96)
+import Payoffs.LadderPosition (Ladder(..), ladderN1, ladderT1)
+import Volatility.VolOrder (VolOrder, tickBucketFromVolOrder)
 
 -- | π^φ(𝓛𝓒_leg; p).
 legPrincipal :: LiquidityChunk -> SqrtPriceX96 -> PayoffX96
@@ -85,3 +90,32 @@ replicaLayout
 replicaLayout config plan pStar references =
   sqrtFunctionLayout config PayoffY $
     ("π̂^σ 4-leg replica", Payoff.runPayoff (fourLegReplica plan pStar)) : references
+
+-- | e^σ_W (README § REPLICATION_THEORY Def 8): RMS over W of (T2 − T1)/N_1, Q96.
+-- Residuals are normalized by the token1 mint notional N_1 BEFORE squaring
+-- (dimensionless, O(1) on W); sum; integerSqrt back to Q96.  Off-chain surface.
+newtype ErrorX96 = ErrorX96 Integer
+  deriving (Show, Eq, Ord)
+
+replicaError :: Ladder -> MintPlan -> [Tick] -> ErrorX96
+replicaError lad plan w
+  | null w = error "Payoffs.VolatilityReplica.replicaError: empty window"
+  | otherwise =
+      let PayoffX96 n1 = ladderN1 lad
+          pStar = sqrtPriceX96 (ladderStar lad)
+          t1 = ladderT1 lad
+          t2 = fourLegReplica plan pStar
+          sq = sum [ d * d
+                   | i <- w
+                   , let p = sqrtPriceX96 i
+                   , let PayoffX96 a = Payoff.runPayoff t2 p
+                   , let PayoffX96 b = Payoff.runPayoff t1 p
+                   , let d = mulDiv (a - b) Q96 n1 ]
+      in  ErrorX96 (integerSqrt (sq `div` toInteger (length w)))
+
+-- | W = every `stride`-th tick on 3× the VolOrder span, [i_L − S, i_U + S].
+windowTicks :: VolOrder -> Int -> [Tick]
+windowTicks vo stride =
+  let (iL, iU, _) = tickBucketFromVolOrder vo
+      s = iU - iL
+  in  [iL - s, iL - s + stride .. iU + s]

@@ -212,7 +212,8 @@ import StrikeX96 (StrikeX96(..))
 import qualified Payoffs.CLMMPosition as CLMM
 import Payoffs.CLMMPosition (clmmChunk)
 import Panoptic.LegChunk (legChunk, legChunks, legLiquidity)
-import Payoffs.VolatilityReplica (fourLegReplica, legMintValue)
+import Payoffs.VolatilityReplica (ErrorX96(..), fourLegReplica, legMintValue, replicaError, windowTicks)
+import Panoptic.Binning (binNotionals, binToLegs, ladderFromVolOrder, mintPlanFromLadder, quantizationReport, QuantizationRow(..))
 import Payoffs.LadderPosition
   ( cOfS, hedgedRung, ladderChunks, ladderFromSpan, ladderN1, ladderReturnQ96, ladderT1, logPortfolioQ96 )
 import Data.Vector ((!))
@@ -1054,6 +1055,46 @@ main = do
     else error ("Prop 1 fails: spreads " ++ show (s200, s20))
   _ <- evaluate (Payoff.runPayoff (ladderT1 lad) pStarL)
   if n1 > 0 then putStrLn "ok: N_1 > 0" else error "N_1 <= 0"
+
+  -- ===== TODO #28.3 — 𝓑 binning (Corollary 1) and e^σ_W =====
+  let
+    voWide  = mkVolOrder (mkVolRangeWidth 4000 (mkTickSpacing 10)) (mkVolStrike Q96) (mkVolSkew 32768) vegaL
+    ladW    = ladderFromVolOrder voWide
+    ns      = binNotionals ladW voWide
+    ((o0, o1, o2, o3), psW) = binToLegs 8 ladW voWide
+    orsW    = [o0, o1, o2, o3]
+    planB   = mintPlanFromLadder 0 ladW voWide
+    legsB   = legChunks planB
+  assertEqual "wide VolOrder legs" [(-2000, -1000), (-1000, 0), (0, 1000), (1000, 2000)] (legIntervals voWide)
+  assertEqual "max or = 127" 127 (maximum orsW)
+  -- Corollary 1 round-trip (spec test g): or·positionSize = n_leg within 1/(2·or); max leg < 127 wei
+  sequence_
+    [ if abs (o * unTargetVega psW - n) <= max 127 (n `div` (2 * o)) then pure ()
+        else error ("round-trip fails leg " ++ show leg ++ ": " ++ show (o, unTargetVega psW, n))
+    | (leg, o, n) <- zip3 [0 :: Int ..] orsW ns ]
+  putStrLn ("ok: Cor 1 round-trip or·positionSize = n_leg (1/(2·or)); or = " ++ show orsW)
+  -- Theorem 8: realized leg liquidity (legLiquidity) = c-weighted mean of the rungs in the bin
+  sequence_
+    [ if abs (lLeg - lMean) <= max 1 (lMean `div` (2 * o)) then pure ()
+        else error ("Thm 8 mean fails leg " ++ show leg ++ ": " ++ show (lLeg, lMean))
+    | (leg, (lo, hi), o) <- zip3 [0 :: Int ..] (legIntervals voWide) orsW
+    , let lLeg = chunkLiquidity (legsB !! leg)
+    , let rungs = [ ch | ch <- ladderChunks ladW, let i = chunkTickLower ch, lo <= i && i < hi ]
+    , let cs = [ b - a | ch <- rungs, let SqrtPriceX96 a = sqrtPriceX96 (chunkTickLower ch), let SqrtPriceX96 b = sqrtPriceX96 (chunkTickLower ch + 10) ]
+    , let lMean = sum (zipWith (*) (map chunkLiquidity rungs) cs) `div` sum cs ]
+  putStrLn "ok: Thm 8 legLiquidity = c-weighted mean of the rungs (4 legs)"
+  -- (h) computed or beats the fixture (1,2,3,4) in e^σ_W on W (stride 50)
+  let
+    wW = windowTicks voWide 50
+    planFix = MintPlan (volOrderToTokenId voWide 0 (1, 2, 3, 4)) (mintChunk planB)
+    ErrorX96 eB   = replicaError ladW planB wW
+    ErrorX96 eFix = replicaError ladW planFix wW
+  if eB < eFix then putStrLn ("ok: (h) e^σ_W: 𝓑 = " ++ show (fromIntegral eB / fromIntegral Q96 :: Double) ++ " < fixture (1,2,3,4) = " ++ show (fromIntegral eFix / fromIntegral Q96 :: Double))
+    else error ("(h) fails: " ++ show (eB, eFix))
+  -- quantization report: bound holds per leg
+  let rows = quantizationReport ladW voWide
+  sequence_ [ if qRelErrPpm r <= qBoundPpm r + 1 then pure () else error ("quantization bound fails: " ++ show r) | r <- rows ]
+  putStrLn ("ok: quantization report " ++ show [ (qOr r, qRelErrPpm r, qBoundPpm r) | r <- rows ])
   -- TODO #28 item 0: strike of a chunk position is the integer sqrt of a·b (no Double).
   let chS = unitChunk 40000 (mkTickSpacing 60)
       SqrtPriceX96 aS = sqrtPriceX96 40000
