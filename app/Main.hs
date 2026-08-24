@@ -26,7 +26,7 @@ import Pricing.Stremia
   , plotFeeVsReturn
   )
 import Payoffs.Linear (linearPayoff)
-import Plotting.PlotSqrt (PlotY(..), plotSqrtFunction)
+import Plotting.PlotSqrt (PlotY(..), plotSqrtFunction, sqrtFunctionLayout)
 import Plotting.PlotInterest
   ( InterestPlot(..)
   , plotInterestFunction
@@ -52,6 +52,7 @@ import Greeks.Delta (deltaLayout)
 import Greeks.Gamma (gammaLayout, kristensenGammaLayoutVsGamma)
 import Payoffs.CLMMPosition (chunkFromStrike, rhsPayoffLayout, scaledVsUnitLayout)
 import Payoffs.Forward (AtmForward(..))
+import Payoffs.Log (nakedLogQ96, nakedLogTickQ96)
 import Panoptic.NId (MintPlan(..), fourLegSkeleton, mkNId, volOrderToMintPlan)
 import Payoffs.VolatilityReplica (legsLayout, replicaLayout)
 import Volatility.VolOrder (fixtureSymmetricVolOrder)
@@ -425,6 +426,27 @@ main = do
     (Beside
       (Cell (legsLayout legsCfg replicaPlan))
       (Cell (replicaLayout replicaCfg replicaPlan pStar0 []))
+    )
+
+  -- TODO #28.1 evidence: tick-quantized log (pre-#64, staircase) vs continuous
+  -- lnQ96 on ±30 ticks, and their difference (bounded by ½ ln λ · Q96).
+  let
+    logCfg = SqrtPlot
+      { plotTitle  = "ln(p/p*) in Q96: tick-quantized (nakedLogTickQ96) vs continuous (lnQ96)"
+      , xAxisTitle = "sqrtPriceX96"
+      , yAxisTitle = "PayoffX96"
+      , xMin       = sqrtPriceX96 (-30)
+      , xMax       = sqrtPriceX96 30
+      }
+    logDiffCfg = retitleSqrt logCfg "difference: tick − continuous (sawtooth, |·| ≤ ½ ln λ · Q96)" "PayoffX96"
+    tickLog p = nakedLogTickQ96 p hopBAtm
+    contLog p = nakedLogQ96 p hopBAtm
+    logDiff p = let PayoffX96 a = tickLog p; PayoffX96 b = contLog p in PayoffX96 (a - b)
+  writePanel
+    "outputs/Payoffs/Replica/panel-log-tick-vs-continuous.png"
+    (Beside
+      (Cell (sqrtFunctionLayout logCfg PayoffY [("tick-quantized", tickLog), ("continuous lnQ96", contLog)]))
+      (Cell (sqrtFunctionLayout logDiffCfg PayoffY [("tick − continuous", logDiff)]))
     )
 
   -- TODO #28.1: with the continuous log (lnQ96) the Hop B Carr–Madan limit is
