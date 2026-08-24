@@ -18,10 +18,10 @@ module Payoffs.PathAccrual
   , Accrual(..)
   , zeroAccrual
   , addAccrual
-  , ArbShareWad
-  , mkArbShareWad
-  , unArbShareWad
-  , pattern WAD_SHARE
+  , ArbSharePips
+  , mkArbSharePips
+  , unArbSharePips
+  , pattern PIPS_ONE
   , syntheticPath
   , stepAccrual
   , pathAccrual
@@ -69,26 +69,27 @@ zeroAccrual = Accrual 0 0 0
 addAccrual :: Accrual -> Accrual -> Accrual
 addAccrual (Accrual a b c) (Accrual a' b' c') = Accrual (a + a') (b + b') (c + c')
 
--- | Atomic arb share [ν_arb/ν] as a WAD (1e18 = 1) — read, never computed.
-newtype ArbShareWad = ArbShareWad Integer
+-- | Atomic arb share [ν_arb/ν] in pips (uint24, 1e6 = 1; same convention as
+-- FeePips / txlVolumeRate) — read, never computed.
+newtype ArbSharePips = ArbSharePips Integer
   deriving (Show, Eq, Ord)
 
-pattern WAD_SHARE :: Integer
-pattern WAD_SHARE = 1000000000000000000
+pattern PIPS_ONE :: Integer
+pattern PIPS_ONE = 1000000
 
-mkArbShareWad :: Integer -> ArbShareWad
-mkArbShareWad s
-  | s < 0 || s > WAD_SHARE = error "Payoffs.PathAccrual.mkArbShareWad: share must be in [0, WAD]"
-  | otherwise = ArbShareWad s
+mkArbSharePips :: Integer -> ArbSharePips
+mkArbSharePips s
+  | s < 0 || s > PIPS_ONE = error "Payoffs.PathAccrual.mkArbSharePips: share must be in [0, 1e6] pips"
+  | otherwise = ArbSharePips s
 
-unArbShareWad :: ArbShareWad -> Integer
-unArbShareWad (ArbShareWad s) = s
+unArbSharePips :: ArbSharePips -> Integer
+unArbSharePips (ArbSharePips s) = s
 
 -- | Deterministic synthetic path: n steps of ±stepTicks from i0; direction from a
 -- 32-bit LCG (seed); tag = Arb on the Bresenham schedule of the share
 -- (⌊(k+1)·s⌋ > ⌊k·s⌋), so #Arb/n → s exactly.  A vol proxy is stepTicks.
-syntheticPath :: Int -> Tick -> Int -> Int -> ArbShareWad -> [Step]
-syntheticPath seed i0 stepTicks n (ArbShareWad s) =
+syntheticPath :: Int -> Tick -> Int -> Int -> ArbSharePips -> [Step]
+syntheticPath seed i0 stepTicks n (ArbSharePips s) =
   go 0 i0 (fromIntegral seed :: Integer)
   where
     go k i st
@@ -98,7 +99,7 @@ syntheticPath seed i0 stepTicks n (ArbShareWad s) =
               up = (st' `div` 65536) `mod` 2 == 0
               j = if up then i + stepTicks else i - stepTicks
               kI = toInteger k
-              isArb = ((kI + 1) * s) `div` WAD_SHARE > (kI * s) `div` WAD_SHARE
+              isArb = ((kI + 1) * s) `div` PIPS_ONE > (kI * s) `div` PIPS_ONE
           in  Step i j (if isArb then Arb else Trans) : go (k + 1) j st'
 
 -- | Accrual of one step on one chunk (token1, Q96 units as PayoffX96).
@@ -141,11 +142,12 @@ netAccrual (Accrual ft fa lg) =
   let lvrNet = lg - fa
   in  (PayoffX96 lvrNet, PayoffX96 (ft - lvrNet))
 
--- | Generic named-lines layout on Double axes (comparative statics).
-linesLayout :: String -> String -> String -> [(String, [(Double, Double)])] -> Layout Double Double
+-- | Named-lines layout. Axes carry EVM-representable numbers only (pips, ticks,
+-- raw PayoffX96 words); Double appears here solely as the chart's coordinate type.
+linesLayout :: String -> String -> String -> [(String, [(Integer, Integer)])] -> Layout Double Double
 linesLayout title xTitle yTitle series = execEC $ do
   layout_title .= title
   layout_x_axis . laxis_title .= xTitle
   layout_y_axis . laxis_title .= yTitle
   setColors (map opaque [blue, red, darkgreen, orange, purple, black])
-  mapM_ (\(name, pts) -> plot (line name [pts])) series
+  mapM_ (\(name, pts) -> plot (line name [[ (fromIntegral x, fromIntegral y) | (x, y) <- pts ]])) series

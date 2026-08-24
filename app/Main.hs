@@ -507,35 +507,33 @@ main = do
   let
     phiXa = mkFeePips 500
     phiMa = mkFeePips 3000
-    toD :: Integer -> Double
-    toD x = fromIntegral x / 1.0e18   -- token1 units (ΔQ_υ = 1e24 liquidity on the 𝓑 plan)
     totalA accs = foldr PA.addAccrual PA.zeroAccrual accs
-    rowFor :: Int -> Int -> (Integer, Integer, Integer, Integer, Integer)
-    rowFor step sharePct =
-      let path = PA.syntheticPath 11 0 step 400 (PA.mkArbShareWad (toInteger sharePct * PA.WAD_SHARE `div` 100))
+    rowFor :: Int -> Integer -> (Integer, Integer, Integer, Integer, Integer)
+    rowFor step sharePips =
+      let path = PA.syntheticPath 11 0 step 400 (PA.mkArbSharePips sharePips)
           acc  = totalA (PA.planAccrual phiXa phiMa plan4k path)
           (PayoffX96 lvrN, PayoffX96 net) = PA.netAccrual acc
       in  (PA.feesTrans acc, PA.feesArb acc, PA.lvrGross acc, lvrN, net)
-    sharesA = [0, 10 .. 100] :: [Int]
-    bySh = [ (fromIntegral s / 100, rowFor 20 s) | s <- sharesA ]
+    sharesA = [0, 100000 .. 1000000] :: [Integer]            -- pips, uint24
+    bySh = [ (s, rowFor 20 s) | s <- sharesA ]
     stepsA = [5, 10, 20, 40, 60, 80, 120, 160, 240] :: [Int]
-    bySt = [ (fromIntegral st, rowFor st 50) | st <- stepsA ]
-    pick f xs = [ (x, toD (f r)) | (x, r) <- xs ]
+    bySt = [ (toInteger st, rowFor st 500000) | st <- stepsA ]
+    pick f xs = [ (x, f r) | (x, r) <- xs ]
     s1 (a,_,_,_,_) = a; s2 (_,b,_,_,_) = b; s3 (_,_,c,_,_) = c; s4 (_,_,_,d,_) = d; s5 (_,_,_,_,e) = e
   writePanel
     "outputs/Payoffs/Accrual/panel-accrual-vs-arbshare.png"
     (Beside
-      (Cell (PA.linesLayout "4-leg accrual vs [ν_arb/ν] (step 20 ticks, 400 steps, φ_X=5bp φ_M=30bp)" "[ν_arb/ν]" "token1"
+      (Cell (PA.linesLayout "4-leg accrual vs [ν_arb/ν] (step 20 ticks, 400 steps, φ_X=5bp φ_M=30bp)" "[ν_arb/ν] (pips, 1e6 = 1)" "PayoffX96 (token1)"
         [("fees_trans", pick s1 bySh), ("fees_arb", pick s2 bySh), ("LVR_gross", pick s3 bySh)]))
-      (Cell (PA.linesLayout "net: LVR_net = LVR_gross − fees_arb;  π^φ = fees_trans − LVR_net" "[ν_arb/ν]" "token1"
+      (Cell (PA.linesLayout "net: LVR_net = LVR_gross − fees_arb;  π^φ = fees_trans − LVR_net" "[ν_arb/ν] (pips, 1e6 = 1)" "PayoffX96 (token1)"
         [("LVR_net", pick s4 bySh), ("π^φ (seller net)", pick s5 bySh)]))
     )
   writePanel
     "outputs/Payoffs/Accrual/panel-accrual-vs-vol.png"
     (Beside
-      (Cell (PA.linesLayout "4-leg accrual vs step size (vol proxy), share 50%" "step (ticks)" "token1"
+      (Cell (PA.linesLayout "4-leg accrual vs step size (vol proxy), share 500000 pips" "step (ticks)" "PayoffX96 (token1)"
         [("fees_trans", pick s1 bySt), ("fees_arb", pick s2 bySt), ("LVR_gross", pick s3 bySt)]))
-      (Cell (PA.linesLayout "LVR_net crosses zero where the step exceeds the fee band" "step (ticks)" "token1"
+      (Cell (PA.linesLayout "LVR_net crosses zero where the step exceeds the fee band" "step (ticks)" "PayoffX96 (token1)"
         [("LVR_net", pick s4 bySt), ("π^φ (seller net)", pick s5 bySt)]))
     )
 
