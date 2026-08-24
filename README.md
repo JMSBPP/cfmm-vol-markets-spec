@@ -150,7 +150,7 @@ Proof sketch: with \(a = p^{(\mathrm{bid})}_{1/2}\), \(b = p^{(\mathrm{ask})}_{1
 	\end{aligned}
 \]
 
-These are the Uniswap `getLiquidityForAmount1` / `getLiquidityForAmount0` inversions over the leg range (`PanopticMath.getLiquidityChunk`: `amount = positionSize · optionRatio`). \(\Delta Q_{\upsilon}\) scales every leg linearly.
+These are the Uniswap `getLiquidityForAmount1` / `getLiquidityForAmount0` inversions over the leg range (`PanopticMath.getLiquidityChunk`: `amount = positionSize · optionRatio`). The numeraire of `positionSize · optionRatio` is the leg's `asset` bit (independent of put/call): this model sets **`asset = 1` (token1) on all four legs** so the four notionals share one basis (`Panoptic.NId.addAsset`, `Panoptic.LegChunk.legLiquidity` with the contract's polarity `0 → Amount0, 1 → Amount1`; PR #62). Arithmetic follows the staged `mulDiv` forms of `Math.sol`; intermediate widths in `docs/BITWIDTHS.md`. Each \(\mathcal{LC}_{\mathrm{leg}}\) is a `CLMMPosition` via `fromChunk` — every `CLMMPosition` is chunk-constructed (location \(k_{1/2}, r\) and scale \(\mathrm{amount}_0\) both from the chunk). \(\Delta Q_{\upsilon}\) scales every leg linearly.
 
 **4-leg replica.** A long Panoptic leg pays the OTM mint value of its chunk minus the cost to return that chunk's liquidity at the current price:
 
@@ -413,6 +413,33 @@ The return parameter \(r_{\Delta Q_{\mathrm{arb}}}^{e}\) does not appear: it par
 \qquad
 \pi^{\varphi}=\pi^{\phi}-\pi^{\mathrm{LVR}}.
 \]
+
+## LADDER_REPLICATION
+
+Spec: `docs/superpowers/specs/2026-08-24-scratchpad-ladder-replication-design.md` (v3, two reviewer passes). Goal: `VariancePortfolio` (T0, a strike **continuum**) is not EVM-realizable; the 4-leg replica \(\hat\pi^\sigma\) is. T0 enters the legs module **as the benchmark that selects the weights**, not as a second payoff construction — *Panoptic realizes, the LDF selects.*
+
+**Tiers.** Rungs \(i_x = i_L + x\Delta_i\), \(x \in [0,\iota)\), \(\iota = (i_U - i_L)/\Delta_i\) from the `VolOrder`; hedged unit rung \(h_x(p_{1/2}) = H_x(p_{1/2}) - \pi^{\Delta Q_X}(\mathrm{Id}_{i_x};p_{1/2})\), \(H_x = \mathrm{amount}_1\) below \(i^\star\), \(p_{1/2}^2\,\mathrm{amount}_0\) above (same convention as the 4-leg replica).
+
+| tier | object | realizable on | role |
+|---|---|---|---|
+| T0 | \(\Delta Q_v\,\Pi^\sigma_{\mathrm{opt}} = \Delta Q_v[N_{\mathrm{id}}(F - \mathrm{Log}) + R]\), `VariancePortfolio` with the continuous log `lnQ96` (Solady `lnWad` port; the tick-quantized log left a sawtooth of amplitude \(\tfrac12\ln\lambda\cdot Q96\), `outputs/Payoffs/Replica/panel-log-tick-vs-continuous.png`) | nowhere | reference / diagnostic |
+| T1 | \(\hat\pi^\sigma_{\mathrm{T1}}(p) = \sum_x \tfrac{L(i_x)}{L_{\mathrm{unit}}}\,h_x(p)\), \(L(i_x) = \Delta Q_v^\star\,\ell(\xi^\star,\iota;x)\) | Bunni geometric LDF, per tick | **benchmark, fixed at \(\xi^\star\)** (LEAN_RESULTS A2) |
+| T2 | `fourLegReplica` on \(\mathcal{LC}_{\mathrm{leg}}\) with \(\mathrm{or} = \mathcal{B}(\ell_\theta)\) | Panoptic | **realization, moves with \(\theta\)** |
+
+**Knobs.** \(\theta_{\mathrm{LDF}} = (\xi_P, \xi_C, \omega)\) — the two-kernel profile (anchor Definition 50), put kernel on \([0,\iota_P)\), call kernel on \([\iota_P,\iota)\), \(\iota_P = (i^\star - i_L)/\Delta_i\) derived. Carr–Madan is the point \(\xi_P = \xi_C = \xi^\star\), \(\omega = \omega^\star\) (LEAN_RESULTS A4).
+
+**Binning \(\mathcal{B}\)** (on token1 notional, one basis for all legs): \(n_{\mathrm{leg}} = \sum_{x \in \mathrm{leg}} L(i_x)\,c_x\), \(c_x = (b_x - a_x)/Q96\); \(\mathrm{or}(\mathrm{leg}) = \mathrm{round}(127\,n_{\mathrm{leg}}/n_{\max})\), \(\texttt{positionSize} = \lfloor n_{\max}/127 \rfloor\); reject if \(\mathrm{or} < \mathrm{or}_{\min}\). The realized leg liquidity is the \(c\)-weighted **mean** of the rungs (LEAN_RESULTS A3 — this is the binning loss, and it is the L² optimum). T2 is a function of T1.
+
+**Objective (norm B; norm C = reweight by \(m(\cdot)\), later).** \(W\) = every tick on 3× the span:
+
+\[
+e^{\sigma}_W(\theta) = \frac{1}{\mathcal{N}_1}\Big(\frac{1}{|W|}\sum_{i \in W}\big[\hat\pi^\sigma_{\mathrm{T2}}(\mathcal{B}(\ell_\theta);p_{1/2}(i)) - \hat\pi^\sigma_{\mathrm{T1}}(\xi^\star;p_{1/2}(i))\big]^2\Big)^{1/2},
+\qquad \mathcal{N}_1 = \sum_x \tfrac{L(i_x)}{L_{\mathrm{unit}}} H_x(p^\star)
+\]
+
+Error decomposition: truncation (span; `VolRangeWidth`) + tick discretization (T0 → T1; `lnQ96`, \(\Delta_i\)) + binning/quantization (T1 → T2; 7-bit \(\mathrm{or}\)). With A2/A3/A4 proved there is **no \((\xi,\omega)\) search** left: \(\mathcal{B}\) is computed; what remains is the width sweep and the quantization report.
+
+**Status.** Items 0 (asset bit, `integerSqrt` strike, `mulDiv`; PR #62) and 1 (`lnQ96`; PR #64) done; Item 2 (T1 in Haskell, `ErrorX96`, differential tests) and Item 3 (\(\mathcal{B}\), `replicaError`, width sweep) open — TODO #28.
 
 ## MODEL_CLOSURE
 
