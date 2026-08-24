@@ -168,6 +168,12 @@ r_{\Delta Q_{\mathrm{trans}}}^{e}
    - `chunkPrincipal` = \(\mathrm{amount}_0(\mathcal{LC})\cdot\) `CLMMPosition` (per-tick identity, #35) ⇒ `fromChunk`, `Scale = Unit | ByAmount0`, plot flag; amounts → `LiquidityChunk`; delete `Payoffs.ChunkPrincipal`
    - Precedes #36 (four \(\mathcal{LC}_{\mathrm{leg}}\) built on `fromChunk`)
 
+28. **T1/T2 ladder replication of `VariancePortfolio` (Panoptic × LDF hybrid)** — `docs`→`fix`/`feat` — [#](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/)
+   - Spec: `docs/superpowers/specs/2026-08-24-scratchpad-ladder-replication-design.md` (v3; Reality Checker + Solidity SC Engineer ×2)
+   - T0 continuum → T1 geometric ladder \(\ell(\xi^\star,\iota;x)\) (fixed benchmark, Bunni-realizable) → T2 4-leg via \(\mathcal{B}\) on token1 notional (`asset = 1` all legs); knobs \(\theta_{\mathrm{LDF}}=(\xi_P,\xi_C,\omega)\); norm B, C later
+   - Sub-issues 0–4 (asset bit + integerSqrt + mulDiv; `lnQ96`; Phase 1; Phase 2; README). Item 0 first — `legLiquidity` currently switches on `tokenType`, the contract on `asset` (never written): on-chain bug
+   - Supersedes TODO #25 (c) (Hop B comparison) via Item 1
+
 Later (not opened yet): compose \(r_{\Delta Q}^{e}\) from #19+#21; wire into parametrized \(\pi^{\Delta Q}/\pi^{\phi}\); then unblock #6.
 
 ### Package / tree moves (README `//` notes; not done)
