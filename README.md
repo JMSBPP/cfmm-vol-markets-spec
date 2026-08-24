@@ -117,8 +117,10 @@ Glyph (anchor Definition 49, user-ruled 2026-08-24): \(\pi^{\Delta Q_X}\) is the
 	\begin{aligned}
 		\ell(\ell_{\mathcal{G}}, \omega;\, i) \, &\equiv \, \sum_{g} \omega_g \, \ell_{\mathcal{G}}(\iota_g;\, i \mid \xi^{\star}), \qquad \omega_g \ge 0, \; \sum_g \omega_g = 1, \quad \ell(i) \ge 0, \; \sum_i \ell(i) = 1
 	\end{aligned}
-CLMM identity (TODO #24 / #35, `CLMMPosition`) — **proved** (closed form, 2026-08-23; Haskell witness `Payoffs.ChunkPrincipal` + `test/Spec.hs`), exact for every \(p_{1/2}\) below, inside and above the range:
+\]
 
+
+> Amount 0 is \Delta Q_X^L
 \[
 	\begin{aligned}
 		\pi^{\Delta Q_X}\big(\mathrm{Id}_i[\mathcal{LC}];\, p_{1/2}\big) \, &= \, \mathrm{amount}_0\big(\mathrm{Id}_i[\mathcal{LC}]\big) \, \Big[ \pi^{c|p}\big(k_{1/2}(i, i+\Delta_i)\big) + \pi^{\mathrm{RAN}}\big(k_{1/2}(i, i+\Delta_i), \, r(i, i+\Delta_i)\big) \Big] \\[4pt]
@@ -126,6 +128,8 @@ CLMM identity (TODO #24 / #35, `CLMMPosition`) — **proved** (closed form, 2026
 	\end{aligned}
 \]
 
+
+> We need to minimze prose and follow notation standards and avoid introducing new vars like a / b
 Proof sketch: with \(a = p^{(\mathrm{bid})}_{1/2}\), \(b = p^{(\mathrm{ask})}_{1/2}\), \(k_{1/2}\sqrt r = b\), \(k_{1/2}^2 = ab\), both RAN arms reduce to \((2pb - p^2 - ab)/(r-1)\) while the in-range principal is \((2pb - p^2 - ab)/b\); below range both are \(\propto p^2\); above, \(b - a\) vs \(ab\). The ratio is \(1/a - 1/b\) in all three pieces. So the normalization is the unit chunk's **token0 amount** (`getAmount0ForLiquidity`), a function of \((i, \Delta_i)\) — **not** one constant per tick spacing as first claimed — and `CLMMPosition` is the LP payoff per unit of token0 notional. The identity requires \(r\) to be the sqrt-price ratio (fixed above). The entry point is the full \(\pi^{c|p} + \pi^{\mathrm{RAN}}\), **not** \(\pi^{c|p}\) alone: \(\pi^{c|p} = \min(P, K)\) is width-blind; width enters only through \(\pi^{\mathrm{RAN}}\). Aristotle transcription still owed (#35, gated on the Lean workspace) — the hand proof is elementary algebra on three pieces.
 
 **Leg geometry** (`Volatility.VolOrder.legIntervals`): from \((i_L, i_U)\) (width/skew about \(i^{\star}\), `tickBucketFromVolOrder`) and split points \(m_P, m_C\) (`volOrderSplitPoints`):
@@ -439,7 +443,7 @@ e^{\sigma}_W(\theta) = \frac{1}{\mathcal{N}_1}\Big(\frac{1}{|W|}\sum_{i \in W}\b
 
 Error decomposition: truncation (span; `VolRangeWidth`) + tick discretization (T0 → T1; `lnQ96`, \(\Delta_i\)) + binning/quantization (T1 → T2; 7-bit \(\mathrm{or}\)). With A2/A3/A4 proved there is **no \((\xi,\omega)\) search** left: \(\mathcal{B}\) is computed; what remains is the width sweep and the quantization report.
 
-**Status.** Items 0 (asset bit, `integerSqrt` strike, `mulDiv`; PR #62) and 1 (`lnQ96`; PR #64) done; Item 2 (T1 in Haskell, `ErrorX96`, differential tests) and Item 3 (\(\mathcal{B}\), `replicaError`, width sweep) open — TODO #28.
+**Status.** Items 0 (asset bit, `integerSqrt` strike, `mulDiv`; PR #62) and 1 (`lnQ96`; PR #64) done; Lean side complete (LEAN_RESULTS: A1 with explicit \(c\), A6a, P17); Item 2 (T1 in Haskell, `ErrorX96`, regressions of A1's \(c\)) and Item 3 (\(\mathcal{B}\), `replicaError`, width sweep) open — TODO #28.
 
 ## MODEL_CLOSURE
 
@@ -487,7 +491,7 @@ Inputs: \(\phi_{X/M}\) (`Quote`), \(\delta_{\mathrm{trans}}\) (#7/#23), \Big[\tf
 
 ## LEAN_RESULTS
 
-Machine-proved results from `~/cfmms-playground/cfmm-wt/lean4-spec` (branch `develop` 8fdd875, Aristotle project 32b8b48e, 9/9 proved, no `sorry`, axiom-clean; second bundle 63e575db in flight), restated in this README's notation. Objects: rung index \(x \in [0,\iota)\), \(i_x = i_L + x\Delta_i\); chunk \(\mathcal{LC} = (i^-, i^+, L)\) with \(a = p^{(\mathrm{bid})}_{1/2}\), \(b = p^{(\mathrm{ask})}_{1/2}\); profile \(\ell(\xi,\iota;x)\); \(\xi^\star = \lambda^{-\Delta_i/2}\); bare principal \(\pi^{\Delta Q_X}(\mathcal{LC};\, p_{1/2})\).
+Machine-proved results from `~/cfmms-playground/cfmm-wt/lean4-spec` (Aristotle projects 32b8b48e 9/9, 63e575db 5/5, c23da4ef 4/4 — 18/18 proved, no `sorry`, axiom-clean; ladder modules on `develop` 8fdd875, `ClmmIdentity`/`LadderLimit` on `feat/lean4-spec` 36a560b pending PR #46), restated in this README's notation. Objects: rung index \(x \in [0,\iota)\), \(i_x = i_L + x\Delta_i\); chunk \(\mathcal{LC} = (i^-, i^+, L)\) with \(a = p^{(\mathrm{bid})}_{1/2}\), \(b = p^{(\mathrm{ask})}_{1/2}\); profile \(\ell(\xi,\iota;x)\); \(\xi^\star = \lambda^{-\Delta_i/2}\); bare principal \(\pi^{\Delta Q_X}(\mathcal{LC};\, p_{1/2})\).
 
 **Ladder / LDF layer** (`GeomMixture.lean`, anchor Definition 50, Theorems 46–47)
 
@@ -508,7 +512,22 @@ Machine-proved results from `~/cfmms-playground/cfmm-wt/lean4-spec` (branch `dev
 | P1 | \(p_{1/2} \mapsto \pi^{\Delta Q_X}(\mathcal{LC};p_{1/2})\) is continuous | `principal_continuous` | no jumps at the range edges — the replica \(\hat\pi^\sigma\) is continuous |
 | P3 | \(P \mapsto \pi^{\Delta Q_X}(\mathcal{LC};\sqrt P)\) is concave on \(P \ge 0\) (as the infimum of the tangent family \(T_t(P) = L(t - a + P/t - P/b)\), \(t \in [a,b]\)); **not** concave in \(p_{1/2}\) (refuted: below range it is \(\propto p_{1/2}^2\)) | `principal_concaveOn_price` | each long leg \(H - \pi^{\Delta Q_X}\) is convex in price ⇒ \(\hat\pi^\sigma \ge 0\), \(=0\) at \(p^\star\) |
 
-**In flight** (bundle 63e575db, `ClmmIdentity.lean`): A6a the per-tick CLMM identity \(\pi^{\Delta Q_X}(\mathrm{Id}_i;p_{1/2}) = \mathrm{amount}_0(\mathrm{Id}_i)\,[\min(P,K) + \pi^{\mathrm{RAN}}(k_{1/2},r)]\) with \(k_{1/2} = \sqrt{ab}\), \(r = b/a\) (hand proof + Haskell witness, PR #53; numerics \(1.3\times10^{-13}\)); RAN lemmas R1–R3 (endpoints, \(\le 0\), value at strike); **Proposition 17** \(\partial^2 \pi^{\Delta Q_X}/\partial P^2 = -\tfrac12 L\,\Gamma_\varphi(P)\) in range — the principal **is** the gamma carrier, which is the object the \(\lambda_{X/M}\) LVR claim (#51) needs for \(\chi(\mathcal{LC})\). **Awaiting a ruling:** A1 (the hedged ladder \(\to c\cdot\)log contract as \(\Delta_i \to 0\), numerically true with \(c \approx 2.62\) on the probe span and \(O(\Delta_i^2)\) spread) needs a Lean `hedgedRung` object — (a) dedicated module or (b) scratch-only.
+**CLMM identity and gamma carrier** (`ClmmIdentity.lean`, bundle 63e575db, 5/5; anchor Theorems 48–49; on `feat/lean4-spec` 71b0068, PR #46 → develop held only by an unrelated Haskell CI failure)
+
+| # | statement (our notation) | Lean name | what it buys |
+|---|---|---|---|
+| A6a | \(\pi^{\Delta Q_X}(\mathcal{LC};p_{1/2}) = \mathrm{amount}_0(\mathcal{LC})\cdot U(k_{1/2},r;p_{1/2})\) for all \(p_{1/2}>0\), \(U = \min(P,K) + \pi^{\mathrm{RAN}}\), \(k_{1/2}=\sqrt{ab}\), \(r=b/a\) (**Theorem 49**) | `ran`, `unitPayoff`, `principal_eq_amount0_mul_unit` | the Haskell identity (PR #53) is a theorem; `CLMMPosition.fromChunk` is exact by construction. Proof shape: both RAN arms reduce to \(a(2pb-p^2-ab)/(b-a)\) |
+| R1–R3 | \(\pi^{\mathrm{RAN}}=0\) at the range edges; \(\le 0\) on the range (needs only \(r>1\)); value \(-k^2(\sqrt r-1)^2/(r-1)\) at the strike | `ran_endpoints`, `ran_nonpos`, `ran_at_strike` | RAN is the concavity of the LP inside its range, nothing else |
+| P17 | In range \(a^2<P<b^2\): \(\partial^2\pi^{\Delta Q_X}/\partial P^2 = -\tfrac12 L\,\Gamma_\varphi(P)\) (**Theorem 48**) | `principal_price_second_deriv` | the principal **is** the gamma carrier — the object \(\chi(\mathcal{LC})\) in the \(\lambda_{X/M}\) LVR claim (#51) is read from here |
+
+**Ladder limit** (`LadderLimit.lean`, bundle c23da4ef, 4/4; Lean-only `hedgedRung` per user ruling (a), no README glyph)
+
+| # | statement (our notation) | Lean name | what it buys |
+|---|---|---|---|
+| H1–H3 | hedged rung \(h_x \ge 0\), \(=0\) at \(p^\star\) on every rung, four closed forms (below / two in-range arms / above) | `hedgedRung_nonneg`, `hedgedRung_atStrike`, `hedgedRung_closed_forms` | spec §2's hedged form is now a Lean object; `fourLegReplica`'s \(\ge0\) / \(=0\) tests are regressions of H1/H2 |
+| **A1** | strike at the midpoint of a span of \(S\) ticks: \(\hat\pi^\sigma_{\mathrm{T1}}(p)/\mathcal{N}_1 \to c\cdot\big[(P-P^\star)/P^\star - \ln(P/P^\star)\big]\) as \(\Delta_i\to0\), with the **explicit constant** \(c = \dfrac{1}{2\big(\ln\lambda\cdot S/4 + (1-\lambda^{-S/2})/2\big)}\) (\(=2.62294\) at \(S=4000\); probe 2.6229) | `ladderT1`, `ladderN1`, `ladder_tendsto_logPortfolio`, `ladder_tendsto_logPortfolio_explicit` | **T1 replicates T0** — the ladder spec's Phase 1 differential tests (a)–(b) become regressions of \(c\); proof: geometric rung edges, primitive \(W(p,t)=\ln t + p^2/(2t^2)\), telescoping squeeze \(a_0\tfrac12\,\mathrm{logPortfolio} \le \sum \le r\cdot\) that, exact mint notional \(\mathcal{N}_1 = a_0[(r-1)n + (1-r^{-2n})r/(r+1)]\) |
+
+Not yet stated (follow-ons on their side): the \(O(\Delta_i)\) rate, general (off-midpoint) strike position.
 
 **Consequence.** Phase 2 of the ladder spec has no \((\xi,\omega)\) search: \(\mathcal{B}\) is the bin mean (A3) of the profile at \(\xi^\star\) (A2) with \(\omega^\star\) (A4). What remains numerical is the 7-bit quantization of \(\mathrm{or}(\mathrm{leg})\), the width/truncation trade-off, and the X96 implementation error.
 

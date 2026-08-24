@@ -181,7 +181,7 @@ Norm C (needs #17–#18); \(\lambda_{X/M}\) LVR claim (#51); porting `sqrtPriceX
 | I0 amounts ↔ liquidity | `LadderPrincipal.amount0/amount1`, `amounts_invert_liquidity` | `chunkAmount0/1`, `legLiquidity` |
 | P2 in-range decomposition principal = amount1(a,p) + p²·amount0(p,b) | `LadderPrincipal.principal_inRange` | regression in `test/Spec.hs` |
 | P1 continuity, P3 concavity in price | `principal_continuous`, `principal_concaveOn_price` | — |
-| A6a per-tick CLMM identity | second bundle (inputs in `lean4-spec/scratch/peer-from-scratchpad-A6a.md`) | PR #53 witness |
-| A1 Δi→0 limit to `logPortfolio` | second bundle (restated through `principal`) | Phase 1 tests (a)–(b) |
+| A6a per-tick CLMM identity (anchor Theorem 49) | `ClmmIdentity.principal_eq_amount0_mul_unit`, `ran`, `unitPayoff`, `ran_endpoints/_nonpos/_at_strike`; P17 `principal_price_second_deriv` (Theorem 48) | PR #53 witness |
+| A1 Δi→0 limit to `logPortfolio`, explicit \(c = 1/(2(\ln\lambda\, S/4 + (1-\lambda^{-S/2})/2))\) | `LadderLimit.hedgedRung`, `hedgedRung_nonneg/_atStrike/_closed_forms`, `ladderT1`, `ladderN1`, `ladder_tendsto_logPortfolio(_explicit)` | Phase 1 tests (a)–(b) become regressions of \(c\) |
 
 Consequence for §4: Phase 2 has no ξ/ω search — \(\mathcal{B}\) is the bin mean (A3) at \(\xi^\star\) (A2) with \(\omega^\star\) (A4); only `VolRangeWidth` and the 7-bit quantization report remain. Phase 1 tests (b)–(c) become regressions of A2/A1 once A1 lands.
