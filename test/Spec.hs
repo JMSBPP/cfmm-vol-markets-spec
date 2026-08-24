@@ -64,6 +64,9 @@ import Liquidity.LiquidityChunk
   , chunkTickUpper
   , createChunk
   , unLiquidityChunk
+  , chunkAmount0
+  , chunkAmount1
+  , unitChunk
   )
 import Liquidity.TickLiquidity
   ( TickLiquidity(..)
@@ -204,7 +207,7 @@ import SqrtGrid
 import State (pattern SQRT_PRICE_1_4, pattern SQRT_PRICE_4_1)
 import StrikeX96 (StrikeX96(..))
 import qualified Payoffs.CLMMPosition as CLMM
-import Payoffs.ChunkPrincipal (chunkPrincipal, chunkAmount0, unitChunk)
+import Payoffs.CLMMPosition (clmmChunk)
 import Data.Vector ((!))
 import qualified Data.Vector as V
 import TickPath (TickPath(..), mkTickPath, pathLength, ticks)
@@ -890,33 +893,45 @@ main = do
     )
   putStrLn "ok: hop B Π vs-gamma / vs-xi layouts"
 
-  -- TODO #24 / #35: per-tick CLMM identity (README MODEL_CLOSURE, 2026-08-23).
-  -- π^φ(Id_i[𝓛𝓒]; p) = amount0(Id_i) · [π^{c|p}(k½) + π^RAN(k½, r)] exactly,
-  -- with k½ = √(p^bid p^ask), r = p^ask/p^bid the SQRT-price ratio
-  -- (= 1.0001^{Δ_i/2}), for every p below / in / above the range.
-  -- The constant is the unit chunk's token0 amount — per (i, Δ_i), not per Δ_i.
+  -- TODO #24 / #35 / #27: per-tick CLMM identity (README MODEL_CLOSURE).
+  -- Every CLMMPosition is built from a chunk.  fromChunk (Id_i) equals the
+  -- unit position fromCall k½ r (chunk with amount0 = 1 token0 at the same
+  -- ticks) scaled by amount0(Id_i), for every p below / in / above the range,
+  -- with k½ = √(p^bid p^ask), r = p^ask/p^bid the SQRT-price ratio.
+  -- The scale is per (i, Δ_i) — the unit chunk's token0 amount — not per Δ_i.
   let identityAt i di p =
         let ch   = unitChunk i (mkTickSpacing di)
             SqrtPriceX96 a = sqrtPriceX96 i
             SqrtPriceX96 b = sqrtPriceX96 (i + di)
             kRaw = floor (sqrt (fromInteger a * fromInteger b :: Double)) :: Integer
             r    = fromInteger b / fromInteger a :: Double
-            clmm = CLMM.toPayoff (CLMM.fromCall (StrikeX96 kRaw) (OptionRatio r))
-            PayoffX96 lhs = chunkPrincipal ch p
-            PayoffX96 c   = Payoff.runPayoff clmm p
+            unit = CLMM.fromCall (StrikeX96 kRaw) (OptionRatio r)
+            PayoffX96 lhs = Payoff.runPayoff (CLMM.toPayoff (CLMM.fromChunk ch)) p
+            PayoffX96 uy  = Payoff.runPayoff (CLMM.toPayoff unit) p
             PayoffX96 am0 = chunkAmount0 ch
-            rhs  = (am0 * c) `div` Q96
+            rhs  = (am0 * uy) `div` Q96
             tol  = max 1 (abs rhs `div` 1000000)  -- 1e-6 rel; X96 floors
+            PayoffX96 unitAm0 = chunkAmount0 (clmmChunk unit)
         in  if abs (lhs - rhs) <= tol
+               && chunkTickLower (clmmChunk unit) == i
+               && chunkTickUpper (clmmChunk unit) == i + di
+               && abs (unitAm0 - Q96) <= Q96 `div` 1000000
               then pure ()
               else error ("CLMM identity fails at i=" ++ show i ++ " Δ=" ++ show di
-                          ++ " p=" ++ show p ++ ": lhs=" ++ show lhs ++ " rhs=" ++ show rhs)
+                          ++ " p=" ++ show p ++ ": lhs=" ++ show lhs ++ " rhs=" ++ show rhs
+                          ++ " unitAm0=" ++ show unitAm0)
   sequence_
     [ identityAt i di (sqrtPriceX96 (i + off))
     | (i, di) <- [(0, 10), (0, 60), (-3000, 200), (40000, 10), (-120000, 60)]
     , off <- [-di, -1, 0, 1, di `div` 2, di - 1, di, di + 1, 3 * di]
     ]
-  putStrLn "ok: per-tick CLMM identity π^φ(Id_i) = amount0 · CLMMPosition"
+  -- Out-of-range values of the chunk position are its token amounts (1e-6 rel).
+  let ch0 = unitChunk 0 (mkTickSpacing 60)
+      PayoffX96 am1 = chunkAmount1 ch0
+      PayoffX96 hi  = Payoff.runPayoff (CLMM.toPayoff (CLMM.fromChunk ch0)) (sqrtPriceX96 600)
+  if abs (hi - am1) <= max 1 (am1 `div` 1000000) then pure ()
+    else error ("fromChunk above range /= amount1: " ++ show hi ++ " vs " ++ show am1)
+  putStrLn "ok: per-tick CLMM identity fromChunk = amount0 · unit fromCall"
   let
     i0 = 0 :: Tick
     i1 = 10 :: Tick

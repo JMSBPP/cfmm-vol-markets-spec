@@ -148,7 +148,7 @@ r_{\Delta Q_{\mathrm{trans}}}^{e}
    - \(\pi^{c|p}+\pi^{\mathrm{RAN}}\equiv\pi^{\varphi}\) (CLMM); \(\pi^{\varphi}=\pi^{\phi}(\pi_{\mathrm{trans}}^{\Delta Q})-\pi^{\mathrm{LVR}}(\pi_{\mathrm{arb}}^{\Delta Q})\)
    - \(\pi^{\mathrm{arb}}\equiv\pi_{\mathrm{arb}}^{\Delta Q}\) (#21); LVR = normalized return read off arb leg; \(r^{\varphi}=r^{\phi}-r^{\mathrm{LVR}}\)
    - Depends: RARB trans tag (#19), arb mixture (#21); CLMM identity test vs `CLMMPosition`
-   - **CLMM identity PROVED (2026-08-23):** \(\pi^{\varphi}(\mathrm{Id}_i[\mathcal{LC}];p)=\mathrm{amount}_0(\mathrm{Id}_i)\,[\pi^{c|p}+\pi^{\mathrm{RAN}}](p)\), \(r\) = sqrt-price ratio; normalization per \((i,\Delta_i)\) not per \(\Delta_i\). `Payoffs.ChunkPrincipal` + witness test. Remaining: \(\chi(\mathcal{LC})\) definition for #26; Aristotle transcription
+   - **CLMM identity PROVED (2026-08-23):** \(\pi^{\varphi}(\mathrm{Id}_i[\mathcal{LC}];p)=\mathrm{amount}_0(\mathrm{Id}_i)\,[\pi^{c|p}+\pi^{\mathrm{RAN}}](p)\), \(r\) = sqrt-price ratio; normalization per \((i,\Delta_i)\) not per \(\Delta_i\). `CLMMPosition.fromChunk` (chunk-constructed, #27) + witness test. Remaining: \(\chi(\mathcal{LC})\) definition for #26; Aristotle transcription
 
 25. **\(\pi^{\sigma}=f(\pi^{\varphi})\) — Panoptic/Haskell bridge (not MEV Σ)** — ~~`docs`~~→`feat` — [#36](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/36) / docs half merged [#38](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/38) (2026-08-23)
    - **Ground truth:** shipped Hop A/B — \(\pi^{\sigma}=\Delta Q_{v}\cdot\Pi^{\sigma}_{\mathrm{opt}}\) with
@@ -163,6 +163,10 @@ r_{\Delta Q_{\mathrm{trans}}}^{e}
    - README `MODEL_CLOSURE` §2: \(\lambda_{X/M}(u,\phi_{X/M};\mathcal{LC}_{\mathrm{leg}})\overset{?}{=}\phi_{X/M}(2e^{u/2}-1)^+\chi(\mathcal{LC}_{\mathrm{leg}})\); LVR = arb after-fee profit
    - Spec (define \(\chi\), derive/refute) → ex-post check (benchmark − `principal` along `TickPath`) → Aristotle statement with #35
    - Depends: #35, #36 feat, #34 (+19/20); proof gated on parent `.planning` Phase 3
+
+27. **Fold `ChunkPrincipal` into `CLMMPosition` as a `Scale`** — `refactor` — [#54](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/54)
+   - `chunkPrincipal` = \(\mathrm{amount}_0(\mathcal{LC})\cdot\) `CLMMPosition` (per-tick identity, #35) ⇒ `fromChunk`, `Scale = Unit | ByAmount0`, plot flag; amounts → `LiquidityChunk`; delete `Payoffs.ChunkPrincipal`
+   - Precedes #36 (four \(\mathcal{LC}_{\mathrm{leg}}\) built on `fromChunk`)
 
 Later (not opened yet): compose \(r_{\Delta Q}^{e}\) from #19+#21; wire into parametrized \(\pi^{\Delta Q}/\pi^{\phi}\); then unblock #6.
 

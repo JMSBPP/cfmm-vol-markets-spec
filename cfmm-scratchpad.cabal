@@ -38,7 +38,6 @@ library
       Panoptic.MintPlan
       Panoptic.NId
       Payoffs.CashSecuredPut
-      Payoffs.ChunkPrincipal
       Payoffs.CLMMPosition
       Payoffs.CoveredCall
       Payoffs.Forward
