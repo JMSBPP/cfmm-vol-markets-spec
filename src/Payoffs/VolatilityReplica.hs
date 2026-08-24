@@ -25,7 +25,7 @@ module Payoffs.VolatilityReplica
 import Graphics.Rendering.Chart.Easy (Layout)
 
 import Liquidity.LiquidityChunk (LiquidityChunk, chunkAmount0, chunkAmount1)
-import Panoptic.LegChunk (legChunk, legChunks)
+import Panoptic.LegChunk (legChunk)
 import Panoptic.MintPlan (MintPlan(..), fourLegNumLegs)
 import Panoptic.NId (panopticTokenType)
 import qualified Payoffs.CLMMPosition as CLMM
