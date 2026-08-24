@@ -22,7 +22,7 @@
 **Hedged rung payoff.** Every tier is written in the **same hedged (long) form** that `fourLegReplica` already uses — mint value minus current principal, both in token1 at the current price:
 
 \[
-h_x(p_{1/2}) = H_x(p_{1/2}) - \pi^{\varphi}\big(\mathrm{Id}_{i_x}[\mathcal{LC}];\, p_{1/2}\big), \qquad
+h_x(p_{1/2}) = H_x(p_{1/2}) - \pi^{\Delta Q_X}\big(\mathrm{Id}_{i_x}[\mathcal{LC}];\, p_{1/2}\big), \qquad
 H_x = \begin{cases} \mathrm{amount}_1(\mathrm{Id}_{i_x}) & i_x < i^\star \ (\text{token1 received}) \\ p_{1/2}^{2}\,\mathrm{amount}_0(\mathrm{Id}_{i_x})/Q96 & i_x \ge i^\star \ (\text{token0 received}) \end{cases}
 \]
 

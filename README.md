@@ -79,11 +79,14 @@ Unit chunk at tick \(i\) (tick spacing \(\Delta_i\); units handled on the EVM di
 
 \(r(i^{-},i^{+})\) is the width ratio. The 7-bit per-leg field \(\mathrm{or}(\mathrm{leg})\) below is a different object (size multiplier) and keeps its own symbol.
 
-**\(\pi^{\varphi}\) of a chunk** — the Uniswap V3 position principal held by the SFPM (`PositionValue.principal`; linear in \(L\), concave in \(p_{1/2}\)):
+**\(\pi^{\Delta Q_X}\) of a chunk (the bare principal, anchor Definition 49)** — the Uniswap V3 position principal held by the SFPM (`PositionValue.principal`; linear in \(L\), concave in \(p_{1/2}\)):
+
+Glyph (anchor Definition 49, user-ruled 2026-08-24): \(\pi^{\Delta Q_X}\) is the **bare principal** (`PositionValue.principal`); \(\pi^{\varphi}=\pi^{\phi}-\pi^{\mathrm{LVR}}\) stays the **net LP accrual**. \(\mathrm{amount}_0 \equiv \Delta Q_M^L\) (money leg), \(\mathrm{amount}_1 \equiv \Delta Q_X^L\) (asset leg). Lean: `LadderPrincipal.principal`, `amount0`, `amount1`.
+
 
 \[
 	\begin{aligned}
-		\pi^{\varphi}(\mathcal{LC};\, p_{1/2}) \, &\equiv \,
+		\pi^{\Delta Q_X}(\mathcal{LC};\, p_{1/2}) \, &\equiv \,
 		\begin{cases}
 			L \, p_{1/2}^{2} \Big( \dfrac{1}{p_{1/2}^{(\mathrm{bid})}} - \dfrac{1}{p_{1/2}^{(\mathrm{ask})}} \Big), & p_{1/2} < p_{1/2}^{(\mathrm{bid})} \\[8pt]
 			L \Big( 2 p_{1/2} - p_{1/2}^{(\mathrm{bid})} - \dfrac{p_{1/2}^{2}}{p_{1/2}^{(\mathrm{ask})}} \Big), & p_{1/2}^{(\mathrm{bid})} \le p_{1/2} < p_{1/2}^{(\mathrm{ask})} \\[8pt]
@@ -96,16 +99,16 @@ Unit chunk at tick \(i\) (tick spacing \(\Delta_i\); units handled on the EVM di
 
 \[
 	\begin{aligned}
-		\pi^{\varphi}(\mathcal{LC};\, p_{1/2}) \, &= \, \frac{L}{1e18} \sum_{i = i^{-}}^{i^{+} - \Delta_i} \pi^{\varphi}\big(\mathrm{Id}_i[\mathcal{LC}];\, p_{1/2}\big)
+		\pi^{\Delta Q_X}(\mathcal{LC};\, p_{1/2}) \, &= \, \frac{L}{1e18} \sum_{i = i^{-}}^{i^{+} - \Delta_i} \pi^{\Delta Q_X}\big(\mathrm{Id}_i[\mathcal{LC}];\, p_{1/2}\big)
 	\end{aligned}
 \]
 
 
 \[
 	\begin{aligned}
-		\pi^{\varphi}(\mathcal{LC}, \ell;\, p_{1/2}) \, &\equiv \, \frac{\bar L}{1e18} \sum_{i} \ell(i) \, \pi^{\varphi}\big(\mathrm{Id}_i[\mathcal{LC}];\, p_{1/2}\big), \qquad
+		\pi^{\Delta Q_X}(\mathcal{LC}, \ell;\, p_{1/2}) \, &\equiv \, \frac{\bar L}{1e18} \sum_{i} \ell(i) \, \pi^{\Delta Q_X}\big(\mathrm{Id}_i[\mathcal{LC}];\, p_{1/2}\big), \qquad
 		\bar L \, = \, L \, \frac{i^{+} - i^{-}}{\Delta_i} \\[4pt]
-		\pi^{\varphi}(\mathcal{LC};\, p_{1/2}) \, &\equiv \, \pi^{\varphi}(\mathcal{LC}, \ell_{U};\, p_{1/2}), \qquad
+		\pi^{\Delta Q_X}(\mathcal{LC};\, p_{1/2}) \, &\equiv \, \pi^{\Delta Q_X}(\mathcal{LC}, \ell_{U};\, p_{1/2}), \qquad
 		\ell_{U}(i) \, = \, \frac{\mathbb{1}[\, i^{-} \le i < i^{+} \,]}{(i^{+} - i^{-})/\Delta_i}
 	\end{aligned}
 \]
@@ -118,7 +121,7 @@ CLMM identity (TODO #24 / #35, `CLMMPosition`) — **proved** (closed form, 2026
 
 \[
 	\begin{aligned}
-		\pi^{\varphi}\big(\mathrm{Id}_i[\mathcal{LC}];\, p_{1/2}\big) \, &= \, \mathrm{amount}_0\big(\mathrm{Id}_i[\mathcal{LC}]\big) \, \Big[ \pi^{c|p}\big(k_{1/2}(i, i+\Delta_i)\big) + \pi^{\mathrm{RAN}}\big(k_{1/2}(i, i+\Delta_i), \, r(i, i+\Delta_i)\big) \Big] \\[4pt]
+		\pi^{\Delta Q_X}\big(\mathrm{Id}_i[\mathcal{LC}];\, p_{1/2}\big) \, &= \, \mathrm{amount}_0\big(\mathrm{Id}_i[\mathcal{LC}]\big) \, \Big[ \pi^{c|p}\big(k_{1/2}(i, i+\Delta_i)\big) + \pi^{\mathrm{RAN}}\big(k_{1/2}(i, i+\Delta_i), \, r(i, i+\Delta_i)\big) \Big] \\[4pt]
 		\mathrm{amount}_0\big(\mathrm{Id}_i[\mathcal{LC}]\big) \, &= \, 1e18 \, \Big( \frac{1}{p_{1/2}^{(\mathrm{bid})}} - \frac{1}{p_{1/2}^{(\mathrm{ask})}} \Big)
 	\end{aligned}
 \]
@@ -153,17 +156,17 @@ These are the Uniswap `getLiquidityForAmount1` / `getLiquidityForAmount0` invers
 
 \[
 	\begin{aligned}
-		\hat{\pi^{\sigma}}(p_{1/2}) \, &\equiv \, \sum_{\mathrm{leg}=0}^{3} \, \Big[ \pi^{\varphi}\big(\mathcal{LC}_{\mathrm{leg}};\, p^{\star}_{1/2}\big) \, - \, \pi^{\varphi}\big(\mathcal{LC}_{\mathrm{leg}};\, p_{1/2}\big) \Big]
+		\hat{\pi^{\sigma}}(p_{1/2}) \, &\equiv \, \sum_{\mathrm{leg}=0}^{3} \, \Big[ \pi^{\Delta Q_X}\big(\mathcal{LC}_{\mathrm{leg}};\, p^{\star}_{1/2}\big) \, - \, \pi^{\Delta Q_X}\big(\mathcal{LC}_{\mathrm{leg}};\, p_{1/2}\big) \Big]
 	\end{aligned}
 \]
 
-Per-leg mint value \(H_{\mathrm{leg}}(p_{1/2})\), valued in token1 at the current price: puts (token1 received) \(H = \mathrm{amount}_1(\mathcal{LC}_{\mathrm{leg}})\), a constant; calls (token0 received) \(H = p_{1/2}^{2}\,\mathrm{amount}_0(\mathcal{LC}_{\mathrm{leg}})\), which floats with \(p\) — so \(\hat{\pi^{\sigma}} = \sum_{\mathrm{leg}} [H_{\mathrm{leg}}(p_{1/2}) - \pi^{\varphi}(\mathcal{LC}_{\mathrm{leg}}; p_{1/2})]\), \(= 0\) at \(p^{\star}\) (all legs OTM) and \(\ge 0\) (each \(-\pi^{\varphi}\) convex). Code: `Panoptic.LegChunk` (\(\mathcal{LC}_{\mathrm{leg}}\), \(\mathrm{or}(\mathrm{leg}) \to L_{\mathrm{leg}}\)), `Payoffs.VolatilityReplica.fourLegReplica`. 
+Per-leg mint value \(H_{\mathrm{leg}}(p_{1/2})\), valued in token1 at the current price: puts (token1 received) \(H = \mathrm{amount}_1(\mathcal{LC}_{\mathrm{leg}})\), a constant; calls (token0 received) \(H = p_{1/2}^{2}\,\mathrm{amount}_0(\mathcal{LC}_{\mathrm{leg}})\), which floats with \(p\) — so \(\hat{\pi^{\sigma}} = \sum_{\mathrm{leg}} [H_{\mathrm{leg}}(p_{1/2}) - \pi^{\Delta Q_X}(\mathcal{LC}_{\mathrm{leg}}; p_{1/2})]\), \(= 0\) at \(p^{\star}\) (all legs OTM) and \(\ge 0\) (each \(-\pi^{\varphi}\) convex). Code: `Panoptic.LegChunk` (\(\mathcal{LC}_{\mathrm{leg}}\), \(\mathrm{or}(\mathrm{leg}) \to L_{\mathrm{leg}}\)), `Payoffs.VolatilityReplica.fourLegReplica`. 
 
-Substituting \(\pi^{\varphi} = \pi^{\phi} - \pi^{\mathrm{LVR}}\):
+Reading the current principal \(\pi^{\Delta Q_X}\) through its net-accrual decomposition (on-chain `total = principal + fees`; \(\pi^{\varphi} = \pi^{\phi} - \pi^{\mathrm{LVR}}\), LVR being the principal's concavity gap to the rebalancing benchmark):
 
 \[
 	\begin{aligned}
-		\hat{\pi^{\sigma}} \, &= \, \sum_{\mathrm{leg}=0}^{3} \, \Big[ \pi^{\mathrm{LVR}}(\mathcal{LC}_{\mathrm{leg}}) \, - \, \pi^{\phi}(\mathcal{LC}_{\mathrm{leg}}) \Big] \, + \, \sum_{\mathrm{leg}=0}^{3} \pi^{\varphi}\big(\mathcal{LC}_{\mathrm{leg}};\, p^{\star}_{1/2}\big)
+		\hat{\pi^{\sigma}} \, &= \, \sum_{\mathrm{leg}=0}^{3} \, \Big[ \pi^{\mathrm{LVR}}(\mathcal{LC}_{\mathrm{leg}}) \, - \, \pi^{\phi}(\mathcal{LC}_{\mathrm{leg}}) \Big] \, + \, \sum_{\mathrm{leg}=0}^{3} \pi^{\Delta Q_X}\big(\mathcal{LC}_{\mathrm{leg}};\, p^{\star}_{1/2}\big)
 	\end{aligned}
 \]
 
@@ -380,7 +383,7 @@ Objective (anchor \(e^{\sigma} = |\pi^{\sigma} - \hat{\pi^{\sigma}}|\)): \(\pi^{
 
 \[
 	\begin{aligned}
-		\tau_{\mathrm{MEV}} \;\to\; \Big[\tfrac{\nu_{\mathrm{arb}}}{\nu}\Big](\tau_{\mathrm{MEV}}) \;\to\; \pi^{\mathrm{LVR}}(\mathcal{LC}_{\mathrm{leg}}) \;\to\; \pi^{\varphi}(\mathcal{LC}_{\mathrm{leg}}) = \pi^{\phi} - \pi^{\mathrm{LVR}} \;\to\; \hat{\pi^{\sigma}} = \sum_{\mathrm{leg}=0}^{3} \Big[ \pi^{\varphi}(\mathcal{LC}_{\mathrm{leg}}; p^{\star}_{1/2}) - \pi^{\varphi}(\mathcal{LC}_{\mathrm{leg}}; p_{1/2}) \Big] 
+		\tau_{\mathrm{MEV}} \;\to\; \Big[\tfrac{\nu_{\mathrm{arb}}}{\nu}\Big](\tau_{\mathrm{MEV}}) \;\to\; \pi^{\mathrm{LVR}}(\mathcal{LC}_{\mathrm{leg}}) \;\to\; \pi^{\Delta Q_X}(\mathcal{LC}_{\mathrm{leg}}) = \pi^{\phi} - \pi^{\mathrm{LVR}} \;\to\; \hat{\pi^{\sigma}} = \sum_{\mathrm{leg}=0}^{3} \Big[ \pi^{\Delta Q_X}(\mathcal{LC}_{\mathrm{leg}}; p^{\star}_{1/2}) - \pi^{\Delta Q_X}(\mathcal{LC}_{\mathrm{leg}}; p_{1/2}) \Big] 
 	\end{aligned}
 \]
 
@@ -433,7 +436,7 @@ Exact functional forms for \(\pi^{\phi}(\pi^{\Delta Q}_{\mathrm{trans}}(r^{e}_{\
 	\end{aligned}
 \]
 
-\(\lambda_X, \lambda_M\) (per-token LVR rates) are the only new primitives. Candidate, band-crossing in state units — zero until implied vol exceeds the fee (\(\sigma_{\mathrm{IV}}/\phi = 2e^{u/2} > 1\)), linear beyond, \(\chi\) the chunk's in-range exposure from the three-piece \(\pi^{\varphi}(\mathcal{LC}; p_{1/2})\):
+\(\lambda_X, \lambda_M\) (per-token LVR rates) are the only new primitives. Candidate, band-crossing in state units — zero until implied vol exceeds the fee (\(\sigma_{\mathrm{IV}}/\phi = 2e^{u/2} > 1\)), linear beyond, \(\chi\) the chunk's in-range exposure from the three-piece \(\pi^{\Delta Q_X}(\mathcal{LC}; p_{1/2})\):
 
 \[
 	\begin{aligned}
@@ -449,7 +452,7 @@ Exact functional forms for \(\pi^{\phi}(\pi^{\Delta Q}_{\mathrm{trans}}(r^{e}_{\
 	\begin{aligned}
 		r^{\varphi} \, &= \, \phi \, \delta_{\mathrm{trans}} \, - \, \Big[\tfrac{\nu_{\mathrm{arb}}}{\nu}\Big] \Big[ (1-r^{e}_{\mathrm{arb}}) \, \lambda_X + r^{e}_{\mathrm{arb}} \, \lambda_M \Big], \qquad
 		\pi^{\varphi} = \mathcal{N}_\pi^{-1} \, r^{\varphi} \\[4pt]
-		\hat{\pi^{\sigma}} \, &= \, \sum_{\mathrm{leg}=0}^{3} \Big[ \pi^{\varphi}(\mathcal{LC}_{\mathrm{leg}};\, p^{\star}_{1/2}) - \pi^{\varphi}(\mathcal{LC}_{\mathrm{leg}};\, p_{1/2}) \Big]
+		\hat{\pi^{\sigma}} \, &= \, \sum_{\mathrm{leg}=0}^{3} \Big[ \pi^{\Delta Q_X}(\mathcal{LC}_{\mathrm{leg}};\, p^{\star}_{1/2}) - \pi^{\Delta Q_X}(\mathcal{LC}_{\mathrm{leg}};\, p_{1/2}) \Big]
 	\end{aligned}
 \]
 
