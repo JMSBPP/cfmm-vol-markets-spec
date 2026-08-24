@@ -55,6 +55,7 @@ import Payoffs.Forward (AtmForward(..))
 import Payoffs.Log (nakedLogQ96, nakedLogTickQ96)
 import Panoptic.NId (MintPlan(..), fourLegSkeleton, mkNId, volOrderToMintPlan)
 import Payoffs.VolatilityReplica (legsLayout, replicaLayout)
+import Payoffs.LadderPosition (cOfS, ladderDensityLayout, ladderFromSpan, ladderLayout, ladderReturnQ96, logPortfolioQ96)
 import Volatility.VolOrder (fixtureSymmetricVolOrder)
 import TargetVega (mkTargetVega, positionSizeForTargetVega)
 import Liquidity.LiquidityChunk
@@ -427,6 +428,33 @@ main = do
       (Cell (legsLayout legsCfg replicaPlan))
       (Cell (replicaLayout replicaCfg replicaPlan pStar0 []))
     )
+
+  -- TODO #28.2: T1 geometric ladder (S = 4000, Δ = 10, ι = 400, ξ*) — README § REPLICATION_THEORY
+  -- Theorem 10 overlay (same units: T1/N_1 vs c(S)·logPortfolio), residual, rung density.
+  let
+    ladT1  = ladderFromSpan (-2000) 2000 spacing10 0 (mkTargetVega (10 ^ (24 :: Int)))
+    cS     = cOfS 4000
+    t1Cfg  = SqrtPlot
+      { plotTitle  = "Thm 10: T1/N_1 (geometric ladder at ξ*, S=4000, Δ=10) vs c(S)·logPortfolio, c = " ++ take 7 (show cS)
+      , xAxisTitle = "sqrtPriceX96"
+      , yAxisTitle = "return (Q96)"
+      , xMin       = sqrtPriceX96 (-2000)
+      , xMax       = sqrtPriceX96 2000
+      }
+    resCfg = retitleSqrt t1Cfg "residual T1/N_1 − c(S)·logPortfolio (Q96)" "Q96"
+    resid p = let PayoffX96 a = ladderReturnQ96 ladT1 p
+                  PayoffX96 b = logPortfolioQ96 p (sqrtPriceX96 0)
+              in  PayoffX96 (a - floor (cS * fromIntegral b))
+    denCfg = retitleSqrt t1Cfg "rung liquidity L(i_x) = ΔQ·ℓ(ξ*, ι; x) (Thm 7)" "liquidity"
+  writePanel
+    "outputs/Payoffs/Replica/panel-t1-vs-t0.png"
+    (Beside
+      (Cell (ladderLayout t1Cfg ladT1))
+      (Cell (sqrtFunctionLayout resCfg PayoffY [("residual", resid)]))
+    )
+  writePanel
+    "outputs/Payoffs/Replica/t1-ladder-density.png"
+    (Cell (ladderDensityLayout denCfg ladT1))
 
   -- TODO #28.1 evidence: tick-quantized log (pre-#64, staircase) vs continuous
   -- lnQ96 on ±30 ticks, and their difference (bounded by ½ ln λ · Q96).

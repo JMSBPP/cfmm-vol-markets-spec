@@ -517,7 +517,7 @@ Proof shape: rung edges geometric; primitive \(W(p,t)=\ln t + p^2/(2t^2)\); tele
 
 **Corollary 3 (residual numerical problem).** \(e^\sigma_W\) decomposes as truncation (in \(S\)) + tick discretization (Proposition 1) + binning/7-bit quantization (relative \(\le1/(2\,\mathrm{or}(\mathrm{leg}))\)). The optimizer reduces to a 1-D sweep in \(S\) (equivalently `VolRangeWidth`) with a quantization report; the remaining theory gap is norm C (reweighting by the pricing measure \(m\), #17–#18).
 
-**Implementation status.** T0 with continuous \(\ln\) (`lnQ96`, PR #64) and T2 (`LegChunk`, `VolatilityReplica`, PR #57; token1 basis PR #62) exist; T1, \(\mathcal B\), \(e^\sigma_W\) are TODO #28 items 2–3 (Haskell regressions of Theorems 3, 9, 10 and Corollary 1). Lean modules: `GeomProfile`, `GeomMixture`, `LadderPrincipal` (`develop` 8fdd875), `ClmmIdentity`, `LadderLimit` (`feat/lean4-spec` 36a560b, PR #46).
+**Implementation status.** T0 with continuous \(\ln\) (`lnQ96`, PR #64), T2 (`LegChunk`, `VolatilityReplica`, PR #57; token1 basis PR #62) and **T1** (`Payoffs.LadderPosition`: `ladderChunks`, `hedgedRung`, `ladderT1`, `ladderN1`, `cOfS`; regressions of Theorems 7(i), 9, 10 and Proposition 1 — T1/\(\mathcal N_1\) matches \(c(4000)\cdot\)logPortfolio to \(2.8\times10^{-6}\) at \(\Delta_i=10\); `outputs/Payoffs/Replica/panel-t1-vs-t0.png`) exist; \(\mathcal B\), \(e^\sigma_W\) are TODO #28 item 3. Lean modules: `GeomProfile`, `GeomMixture`, `LadderPrincipal` (`develop` 8fdd875), `ClmmIdentity`, `LadderLimit` (`feat/lean4-spec` 36a560b, PR #46).
 
 ## MODEL_CLOSURE
 

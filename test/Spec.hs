@@ -213,6 +213,8 @@ import qualified Payoffs.CLMMPosition as CLMM
 import Payoffs.CLMMPosition (clmmChunk)
 import Panoptic.LegChunk (legChunk, legChunks, legLiquidity)
 import Payoffs.VolatilityReplica (fourLegReplica, legMintValue)
+import Payoffs.LadderPosition
+  ( cOfS, hedgedRung, ladderChunks, ladderFromSpan, ladderN1, ladderReturnQ96, ladderT1, logPortfolioQ96 )
 import Data.Vector ((!))
 import qualified Data.Vector as V
 import TickPath (TickPath(..), mkTickPath, pathLength, ticks)
@@ -995,6 +997,63 @@ main = do
     , let rhs = am1 + mulDiv (mulDiv pRaw pRaw Q96) am0 Q96
     ]
   putStrLn "ok: principal_inRange (Lean P2) = amount1(a,p) + p²·amount0(p,b)"
+
+  -- ===== TODO #28.2 — T1 ladder: regressions of README § REPLICATION_THEORY =====
+  let
+    vegaL  = mkTargetVega (10 ^ (24 :: Int))
+    spL    = mkTickSpacing 10
+    lad    = ladderFromSpan (-2000) 2000 spL 0 vegaL           -- S = 4000, ι = 400, strike at midpoint
+    chunksL = ladderChunks lad
+    pStarL = sqrtPriceX96 0
+    PayoffX96 n1 = ladderN1 lad
+  assertEqual "ladder has ι = S/Δ rungs" 400 (length chunksL)
+  -- Theorem 7(i): ℓ(ξ*, ι; x) equals the normalized sampled K^{-1/2} profile (Q96, 1e-9 rel)
+  let
+    iotaL = mkLadderResolution 400
+    samples = [ (Q96 * Q96) `div` raw | x <- [0 .. 399], let SqrtPriceX96 raw = sqrtPriceX96 (-2000 + 10 * x) ]
+    total = sum samples
+    worst = maximum [ abs (fromIntegral (unLiquidityDensityX96 (ell (xiStar spL) iotaL x)) - fromIntegral (samples !! x) * fromIntegral Q96 / fromIntegral total) / fromIntegral Q96
+                    | x <- [0 .. 399] ] :: Double
+  if worst <= 1.0e-9 then putStrLn ("ok: Thm 7(i) ℓ(ξ*) = normalized K^{-1/2} samples, max err " ++ show worst)
+    else error ("Thm 7(i) fails: " ++ show worst)
+  -- Theorem 9: h_x(p*) = 0 on every rung; h_x ≥ 0 on a grid (X96 floors: 1e6 wei ≈ 1e-12 of the unit chunk)
+  let tolW = 1000000 :: Integer
+  sequence_
+    [ if abs h0 <= tolW && all (>= negate tolW) hs then pure ()
+        else error ("Thm 9 fails at rung " ++ show (chunkTickLower ch) ++ ": h(p*)=" ++ show h0 ++ " min h=" ++ show (minimum hs))
+    | ch <- chunksL
+    , let PayoffX96 h0 = hedgedRung 0 ch pStarL
+    , let hs = [ y | i <- [-3000, -2500 .. 3000], let PayoffX96 y = hedgedRung 0 ch (sqrtPriceX96 i) ]
+    ]
+  putStrLn "ok: Thm 9 hedged rung = 0 at p*, ≥ 0 (400 rungs × 13 prices)"
+  -- Theorem 10: T1/N_1 ≈ c(S)·logPortfolio, S = 4000 → c = 2.62294; exclusion band |i| < 2Δ
+  let
+    cS = cOfS 4000
+    relErrs = [ abs (fromIntegral t1r - cS * fromIntegral lp) / (cS * fromIntegral lp)
+              | i <- [-1800, -1500 .. 1800], abs i >= 20
+              , let p = sqrtPriceX96 i
+              , let PayoffX96 t1r = ladderReturnQ96 lad p
+              , let PayoffX96 lp  = logPortfolioQ96 p pStarL ] :: [Double]
+  if abs (cS - 2.62294) < 2.0e-5 then putStrLn ("ok: c(4000) = " ++ show cS ++ " (Lean 2.62294)")
+    else error ("c(4000) = " ++ show cS)
+  if maximum relErrs <= 5.0e-3 then putStrLn ("ok: Thm 10 T1/N_1 vs c(S)·logPortfolio, max rel err " ++ show (maximum relErrs) ++ " at Δ=10")
+    else error ("Thm 10 fails: max rel err " ++ show (maximum relErrs))
+  -- Proposition 1: residual shrinks ~O(Δ²): Δ = 200 → 20 should cut the spread by ≥ 20× (100× nominal)
+  let
+    spreadAt d =
+      let ld = ladderFromSpan (-2000) 2000 (mkTickSpacing d) 0 vegaL
+          rs = [ fromIntegral t1r / fromIntegral lp
+               | i <- [-1800, -1500 .. 1800], abs i >= 2 * d
+               , let p = sqrtPriceX96 i
+               , let PayoffX96 t1r = ladderReturnQ96 ld p
+               , let PayoffX96 lp  = logPortfolioQ96 p pStarL ] :: [Double]
+      in  (maximum rs - minimum rs) / cS
+    s200 = spreadAt 200
+    s20  = spreadAt 20
+  if s200 / s20 >= 20 then putStrLn ("ok: Prop 1 spread ratio Δ200/Δ20 = " ++ show (s200 / s20) ++ " (≥ 20; O(Δ²) nominal 100)")
+    else error ("Prop 1 fails: spreads " ++ show (s200, s20))
+  _ <- evaluate (Payoff.runPayoff (ladderT1 lad) pStarL)
+  if n1 > 0 then putStrLn "ok: N_1 > 0" else error "N_1 <= 0"
   -- TODO #28 item 0: strike of a chunk position is the integer sqrt of a·b (no Double).
   let chS = unitChunk 40000 (mkTickSpacing 60)
       SqrtPriceX96 aS = sqrtPriceX96 40000

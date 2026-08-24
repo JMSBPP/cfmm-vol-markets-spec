@@ -42,6 +42,7 @@ library
       Payoffs.CLMMPosition
       Payoffs.CoveredCall
       Payoffs.Forward
+      Payoffs.LadderPosition
       Payoffs.Linear
       Payoffs.Log
       Payoffs.Payoff
