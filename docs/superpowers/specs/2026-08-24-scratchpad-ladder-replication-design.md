@@ -26,7 +26,7 @@ h_x(p_{1/2}) = H_x(p_{1/2}) - \pi^{\varphi}\big(\mathrm{Id}_{i_x}[\mathcal{LC}];
 H_x = \begin{cases} \mathrm{amount}_1(\mathrm{Id}_{i_x}) & i_x < i^\star \ (\text{token1 received}) \\ p_{1/2}^{2}\,\mathrm{amount}_0(\mathrm{Id}_{i_x})/Q96 & i_x \ge i^\star \ (\text{token0 received}) \end{cases}
 \]
 
-\(h_x \ge 0\), \(=0\) at \(p^\star\), convex. (The bare principal \(\pi^\varphi\) is concave and non-zero at \(p^\star\); it is never compared to T0 directly.)
+\(h_x \ge 0\), \(=0\) at \(p^\star\), convex in the price \(P = p_{1/2}^2\). (The bare principal \(\pi^\varphi\) is concave **in the price \(P\)**, not in \(p_{1/2}\) — Lean `LadderPrincipal.principal_concaveOn_price`, with the \(p_{1/2}\) version refuted — and non-zero at \(p^\star\); it is never compared to T0 directly.)
 
 | tier | definition | realizable on | role |
 |---|---|---|---|
@@ -169,3 +169,19 @@ Norm C (needs #17–#18); \(\lambda_{X/M}\) LVR claim (#51); porting `sqrtPriceX
 - `OptionRatio Double` and `sqrtPriceX96` (`Double` power) remain leaks on every rung path until ported (`getSqrtRatioAtTick`); budgeted per tolerance.
 - The `asset = 1` basis makes all four notionals token1; if a future design wants token0-based sizing, \(\mathcal{B}\) must be re-derived with \(c_x = (b_x-a_x)Q96/(a_xb_x)\) for **all** legs — never mixed.
 - Panoptic `asset` semantics were read from `PanopticMath.sol:378–405` (vendored copy); re-verify against the pinned `lib/` before Item 0 lands.
+
+## 11. Lean status (lean4-spec `develop` 8fdd875, 2026-08-24; Aristotle 9/9, axiom-clean)
+
+| statement | Lean (vol_markets) | scratchpad twin |
+|---|---|---|
+| θ_LDF two-kernel profile, partition of unity (M0) | `GeomMixture.mixWeight`, `mixWeight_sum` | `mixEll` (Item 2) |
+| A4 ω* collapse | `GeomMixture.mix_eq_single_iff` | — (pins ω in Tuning) |
+| A3 bin mean is the weighted-L² minimizer | `GeomMixture.wMean_minimizes` | `binToLegs` (Item 3) is computed, not searched |
+| A2 ξ* = λ^{−Δi/2} argmin, unique ι ≥ 2 (liquidity layer) | `GeomMixture.logLiqWeight_eq_geom`, `xiStar`, `xiStar_argmin` | `xiStar` (exists); test (c) becomes a regression |
+| I0 amounts ↔ liquidity | `LadderPrincipal.amount0/amount1`, `amounts_invert_liquidity` | `chunkAmount0/1`, `legLiquidity` |
+| P2 in-range decomposition principal = amount1(a,p) + p²·amount0(p,b) | `LadderPrincipal.principal_inRange` | regression in `test/Spec.hs` |
+| P1 continuity, P3 concavity in price | `principal_continuous`, `principal_concaveOn_price` | — |
+| A6a per-tick CLMM identity | second bundle (inputs in `lean4-spec/scratch/peer-from-scratchpad-A6a.md`) | PR #53 witness |
+| A1 Δi→0 limit to `logPortfolio` | second bundle (restated through `principal`) | Phase 1 tests (a)–(b) |
+
+Consequence for §4: Phase 2 has no ξ/ω search — \(\mathcal{B}\) is the bin mean (A3) at \(\xi^\star\) (A2) with \(\omega^\star\) (A4); only `VolRangeWidth` and the 7-bit quantization report remain. Phase 1 tests (b)–(c) become regressions of A2/A1 once A1 lands.

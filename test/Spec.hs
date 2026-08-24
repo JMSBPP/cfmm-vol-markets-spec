@@ -68,6 +68,7 @@ import Liquidity.LiquidityChunk
   , chunkAmount0
   , chunkAmount1
   , unitChunk
+  , unitLiquidity
   )
 import Liquidity.TickLiquidity
   ( TickLiquidity(..)
@@ -194,6 +195,7 @@ import SqrtGrid
   , SqrtPriceX96(..)
   , Tick
   , integerSqrt
+  , mulDiv
   , invX96
   , mkTickSpacing
   , mulX96
@@ -977,6 +979,22 @@ main = do
   if abs (hi - am1) <= max 1 (am1 `div` 1000000) then pure ()
     else error ("fromChunk above range /= amount1: " ++ show hi ++ " vs " ++ show am1)
   putStrLn "ok: per-tick CLMM identity fromChunk = amount0 · unit fromCall"
+  -- Lean LadderPrincipal.principal_inRange (P2): in range, principal(L,a,b,p)
+  -- = amount1(L,a,p) + p²·amount0(L,p,b) — the Uniswap split at the current price.
+  -- Regression at interior ticks (chunks split at tick m).
+  sequence_
+    [ if abs (lhs - rhs) <= max 1 (abs rhs `div` 1000000) then pure ()
+        else error ("principal_inRange fails at i=" ++ show i ++ " m=" ++ show m ++ ": " ++ show lhs ++ " vs " ++ show rhs)
+    | (i, di) <- [(0, 60), (-3000, 200), (40000, 60)]
+    , m <- [i + 10, i + di `div` 2, i + di - 10]
+    , let ch = unitChunk i (mkTickSpacing di)
+    , let p@(SqrtPriceX96 pRaw) = sqrtPriceX96 m
+    , let PayoffX96 lhs = Payoff.runPayoff (CLMM.toPayoff (CLMM.fromChunk ch)) p
+    , let PayoffX96 am1 = chunkAmount1 (createChunk i m unitLiquidity)
+    , let PayoffX96 am0 = chunkAmount0 (createChunk m (i + di) unitLiquidity)
+    , let rhs = am1 + mulDiv (mulDiv pRaw pRaw Q96) am0 Q96
+    ]
+  putStrLn "ok: principal_inRange (Lean P2) = amount1(a,p) + p²·amount0(p,b)"
   -- TODO #28 item 0: strike of a chunk position is the integer sqrt of a·b (no Double).
   let chS = unitChunk 40000 (mkTickSpacing 60)
       SqrtPriceX96 aS = sqrtPriceX96 40000
