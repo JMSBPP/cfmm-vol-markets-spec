@@ -208,6 +208,8 @@ import State (pattern SQRT_PRICE_1_4, pattern SQRT_PRICE_4_1)
 import StrikeX96 (StrikeX96(..))
 import qualified Payoffs.CLMMPosition as CLMM
 import Payoffs.CLMMPosition (clmmChunk)
+import Panoptic.LegChunk (legChunk, legChunks, legLiquidity)
+import Payoffs.VolatilityReplica (fourLegReplica, legMintValue)
 import Data.Vector ((!))
 import qualified Data.Vector as V
 import TickPath (TickPath(..), mkTickPath, pathLength, ticks)
@@ -932,6 +934,54 @@ main = do
   if abs (hi - am1) <= max 1 (am1 `div` 1000000) then pure ()
     else error ("fromChunk above range /= amount1: " ++ show hi ++ " vs " ++ show am1)
   putStrLn "ok: per-tick CLMM identity fromChunk = amount0 · unit fromCall"
+
+  -- TODO #25 (#36): four leg chunks 𝓛𝓒_leg from a MintPlan (≙ PanopticMath.getLiquidityChunk)
+  -- and the 4-leg replica π̂^σ = Σ_leg [ H_leg(p) − π^φ(𝓛𝓒_leg; p) ].
+  let
+    dqvBig   = mkTargetVega (10 ^ (18 :: Int))
+    voBig    = fixtureSymmetricVolOrder dqvBig
+    ratios4  = (1, 2, 3, 4)
+    planBig  = volOrderToMintPlan voBig 0 ratios4
+    chunks   = legChunks planBig
+    orOf leg = panopticOptionRatio (mintTokenId planBig) (toInteger leg)
+  assertEqual "legChunks ticks = legIntervals"
+    (legIntervals voBig)
+    [ (chunkTickLower c, chunkTickUpper c) | c <- chunks ]
+  assertEqual "legChunk leg = legChunks !! leg" (chunks !! 2) (legChunk planBig 2)
+  -- put legs (tokenType 0): token1 notional or(leg)·ΔQ_υ is the chunk's amount1;
+  -- call legs (tokenType 1): token0 notional or(leg)·ΔQ_υ is the chunk's amount0.
+  let relClose lbl want (PayoffX96 got) =
+        if abs (got - want) <= max 1 (want `div` 100000)
+          then pure ()
+          else error (lbl ++ ": want " ++ show want ++ " got " ++ show got)
+  relClose "put leg0 amount1 = or·ΔQ" (orOf 0 * 10 ^ (18 :: Int)) (chunkAmount1 (chunks !! 0))
+  relClose "put leg1 amount1 = or·ΔQ" (orOf 1 * 10 ^ (18 :: Int)) (chunkAmount1 (chunks !! 1))
+  relClose "call leg2 amount0 = or·ΔQ" (orOf 2 * 10 ^ (18 :: Int)) (chunkAmount0 (chunks !! 2))
+  relClose "call leg3 amount0 = or·ΔQ" (orOf 3 * 10 ^ (18 :: Int)) (chunkAmount0 (chunks !! 3))
+  assertEqual "legLiquidity = chunkLiquidity" (chunkLiquidity (chunks !! 3)) (legLiquidity planBig 3)
+  -- Replica: zero at p* (all legs OTM), non-negative everywhere, and each leg's
+  -- mint value H_leg dominates its principal.
+  let
+    pStar   = sqrtPriceX96 0
+    replica = fourLegReplica planBig pStar
+    at p    = let PayoffX96 y = Payoff.runPayoff replica p in y
+  let tolRep = 10 ^ (9 :: Int)  -- 1e-9 of ΔQ_υ = 1e18; X96 floors between branches
+  if abs (at pStar) <= tolRep then putStrLn "ok: replica(p*) = 0 (X96 tol)"
+    else error ("replica(p*) /= 0: " ++ show (at pStar))
+  sequence_
+    [ if at p >= negate tolRep && hLeg + tolRep >= principal
+        then pure ()
+        else error ("replica negative or H < π^φ at tick " ++ show i)
+    | i <- [-60, -25, -20, -15, -10, -5, -1, 1, 5, 10, 15, 20, 25, 60]
+    , let p = sqrtPriceX96 i
+    , leg <- [0 .. 3]
+    , let PayoffX96 hLeg = legMintValue planBig leg p
+    , let PayoffX96 principal = Payoff.runPayoff (CLMM.toPayoff (CLMM.fromChunk (chunks !! leg))) p
+    ]
+  -- Convex in p around p*: replica grows away from p* on both sides.
+  if at (sqrtPriceX96 (-20)) > at (sqrtPriceX96 (-10)) && at (sqrtPriceX96 20) > at (sqrtPriceX96 10)
+    then pure () else error "replica not increasing away from p*"
+  putStrLn "ok: 4-leg chunks + replica π̂^σ (zero at p*, ≥ 0, growing away)"
   let
     i0 = 0 :: Tick
     i1 = 10 :: Tick

@@ -35,6 +35,7 @@ library
       Liquidity.LiquidityGrid
       Liquidity.TickLiquidity
       OptionRatio
+      Panoptic.LegChunk
       Panoptic.MintPlan
       Panoptic.NId
       Payoffs.CashSecuredPut
@@ -51,6 +52,7 @@ library
       Payoffs.TransactionalFeeCapture
       Payoffs.VariancePortfolio
       Payoffs.VolatilityCall
+      Payoffs.VolatilityReplica
       Plotting.PlotInterest
       Plotting.PlotSqrt
       Plotting.PlotUtils
