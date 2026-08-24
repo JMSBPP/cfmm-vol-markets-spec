@@ -60,6 +60,7 @@ import Payoffs.LadderPosition (ladderN1, ladderT1)
 import Volatility.VolOrder (VolOrder, mkVolOrder, mkVolRangeWidth, mkVolSkew)
 import Payoffs.VolatilityReplica (fourLegReplica)
 import Panoptic.NId (volOrderToTokenId)
+import qualified Payoffs.PathAccrual as PA
 import Payoffs.LadderPosition (cOfS, ladderDensityLayout, ladderFromSpan, ladderLayout, ladderReturnQ96, logPortfolioQ96)
 import Volatility.VolOrder (fixtureSymmetricVolOrder)
 import TargetVega (mkTargetVega, positionSizeForTargetVega)
@@ -500,6 +501,43 @@ main = do
   mapM_ (\(s, e) -> putStrLn ("  S=" ++ show s ++ "  e=" ++ show (fromIntegral e / fromIntegral Q96 :: Double))) sweep
   putStrLn "quantization report S=4000 (leg, or, relErr ppm, bound ppm):"
   mapM_ print (quantizationReport lad4k vo4k)
+
+  -- TODO #30: path accrual comparative statics on the 𝓑 plan (S=4000):
+  -- (a) vs atomic arb share at fixed step size; (b) vs step size (vol proxy) at share 50%.
+  let
+    phiXa = mkFeePips 500
+    phiMa = mkFeePips 3000
+    toD :: Integer -> Double
+    toD x = fromIntegral x / 1.0e18   -- token1 units (ΔQ_υ = 1e24 liquidity on the 𝓑 plan)
+    totalA accs = foldr PA.addAccrual PA.zeroAccrual accs
+    rowFor :: Int -> Int -> (Integer, Integer, Integer, Integer, Integer)
+    rowFor step sharePct =
+      let path = PA.syntheticPath 11 0 step 400 (PA.mkArbShareWad (toInteger sharePct * PA.WAD_SHARE `div` 100))
+          acc  = totalA (PA.planAccrual phiXa phiMa plan4k path)
+          (PayoffX96 lvrN, PayoffX96 net) = PA.netAccrual acc
+      in  (PA.feesTrans acc, PA.feesArb acc, PA.lvrGross acc, lvrN, net)
+    sharesA = [0, 10 .. 100] :: [Int]
+    bySh = [ (fromIntegral s / 100, rowFor 20 s) | s <- sharesA ]
+    stepsA = [5, 10, 20, 40, 60, 80, 120, 160, 240] :: [Int]
+    bySt = [ (fromIntegral st, rowFor st 50) | st <- stepsA ]
+    pick f xs = [ (x, toD (f r)) | (x, r) <- xs ]
+    s1 (a,_,_,_,_) = a; s2 (_,b,_,_,_) = b; s3 (_,_,c,_,_) = c; s4 (_,_,_,d,_) = d; s5 (_,_,_,_,e) = e
+  writePanel
+    "outputs/Payoffs/Accrual/panel-accrual-vs-arbshare.png"
+    (Beside
+      (Cell (PA.linesLayout "4-leg accrual vs [ν_arb/ν] (step 20 ticks, 400 steps, φ_X=5bp φ_M=30bp)" "[ν_arb/ν]" "token1"
+        [("fees_trans", pick s1 bySh), ("fees_arb", pick s2 bySh), ("LVR_gross", pick s3 bySh)]))
+      (Cell (PA.linesLayout "net: LVR_net = LVR_gross − fees_arb;  π^φ = fees_trans − LVR_net" "[ν_arb/ν]" "token1"
+        [("LVR_net", pick s4 bySh), ("π^φ (seller net)", pick s5 bySh)]))
+    )
+  writePanel
+    "outputs/Payoffs/Accrual/panel-accrual-vs-vol.png"
+    (Beside
+      (Cell (PA.linesLayout "4-leg accrual vs step size (vol proxy), share 50%" "step (ticks)" "token1"
+        [("fees_trans", pick s1 bySt), ("fees_arb", pick s2 bySt), ("LVR_gross", pick s3 bySt)]))
+      (Cell (PA.linesLayout "LVR_net crosses zero where the step exceeds the fee band" "step (ticks)" "token1"
+        [("LVR_net", pick s4 bySt), ("π^φ (seller net)", pick s5 bySt)]))
+    )
 
   -- TODO #28.1 evidence: tick-quantized log (pre-#64, staircase) vs continuous
   -- lnQ96 on ±30 ticks, and their difference (bounded by ½ ln λ · Q96).

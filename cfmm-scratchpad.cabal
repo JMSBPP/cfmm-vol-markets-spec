@@ -46,6 +46,7 @@ library
       Payoffs.LadderPosition
       Payoffs.Linear
       Payoffs.Log
+      Payoffs.PathAccrual
       Payoffs.Payoff
       Payoffs.RangeAccrualNote
       Payoffs.Return

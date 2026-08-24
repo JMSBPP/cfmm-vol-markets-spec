@@ -215,6 +215,7 @@ import Payoffs.CLMMPosition (clmmChunk)
 import Panoptic.LegChunk (legChunk, legChunks, legLiquidity)
 import Payoffs.VolatilityReplica (ErrorX96(..), fourLegReplica, legMintValue, replicaError, windowTicks)
 import Panoptic.Binning (binNotionals, binToLegs, ladderFromVolOrder, mintPlanFromLadder, quantizationReport, QuantizationRow(..))
+import qualified Payoffs.PathAccrual as PA
 import Payoffs.LadderPosition
   ( cOfS, hedgedRung, ladderChunks, ladderFromSpan, ladderN1, ladderReturnQ96, ladderT1 )
 import Data.Vector ((!))
@@ -1104,6 +1105,49 @@ main = do
   let rows = quantizationReport ladW voWide
   sequence_ [ if qRelErrPpm r <= qBoundPpm r + 1 then pure () else error ("quantization bound fails: " ++ show r) | r <- rows ]
   putStrLn ("ok: quantization report " ++ show [ (qOr r, qRelErrPpm r, qBoundPpm r) | r <- rows ])
+
+  -- ===== TODO #30 — path accrual: fees and LVR per chunk along a tagged path =====
+  let
+    phiXp = mkFeePips 500      -- 5 bp on token0 (down moves)
+    phiMp = mkFeePips 3000     -- 30 bp on token1 (up moves)
+    chA   = createChunk (-500) 500 (10 ^ (24 :: Int))
+    shareOf s = PA.mkArbShareWad (s * PA.WAD_SHARE `div` 100)
+    pathAt s = PA.syntheticPath 7 0 20 400 (shareOf s)
+    accAt s = PA.pathAccrual phiXp phiMp chA (pathAt s)
+    nArb s = length [ () | PA.Step _ _ PA.Arb <- pathAt s ]
+  assertEqual "share 0 → no arb steps" 0 (nArb 0)
+  assertEqual "share 100 → all arb steps" 400 (nArb 100)
+  assertEqual "share 25 → 100 arb steps (Bresenham)" 100 (nArb 25)
+  -- LVR ≥ 0 on every arb step (concavity, Thm 5); zero at share 0
+  sequence_ [ if PA.lvrGross (PA.stepAccrual phiXp phiMp chA st) >= 0 then pure () else error ("negative LVR on " ++ show st) | st <- pathAt 100 ]
+  assertEqual "LVR = 0 at share 0" 0 (PA.lvrGross (accAt 0))
+  if PA.lvrGross (accAt 100) > 0 then putStrLn "ok: LVR > 0 at share 100" else error "no LVR at share 100"
+  -- total fees independent of tagging (same path, same fees; only the split moves)
+  let totalFees s = PA.feesTrans (accAt s) + PA.feesArb (accAt s)
+  assertEqual "total fees independent of tagging" (totalFees 0) (totalFees 100)
+  assertEqual "total fees independent of tagging (50)" (totalFees 0) (totalFees 50)
+  -- monotone in the share: LVR ↑, fees_trans ↓
+  let shares = [0, 25, 50, 75, 100]
+      lvrs = [ PA.lvrGross (accAt s) | s <- shares ]
+      fts  = [ PA.feesTrans (accAt s) | s <- shares ]
+  if and (zipWith (<=) lvrs (drop 1 lvrs)) && and (zipWith (>=) fts (drop 1 fts))
+    then putStrLn ("ok: LVR monotone ↑, fees_trans ↓ in arb share: " ++ show (zip shares lvrs))
+    else error ("monotonicity fails: " ++ show (lvrs, fts))
+  -- a single up-step: fee = φ_M·amount1, LVR = amount0·p_j² − amount1 > 0
+  let PA.Accrual _ fa1 lg1 = PA.stepAccrual phiXp phiMp chA (PA.Step 0 20 PA.Arb)
+      SqrtPriceX96 a0 = sqrtPriceX96 0
+      SqrtPriceX96 a20 = sqrtPriceX96 20
+      amt1 = mulDiv (10 ^ (24 :: Int)) (a20 - a0) Q96
+  assertEqual "up-step fee = φ_M·amount1" (mulDiv amt1 3000 1000000) fa1
+  if lg1 > 0 && lg1 < amt1 `div` 100 then putStrLn ("ok: up-step LVR small positive: " ++ show lg1 ++ " vs amount1 " ++ show amt1)
+    else error ("up-step LVR " ++ show lg1)
+  -- four-leg roll-up and net accrual sign: seller net = fees_trans − LVR_net
+  let accs = PA.planAccrual phiXp phiMp planB (PA.syntheticPath 11 0 20 400 (shareOf 50))
+      (PayoffX96 lvrN, PayoffX96 netS) = PA.netAccrual (foldr addAccrualT zeroT accs)
+      addAccrualT (PA.Accrual x y z) (PA.Accrual x' y' z') = PA.Accrual (x + x') (y + y') (z + z')
+      zeroT = PA.Accrual 0 0 0
+  assertEqual "plan accrual has 4 legs" 4 (length accs)
+  putStrLn ("ok: 4-leg net accrual at share 50: LVR_net = " ++ show lvrN ++ ", π^φ = " ++ show netS)
   -- TODO #28 item 0: strike of a chunk position is the integer sqrt of a·b (no Double).
   let chS = unitChunk 40000 (mkTickSpacing 60)
       SqrtPriceX96 aS = sqrtPriceX96 40000

@@ -177,6 +177,10 @@ r_{\Delta Q_{\mathrm{trans}}}^{e}
 29. **Single T0 definition; `VariancePortfolio` = reference only** — `refactor` — [#77](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/77)
    - `logPortfolioQ96` moves to `Payoffs.Log`; `VariancePortfolio.fromDef6` = \(N_{\mathrm{id}}\cdot\)`logPortfolioQ96` + R, `fromLegs` delegates; module labelled T0 reference; `panel-replica-vs-hopB` retired (superseded by t1-vs-t0 / t2-vs-t1)
 
+30. **Path accrual — fees and LVR per chunk along a tagged tick path; comparative statics** — `feat` — [#79](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/79)
+   - `Payoffs.PathAccrual`: per-step amounts moved (Uniswap), fee on the token paid in, LVR on arb steps = concavity gap (Thm 5); split fees_trans/fees_arb/LVR_gross; LVR_net = LVR_gross − fees_arb; \(\pi^{\varphi}\) = fees_trans − LVR_net
+   - Synthetic tagged path (LCG + Bresenham share); 4-leg roll-up; panels vs \([\nu_{\mathrm{arb}}/\nu]\) and vs step size; prover path replaces it in #34
+
 Later (not opened yet): compose \(r_{\Delta Q}^{e}\) from #19+#21; wire into parametrized \(\pi^{\Delta Q}/\pi^{\phi}\); then unblock #6.
 
 ### Package / tree moves (README `//` notes; not done)

@@ -521,6 +521,14 @@ Proof shape: rung edges geometric; primitive \(W(p,t)=\ln t + p^2/(2t^2)\); tele
 
 **Implementation status.** T0 with continuous \(\ln\) (`lnQ96`, PR #64), T2 (`LegChunk`, `VolatilityReplica`, PR #57; token1 basis PR #62) and **T1** (`Payoffs.LadderPosition`: `ladderChunks`, `hedgedRung`, `ladderT1`, `ladderN1`, `cOfS`; regressions of Theorems 7(i), 9, 10 and Proposition 1 — T1/\(\mathcal N_1\) matches \(c(4000)\cdot\)logPortfolio to \(2.8\times10^{-6}\) at \(\Delta_i=10\); `outputs/Payoffs/Replica/panel-t1-vs-t0.png`) exist; \(\mathcal B\) (`Panoptic.Binning`: `ladderFromVolOrder`, `binToLegs`, `mintPlanFromLadder`, `quantizationReport`) and \(e^\sigma_W\) (`VolatilityReplica.replicaError`, `windowTicks`) exist — the optimizer is now a `VolRangeWidth` sweep (`outputs/Payoffs/Replica/panel-t2-vs-t1.png`, sweep printed by the app). Lean modules: `GeomProfile`, `GeomMixture`, `LadderPrincipal` (`develop` 8fdd875), `ClmmIdentity`, `LadderLimit` (`feat/lean4-spec` 36a560b, PR #46).
 
+## CHANNEL_STATICS
+
+Comparative statics of the two legs of \(\pi^{\varphi}=\pi^{\phi}-\pi^{\mathrm{LVR}}\) on the \(\mathcal B\) plan (S=4000), from `Payoffs.PathAccrual` over a synthetic tagged path (TODO #30; the prover path replaces it in #34). Per step inside a chunk: amounts moved by `getAmount0/1`, fee on the token paid in, LVR on arb steps \(=\) the concavity gap (Theorem 5). \(\mathrm{LVR}_{\mathrm{net}}=\mathrm{LVR}_{\mathrm{gross}}-\mathrm{fees}_{\mathrm{arb}}\) (after-fee convention); \(\pi^{\varphi}=\mathrm{fees}_{\mathrm{trans}}-\mathrm{LVR}_{\mathrm{net}}\).
+
+**Fact 1 (share axis, `panel-accrual-vs-arbshare.png`).** At fixed step size, \(\mathrm{fees}_{\mathrm{trans}}\) is antitone and \(\mathrm{LVR}_{\mathrm{gross}}\) monotone in \([\nu_{\mathrm{arb}}/\nu]\), both linear; total fees are invariant to the tag. Below the fee band \(\mathrm{LVR}_{\mathrm{net}}<0\) for every share: arbs pay more fee than they extract, and the seller's \(\pi^{\varphi}\) falls in the share only through lost transactional fees.
+
+**Fact 2 (vol axis, `panel-accrual-vs-vol.png`).** At share ½, \(\mathrm{LVR}_{\mathrm{net}}\) crosses zero where the step exceeds the fee band (≈40–50 ticks for \(\phi_X=5\,\)bp, \(\phi_M=30\,\)bp), and \(\pi^{\varphi}\) peaks there: too little vol → few fees, too much → LVR dominates. This is the band-crossing form of \(\lambda_{X/M}\) (MODEL_CLOSURE §2) seen directly, and the reason \(\inf_\tau\) has an interior solution: the tax moves \([\nu_{\mathrm{arb}}/\nu]\) (Fact 1) but the *sign* of the arb's extraction is set by vol vs fee (Fact 2).
+
 ## MODEL_CLOSURE
 
 Exact functional forms for \(\pi^{\phi}(\pi^{\Delta Q}_{\mathrm{trans}}(r^{e}_{\mathrm{trans}}))\) and \(\pi^{\mathrm{LVR}}(\pi^{\Delta Q}_{\mathrm{arb}}(r^{e}_{\mathrm{arb}}))\). Both channels have the same shape — a token-side mixture weighted by \(r^{e}\) — which is what closes the model.
