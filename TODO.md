@@ -174,6 +174,9 @@ r_{\Delta Q_{\mathrm{trans}}}^{e}
    - Sub-issues: **0 ✓** [#61](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/61)/PR #62 (asset = 1 all legs, integerSqrt strike, mulDiv staged forms, `docs/BITWIDTHS.md`); **1 ✓** [#63](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/63)/PR #64 (`lnQ96`); **2 ✓** `Payoffs.LadderPosition` (T1; regressions of Thm 7(i)/9/10, Prop 1; T1/N_1 vs c(4000)·logPortfolio 2.8e-6); **3 ✓** `Panoptic.Binning` + `replicaError` (Cor 1/Thm 8 regressions; \(e^\sigma_W(\mathcal B)=2.1\)e-4 at S=4000, \(\approx S^2\) sweep; or = (127,…) = equal notional per leg, Cor 4); **4 ✓** README § REPLICATION_THEORY — **#28 complete** except the peer follow-ons (O(Δi) bound, off-midpoint strike, χ via Thm 5)
    - Supersedes TODO #25 (c) (Hop B comparison) via Item 1
 
+29. **Single T0 definition; `VariancePortfolio` = reference only** — `refactor` — [#77](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/77)
+   - `logPortfolioQ96` moves to `Payoffs.Log`; `VariancePortfolio.fromDef6` = \(N_{\mathrm{id}}\cdot\)`logPortfolioQ96` + R, `fromLegs` delegates; module labelled T0 reference; `panel-replica-vs-hopB` retired (superseded by t1-vs-t0 / t2-vs-t1)
+
 Later (not opened yet): compose \(r_{\Delta Q}^{e}\) from #19+#21; wire into parametrized \(\pi^{\Delta Q}/\pi^{\phi}\); then unblock #6.
 
 ### Package / tree moves (README `//` notes; not done)

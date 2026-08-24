@@ -46,8 +46,7 @@ import Liquidity.LiquidityGrid
   , xiStar
   )
 import qualified Payoffs.CLMMPosition as CLMM
-import Payoffs.Forward (AtmForward(..), nakedForwardQ96)
-import Payoffs.Log (lnQ96)
+import Payoffs.Log (logPortfolioQ96)
 import qualified Payoffs.Payoff as Payoff
 import Plotting.PlotSqrt (PlotY(..), sqrtFunctionLayout)
 import SqrtGrid
@@ -147,13 +146,6 @@ ladderReturnQ96 l p =
   let PayoffX96 t1 = Payoff.runPayoff (ladderT1 l) p
       PayoffX96 n1 = ladderN1 l
   in  PayoffX96 (mulDiv t1 Q96 n1)
-
--- | logPortfolio(P, P*) = (P − P*)/P* − ln(P/P*) in Q96 (T0 bare; continuous lnQ96).
-logPortfolioQ96 :: SqrtPriceX96 -> SqrtPriceX96 -> PayoffX96
-logPortfolioQ96 p pStar =
-  let PayoffX96 f = nakedForwardQ96 p (AtmForward pStar)
-      PayoffX96 l = lnQ96 p pStar
-  in  PayoffX96 (f - l)
 
 -- | Theorem 10's constant c(S) = 1 / (2·(ln λ · S/4 + (1 − λ^{−S/2})/2)), Double (test/plot boundary).
 cOfS :: Int -> Double

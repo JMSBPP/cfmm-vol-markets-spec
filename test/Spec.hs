@@ -42,8 +42,9 @@ import Payoffs.Forward
   , nakedForwardQ96
   )
 import qualified Payoffs.Forward as Fwd
-import Payoffs.Log (lnQ96, lnWad, logContract, nakedLogQ96, nakedLogTickQ96, pattern WAD)
+import Payoffs.Log (lnQ96, lnWad, logContract, logPortfolioQ96, nakedLogQ96, nakedLogTickQ96, pattern WAD)
 import qualified Payoffs.Log as PLog
+import qualified Payoffs.VariancePortfolio as VPort
 import Payoffs.VariancePortfolio
   ( fromDef6
   , fromLegs
@@ -215,7 +216,7 @@ import Panoptic.LegChunk (legChunk, legChunks, legLiquidity)
 import Payoffs.VolatilityReplica (ErrorX96(..), fourLegReplica, legMintValue, replicaError, windowTicks)
 import Panoptic.Binning (binNotionals, binToLegs, ladderFromVolOrder, mintPlanFromLadder, quantizationReport, QuantizationRow(..))
 import Payoffs.LadderPosition
-  ( cOfS, hedgedRung, ladderChunks, ladderFromSpan, ladderN1, ladderReturnQ96, ladderT1, logPortfolioQ96 )
+  ( cOfS, hedgedRung, ladderChunks, ladderFromSpan, ladderN1, ladderReturnQ96, ladderT1 )
 import Data.Vector ((!))
 import qualified Data.Vector as V
 import TickPath (TickPath(..), mkTickPath, pathLength, ticks)
@@ -420,6 +421,14 @@ main = do
     yLegs10 = Payoff.runPayoff (toPayoff piLegs) s10
     yDef10 = Payoff.runPayoff (toPayoff piDef6) s10
   assertEqual "fromLegs = fromDef6 off ATM" yLegs10 yDef10
+  -- TODO #29: single T0 definition — fromLegs = N_id·logPortfolioQ96 + R, exactly, at several ticks
+  sequence_
+    [ assertEqual ("T0 single definition at tick " ++ show i) (scaleByNId n32 lp + rRaw) y
+    | i <- [-3000, -700, -10, 10, 700, 3000]
+    , let p = sqrtPriceX96 i
+    , let PayoffX96 lp = logPortfolioQ96 p (Fwd.unAtmForward atm0)
+    , let PayoffX96 rRaw = remaining
+    , let PayoffX96 y = Payoff.runPayoff (VPort.toPayoff (fromLegs n32 atm0 remaining)) p ]
 
   assertThrows "mkTargetVega 0 rejected" (mkTargetVega 0)
   assertThrows "mkTargetVega (-1) rejected" (mkTargetVega (-1))

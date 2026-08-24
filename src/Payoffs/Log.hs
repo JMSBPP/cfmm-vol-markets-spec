@@ -20,6 +20,7 @@ module Payoffs.Log
   , nakedLogTickQ96
   , lnWad
   , lnQ96
+  , logPortfolioQ96
   , pattern WAD
   , payoff
   , logContract
@@ -28,7 +29,7 @@ module Payoffs.Log
 import Data.Bits (shiftL, shiftR, xor, (.&.), (.|.))
 
 import qualified Payoffs.Payoff as Payoff
-import Payoffs.Forward (AtmForward, unAtmForward)
+import Payoffs.Forward (AtmForward(..), nakedForwardQ96, unAtmForward)
 import Panoptic.NId (NId, scaleByNId)
 import SqrtGrid
   ( SqrtPriceX96(..)
@@ -116,3 +117,13 @@ payoff nId spot atm =
 logContract :: NId -> AtmForward -> Payoff.Payoff SqrtPriceX96
 logContract nId atm =
   Payoff.Payoff (\spot -> payoff nId spot atm)
+
+-- | T0 bare: logPortfolio(P, P*) = (P − P*)/P* − ln(P/P*) in Q96, continuous log.
+-- The single definition of the Carr–Madan / Demeterfi log portfolio in this
+-- codebase (README § REPLICATION_THEORY Def 7; Lean VolInstrument.logPortfolio).
+-- VariancePortfolio (T0 with N_id scale and R) is built from this.
+logPortfolioQ96 :: SqrtPriceX96 -> SqrtPriceX96 -> PayoffX96
+logPortfolioQ96 p pStar =
+  let PayoffX96 f = nakedForwardQ96 p (AtmForward pStar)
+      PayoffX96 l = lnQ96 p pStar
+  in  PayoffX96 (f - l)

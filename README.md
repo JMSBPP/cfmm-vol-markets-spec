@@ -459,7 +459,7 @@ L\,(b-a) & p_{1/2} \ge b
 \(h_x(p_{1/2}) = H_x(p_{1/2}) - \pi^{\Delta Q_X}(\mathrm{Id}_{i_x};p_{1/2})\).
 
 **Definition 7 (tiers).**
-- T0: \(\Pi^\sigma_{\mathrm{opt}}(P) = N_{\mathrm{id}}\big[(P-P^\star)/P^\star - \ln(P/P^\star)\big] + R\), \(\;\mathrm{logPortfolio}(P,P^\star) = (P-P^\star)/P^\star - \ln(P/P^\star)\).
+- T0 (**reference only**, not a position): \(\Pi^\sigma_{\mathrm{opt}}(P) = N_{\mathrm{id}}\big[(P-P^\star)/P^\star - \ln(P/P^\star)\big] + R\), \(\;\mathrm{logPortfolio}(P,P^\star) = (P-P^\star)/P^\star - \ln(P/P^\star)\) — single code definition `Payoffs.Log.logPortfolioQ96`; `VariancePortfolio` is \(N_{\mathrm{id}}\cdot\) it \(+R\) (TODO #29).
 - T1: \(L(i_x) = \Delta Q_v^\star\,\ell(\xi^\star,\iota;x)\), \(\;\hat\pi^\sigma_{\mathrm{T1}}(p) = \sum_x \tfrac{L(i_x)}{L_{\mathrm{unit}}}\,h_x(p)\), \(\;\mathcal N_1 = \sum_x \tfrac{L(i_x)}{L_{\mathrm{unit}}}H_x(p^\star)\).
 - T2: \(\hat\pi^\sigma(p) = \sum_{\mathrm{leg}=0}^{3}\big[H_{\mathrm{leg}}(p) - \pi^{\Delta Q_X}(\mathcal{LC}_{\mathrm{leg}};p)\big]\), \(\mathcal{LC}_{\mathrm{leg}}\) from \(\mathrm{or}(\mathrm{leg})\cdot\texttt{positionSize}\) on the token1 basis (`asset = 1`).
 
