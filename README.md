@@ -457,3 +457,31 @@ Exact functional forms for \(\pi^{\phi}(\pi^{\Delta Q}_{\mathrm{trans}}(r^{e}_{\
 \]
 
 Inputs: \(\phi_{X/M}\) (`Quote`), \(\delta_{\mathrm{trans}}\) (#7/#23), \Big[\tfrac{\nu_{\mathrm{arb}}}{\nu}\Big] (atomic), \(r^{e}_{\mathrm{arb}} = \Lambda(\gamma(u - u^{\star}))\) (#21), \(u\), \(\mathcal{LC}_{\mathrm{leg}}\) (#25).
+
+## LEAN_RESULTS
+
+Machine-proved results from `~/cfmms-playground/cfmm-wt/lean4-spec` (branch `develop` 8fdd875, Aristotle project 32b8b48e, 9/9 proved, no `sorry`, axiom-clean; second bundle 63e575db in flight), restated in this README's notation. Objects: rung index \(x \in [0,\iota)\), \(i_x = i_L + x\Delta_i\); chunk \(\mathcal{LC} = (i^-, i^+, L)\) with \(a = p^{(\mathrm{bid})}_{1/2}\), \(b = p^{(\mathrm{ask})}_{1/2}\); profile \(\ell(\xi,\iota;x)\); \(\xi^\star = \lambda^{-\Delta_i/2}\); bare principal \(\pi^{\Delta Q_X}(\mathcal{LC};\, p_{1/2})\).
+
+**Ladder / LDF layer** (`GeomMixture.lean`, anchor Definition 50, Theorems 46–47)
+
+| # | statement (our notation) | Lean name | what it buys |
+|---|---|---|---|
+| M0 | Two-kernel profile \(\ell_{\theta}(x) = \omega\,\ell(\xi_P,\iota_P;x)\,\mathbb{1}_{x<\iota_P} + (1-\omega)\,\ell(\xi_C,\iota_C;x-\iota_P)\,\mathbb{1}_{x\ge\iota_P}\), \(\theta_{\mathrm{LDF}} = (\xi_P,\xi_C,\omega)\), \(\iota_P = (i^\star - i_L)/\Delta_i\) derived: \(\sum_x \ell_\theta(x) = 1\) for every \(\omega\) | `mixWeight`, `mixWeight_sum` | \(\theta_{\mathrm{LDF}}\) is a well-formed density for any knob setting — no renormalization step in the tuner |
+| A4 | With a common base \(\xi_P = \xi_C = \xi\): \(\ell_\theta = \ell(\xi,\iota;\cdot)\) on all rungs **iff** \(\omega = \omega^\star = \dfrac{1-\xi^{\iota_P}}{1-\xi^{\iota}}\) | `mix_eq_single_iff` | \(\omega\) is **not a free knob** at the Carr–Madan point; any other \(\omega\) puts a jump at \(i^\star\) |
+| A3 | For bin \(B\) with weights \(c_x > 0\): the \(c\)-weighted mean \(\bar L_B = \sum_B c_x L_x / \sum_B c_x\) minimizes \(\sum_B c_x (L_x - m)^2\) over all \(m\) | `wMean`, `wMean_minimizes` | the 4-leg binning \(\mathcal{B}\) is a **closed form**: \(\mathrm{or}(\mathrm{leg}) \propto\) bin notional; there is nothing to search over per leg |
+| A2a | The sampled log-contract liquidity profile \(K^{-1/2}\big|_{i_x}\), normalized over \(\iota\) rungs, **is** \(\ell(\xi^\star,\iota;x)\) | `logLiqWeight_eq_geom` | the variance-swap ladder is exactly geometric at \(\xi^\star\) — T1 is the right object |
+| A2b | \(\xi^\star\) minimizes \(\sum_x \big(\ell(\xi,\iota;x) - K^{-1/2}\text{-profile}\big)^2\) over \(\xi > 0, \xi \ne 1\); the minimum is 0 and is attained **only** at \(\xi^\star\) (\(\iota \ge 2\)) | `xiStar`, `l2dist`, `xiStar_argmin` | the \(\xi\) sweep of the spec's test (c) is a theorem; liquidity layer \(\lambda^{-\Delta_i/2}\), **not** the strike layer \(\lambda^{-\Delta_i}\) (`varswapWeight_normalized`) |
+
+**Principal layer** (`LadderPrincipal.lean`, anchor Definition 49, Theorem 45, Proposition 17)
+
+| # | statement (our notation) | Lean name | what it buys |
+|---|---|---|---|
+| I0 | \(\mathrm{amount}_0 = L\,(b-a)/(ab)\), \(\mathrm{amount}_1 = L\,(b-a)\) are the inverses of `getLiquidityForAmount0/1` in both directions (\(0<a<b\)) | `amount0`, `amount1`, `amounts_invert_liquidity` | \(\mathrm{or}(\mathrm{leg}) \to L_{\mathrm{leg}}\) (`legLiquidity`) and back is exact; \(\mathrm{amount}_0 \equiv \Delta Q_M^L\), \(\mathrm{amount}_1 \equiv \Delta Q_X^L\) |
+| P2 | In range (\(a \le p_{1/2} < b\)): \(\pi^{\Delta Q_X}(\mathcal{LC};p_{1/2}) = \mathrm{amount}_1(L,a,p_{1/2}) + p_{1/2}^2\,\mathrm{amount}_0(L,p_{1/2},b)\) | `principal_inRange` | the Uniswap split at the current price; Haskell regression in `test/Spec.hs` |
+| P1 | \(p_{1/2} \mapsto \pi^{\Delta Q_X}(\mathcal{LC};p_{1/2})\) is continuous | `principal_continuous` | no jumps at the range edges — the replica \(\hat\pi^\sigma\) is continuous |
+| P3 | \(P \mapsto \pi^{\Delta Q_X}(\mathcal{LC};\sqrt P)\) is concave on \(P \ge 0\) (as the infimum of the tangent family \(T_t(P) = L(t - a + P/t - P/b)\), \(t \in [a,b]\)); **not** concave in \(p_{1/2}\) (refuted: below range it is \(\propto p_{1/2}^2\)) | `principal_concaveOn_price` | each long leg \(H - \pi^{\Delta Q_X}\) is convex in price ⇒ \(\hat\pi^\sigma \ge 0\), \(=0\) at \(p^\star\) |
+
+**In flight** (bundle 63e575db, `ClmmIdentity.lean`): A6a the per-tick CLMM identity \(\pi^{\Delta Q_X}(\mathrm{Id}_i;p_{1/2}) = \mathrm{amount}_0(\mathrm{Id}_i)\,[\min(P,K) + \pi^{\mathrm{RAN}}(k_{1/2},r)]\) with \(k_{1/2} = \sqrt{ab}\), \(r = b/a\) (hand proof + Haskell witness, PR #53; numerics \(1.3\times10^{-13}\)); RAN lemmas R1–R3 (endpoints, \(\le 0\), value at strike); **Proposition 17** \(\partial^2 \pi^{\Delta Q_X}/\partial P^2 = -\tfrac12 L\,\Gamma_\varphi(P)\) in range — the principal **is** the gamma carrier, which is the object the \(\lambda_{X/M}\) LVR claim (#51) needs for \(\chi(\mathcal{LC})\). **Awaiting a ruling:** A1 (the hedged ladder \(\to c\cdot\)log contract as \(\Delta_i \to 0\), numerically true with \(c \approx 2.62\) on the probe span and \(O(\Delta_i^2)\) spread) needs a Lean `hedgedRung` object — (a) dedicated module or (b) scratch-only.
+
+**Consequence.** Phase 2 of the ladder spec has no \((\xi,\omega)\) search: \(\mathcal{B}\) is the bin mean (A3) of the profile at \(\xi^\star\) (A2) with \(\omega^\star\) (A4). What remains numerical is the 7-bit quantization of \(\mathrm{or}(\mathrm{leg})\), the width/truncation trade-off, and the X96 implementation error.
+
