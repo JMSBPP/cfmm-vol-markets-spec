@@ -42,7 +42,7 @@ import Payoffs.Forward
   , nakedForwardQ96
   )
 import qualified Payoffs.Forward as Fwd
-import Payoffs.Log (logContract, nakedLogQ96)
+import Payoffs.Log (lnQ96, lnWad, logContract, nakedLogQ96, nakedLogTickQ96, pattern WAD)
 import qualified Payoffs.Log as PLog
 import Payoffs.VariancePortfolio
   ( fromDef6
@@ -350,7 +350,11 @@ main = do
     expectedLog =
       floor (fromIntegral Q96 * fromIntegral (i10 - i0) * log tickBase)
     PayoffX96 log10 = nakedLogQ96 s10 atm0
-  assertEqual "naked log is (i-i*) ln λ in Q96" expectedLog log10
+  -- TODO #28.1: continuous log agrees with the tick formula AT a tick price
+  -- (both are 10·ln λ here); tolerance covers lnWad approx + Double floor.
+  if abs (log10 - expectedLog) <= Q96 `div` 1000000000
+    then putStrLn "ok: naked log ≈ (i-i*) ln λ at a tick price (1e-9 Q96)"
+    else error ("naked log vs tick formula: " ++ show log10 ++ " vs " ++ show expectedLog)
   let SqrtPriceX96 word10 = s10
   if log10 == word10
     then error "log must not be ln of the Q96 word"
@@ -361,6 +365,42 @@ main = do
     (let PayoffX96 y = PLog.payoff n32 s10 atm0 in y)
   _ <- evaluate (logContract n32 atm0)
   putStrLn "ok: logContract Payoff"
+
+  -- TODO #28.1: lnWad port + lnQ96 properties.
+  assertEqual "lnWad(WAD) = 0" 0 (lnWad WAD)
+  let e18 = 2718281828459045235 :: Integer  -- e·WAD (floor)
+  if abs (lnWad e18 - WAD) <= 10 then putStrLn "ok: lnWad(e) = WAD ± 10 wei"
+    else error ("lnWad(e) = " ++ show (lnWad e18))
+  if abs (lnWad (2 * WAD) - 693147180559945309) <= 10 then putStrLn "ok: lnWad(2) ± 10 wei"
+    else error ("lnWad(2) = " ++ show (lnWad (2 * WAD)))
+  if abs (lnWad (WAD `div` 2) + 693147180559945309) <= 10 then putStrLn "ok: lnWad(1/2) ± 10 wei"
+    else error ("lnWad(1/2) = " ++ show (lnWad (WAD `div` 2)))
+  -- monotone on a log-spaced grid
+  let grid = [ WAD * k `div` 100 | k <- [1 .. 99] ] ++ [ WAD * k | k <- [1 .. 1000] ]  -- strictly increasing, no duplicates
+  if and (zipWith (<) (map lnWad grid) (map lnWad (drop 1 grid)) ) then putStrLn "ok: lnWad monotone"
+    else error "lnWad not monotone"
+  -- lnQ96 vs tick log at every 10th tick on ±3000: measured max |diff| ≤ ½ ln λ · Q96 (tick error)
+  let halfTickErr = floor (0.5 * log tickBase * fromIntegral Q96 :: Double) + Q96 `div` 1000000 :: Integer
+      diffs = [ abs (a - b)
+              | i <- [-3000, -2990 .. 3000]
+              , let PayoffX96 a = nakedLogQ96 (sqrtPriceX96 i) atm0
+              , let PayoffX96 b = nakedLogTickQ96 (sqrtPriceX96 i) atm0 ]
+  if maximum diffs <= halfTickErr then putStrLn ("ok: lnQ96 vs tick log, max diff " ++ show (maximum diffs) ++ " ≤ ½ ln λ Q96")
+    else error ("lnQ96 vs tick log max diff " ++ show (maximum diffs) ++ " > " ++ show halfTickErr)
+  -- lnQ96 vs Double reference (plot boundary): measured max relative error, reported
+  let refErr = maximum
+        [ abs (fromIntegral a - 2 * log (fromIntegral p / fromIntegral Q96) * fromIntegral Q96) / fromIntegral Q96
+        | i <- [-3000, -2990 .. 3000], i /= 0
+        , let SqrtPriceX96 p = sqrtPriceX96 i
+        , let PayoffX96 a = lnQ96 (SqrtPriceX96 p) (sqrtPriceX96 0) ] :: Double
+  if refErr <= 1.0e-12 then putStrLn ("ok: lnQ96 vs Double ln, max abs err " ++ show refErr ++ " (Q96 units)")
+    else error ("lnQ96 vs Double ln err " ++ show refErr)
+  -- continuity: strictly increasing across a sub-tick step
+  let SqrtPriceX96 s0 = sqrtPriceX96 0
+      PayoffX96 lA = lnQ96 (SqrtPriceX96 (s0 + s0 `div` 100000)) (sqrtPriceX96 0)
+      PayoffX96 lB = lnQ96 (SqrtPriceX96 (s0 + s0 `div` 50000)) (sqrtPriceX96 0)
+  if 0 < lA && lA < lB then putStrLn "ok: lnQ96 continuous below one tick (no sawtooth)"
+    else error "lnQ96 not increasing within a tick"
 
   let
     remaining = PayoffX96 1000

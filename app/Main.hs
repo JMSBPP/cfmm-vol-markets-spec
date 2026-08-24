@@ -426,6 +426,17 @@ main = do
       (Cell (legsLayout legsCfg replicaPlan))
       (Cell (replicaLayout replicaCfg replicaPlan pStar0 []))
     )
+
+  -- TODO #28.1: with the continuous log (lnQ96) the Hop B Carr–Madan limit is
+  -- smooth on the ±60-tick window — the comparison #36 (c) was blocked on.
+  -- Units differ (token1 vs N_id-scaled return), so side by side, not overlaid;
+  -- the overlay with the scale bridge is Phase 1 (T1 vs T0).
+  writePanel
+    "outputs/Payoffs/Replica/panel-replica-vs-hopB.png"
+    (Beside
+      (Cell (replicaLayout replicaCfg replicaPlan pStar0 []))
+      (Cell (variancePortfolioLayout hopBNid hopBAtm (PayoffX96 0) (mkTargetVega 1) (sqrtPriceX96 (-60)) (sqrtPriceX96 60)))
+    )
   writePanel
     "outputs/Payoffs/variance-portfolio-vs-gammaCoordinate.png"
     (Cell
