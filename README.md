@@ -157,7 +157,7 @@ These are the Uniswap `getLiquidityForAmount1` / `getLiquidityForAmount0` invers
 	\end{aligned}
 \]
 
-Legs are OTM at \(p^{\star}\), so \(\pi^{\varphi}(\mathcal{LC}_{\mathrm{leg}}; p^{\star}_{1/2})\) is a constant per leg: \(L_{\mathrm{leg}} \big(p_{1/2}^{(\mathrm{ask})}(\mathrm{leg}) - p_{1/2}^{(\mathrm{bid})}(\mathrm{leg})\big)\) for puts, \(L_{\mathrm{leg}} \, p^{\star} \big(1/p_{1/2}^{(\mathrm{bid})}(\mathrm{leg}) - 1/p_{1/2}^{(\mathrm{ask})}(\mathrm{leg})\big)\) for calls. 
+Per-leg mint value \(H_{\mathrm{leg}}(p_{1/2})\), valued in token1 at the current price: puts (token1 received) \(H = \mathrm{amount}_1(\mathcal{LC}_{\mathrm{leg}})\), a constant; calls (token0 received) \(H = p_{1/2}^{2}\,\mathrm{amount}_0(\mathcal{LC}_{\mathrm{leg}})\), which floats with \(p\) — so \(\hat{\pi^{\sigma}} = \sum_{\mathrm{leg}} [H_{\mathrm{leg}}(p_{1/2}) - \pi^{\varphi}(\mathcal{LC}_{\mathrm{leg}}; p_{1/2})]\), \(= 0\) at \(p^{\star}\) (all legs OTM) and \(\ge 0\) (each \(-\pi^{\varphi}\) convex). Code: `Panoptic.LegChunk` (\(\mathcal{LC}_{\mathrm{leg}}\), \(\mathrm{or}(\mathrm{leg}) \to L_{\mathrm{leg}}\)), `Payoffs.VolatilityReplica.fourLegReplica`. 
 
 Substituting \(\pi^{\varphi} = \pi^{\phi} - \pi^{\mathrm{LVR}}\):
 

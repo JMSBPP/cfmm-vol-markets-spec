@@ -52,7 +52,9 @@ import Greeks.Delta (deltaLayout)
 import Greeks.Gamma (gammaLayout, kristensenGammaLayoutVsGamma)
 import Payoffs.CLMMPosition (chunkFromStrike, rhsPayoffLayout, scaledVsUnitLayout)
 import Payoffs.Forward (AtmForward(..))
-import Panoptic.NId (MintPlan(..), fourLegSkeleton, mkNId)
+import Panoptic.NId (MintPlan(..), fourLegSkeleton, mkNId, volOrderToMintPlan)
+import Payoffs.VolatilityReplica (legsLayout, replicaLayout)
+import Volatility.VolOrder (fixtureSymmetricVolOrder)
 import TargetVega (mkTargetVega, positionSizeForTargetVega)
 import Liquidity.LiquidityChunk
   ( chunkLiquidity
@@ -404,6 +406,26 @@ main = do
     hopBAtm = AtmForward (sqrtPriceX96 0)
     hopBNid = mkNId 32
     hopBMin = -160
+
+  -- TODO #25 (#36): the 4-leg replica π̂^σ from leg chunks (fixture VolOrder,
+  -- legs ±20 ticks about i* = 0, ΔQ_υ = 1e18, or = (1,2,3,4)).
+  let
+    replicaPlan = volOrderToMintPlan (fixtureSymmetricVolOrder (mkTargetVega (10 ^ (18 :: Int)))) 0 (1, 2, 3, 4)
+    replicaCfg  = SqrtPlot
+      { plotTitle  = "π̂^σ = Σ_leg [H_leg − π^φ(LC_leg)] (4-leg Panoptic, ΔQ_υ = 1e18)"
+      , xAxisTitle = "sqrtPriceX96"
+      , yAxisTitle = "PayoffX96 (token1)"
+      , xMin       = sqrtPriceX96 (-60)
+      , xMax       = sqrtPriceX96 60
+      }
+    legsCfg = retitleSqrt replicaCfg "Per-leg terms H_leg − π^φ(LC_leg) and their sum" "PayoffX96 (token1)"
+    pStar0  = sqrtPriceX96 0
+  writePanel
+    "outputs/Payoffs/Replica/panel-legs-replica.png"
+    (Beside
+      (Cell (legsLayout legsCfg replicaPlan))
+      (Cell (replicaLayout replicaCfg replicaPlan pStar0 []))
+    )
   writePanel
     "outputs/Payoffs/variance-portfolio-vs-gammaCoordinate.png"
     (Cell
