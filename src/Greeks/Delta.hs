@@ -19,7 +19,8 @@ import qualified Payoffs.Payoff as Payoff
 
 import OptionRatio (OptionRatio(..))
 import SqrtGrid
-  ( SqrtPriceX96(..)
+  ( integerSqrt
+  , SqrtPriceX96(..)
   , PayoffX96(..)
   , SqrtPlot(..)
   , pattern Q96
@@ -38,14 +39,6 @@ newtype DeltaX96 = DeltaX96 Integer
 pattern DELTA_ATM :: DeltaX96
 pattern DELTA_ATM = DeltaX96 39614081257132168796771975168
 
-integerSqrt :: Integer -> Integer
-integerSqrt n
-  | n <= 0 = 0
-  | otherwise = go (1 + n `div` 2)
-  where
-    go x =
-      let x' = (x + n `div` x) `div` 2
-      in  if x' >= x then x else go x'
 
 -- (3.23) in price coordinates, then κ_{1/2} = √K · 2^96
 strikeFromDelta

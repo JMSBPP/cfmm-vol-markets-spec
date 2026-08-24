@@ -22,6 +22,7 @@ module SqrtGrid
   , invX96
   , rpowX96
   , integerSqrt
+  , mulDiv
   ) where
 
 type Tick = Int
@@ -73,6 +74,15 @@ rpowX96 a n = go n a Q96
           go (k `div` 2) (mulX96 base base) (mulX96 acc base)
       | otherwise =
           go (k `div` 2) (mulX96 base base) acc
+
+-- | floor(a·b / d) — the single-floor twin of FullMath.mulDiv (512-bit
+-- intermediate on the EVM). New model arithmetic must be written as mulDiv
+-- chains in the exact staged form of the Solidity twin; bare a*b*c `div` d
+-- is forbidden (see docs/BITWIDTHS.md).
+mulDiv :: Integer -> Integer -> Integer -> Integer
+mulDiv a b d
+  | d == 0    = error "SqrtGrid.mulDiv: division by zero"
+  | otherwise = (a * b) `div` d
 
 integerSqrt :: Integer -> Integer
 integerSqrt n

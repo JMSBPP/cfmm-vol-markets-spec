@@ -3,6 +3,7 @@
 module Payoffs.CLMMPosition
   ( CLMMPosition
   , clmmChunk
+  , chunkStrike
   , fromChunk
   , fromCall
   , fromPut
@@ -28,6 +29,7 @@ import SqrtGrid
   ( SqrtPriceX96(..)
   , PayoffX96(..)
   , SqrtPlot
+  , integerSqrt
   , pattern Q96
   , sqrtPriceX96
   , tickFromSqrtPriceX96
@@ -63,12 +65,16 @@ data CLMMPosition = CLMMPosition
   , clmmPayoff :: Payoff.Payoff SqrtPriceX96
   }
 
+-- k½ = integerSqrt(a·b) — no Double on the strike (TODO #28 item 0).
+-- The ratio r = b/a stays an OptionRatio Double: a budgeted leak, own TODO.
 strikeAndRatio :: LiquidityChunk -> (StrikeX96, OptionRatio)
 strikeAndRatio ch =
   let SqrtPriceX96 a = sqrtPriceX96 (chunkTickLower ch)
       SqrtPriceX96 b = sqrtPriceX96 (chunkTickUpper ch)
-      kRaw = floor (sqrt (fromInteger a * fromInteger b :: Double)) :: Integer
-  in  (StrikeX96 kRaw, OptionRatio (fromInteger b / fromInteger a))
+  in  (StrikeX96 (integerSqrt (a * b)), OptionRatio (fromInteger b / fromInteger a))
+
+chunkStrike :: LiquidityChunk -> StrikeX96
+chunkStrike = fst . strikeAndRatio
 
 scaleQ96 :: PayoffX96 -> Payoff.Payoff SqrtPriceX96 -> Payoff.Payoff SqrtPriceX96
 scaleQ96 (PayoffX96 s) (Payoff.Payoff f) =

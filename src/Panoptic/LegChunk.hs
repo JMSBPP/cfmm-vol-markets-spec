@@ -5,13 +5,13 @@
 --
 -- Geometry is decoded from the tokenId bits exactly as Panoptic's asTicks:
 --   i⁻ = strike − width·Δ_i/2,  i⁺ = strike + width·Δ_i/2.
--- Size (README "Per-leg option ratio and leg chunk"): the leg notional is
--- or(leg)·ΔQ_υ, in token1 for puts (tokenType 0) and token0 for calls
--- (tokenType 1), inverted to liquidity over the leg range
--- (LiquidityAmounts.getLiquidityForAmount1 / getLiquidityForAmount0):
---
---   L_leg = or·ΔQ_υ / (p½^ask − p½^bid)              (put,  token1 notional)
---   L_leg = or·ΔQ_υ / (1/p½^bid − 1/p½^ask)          (call, token0 notional)
+-- Size: the leg notional is or(leg)·ΔQ_υ in the numeraire selected by the
+-- leg's `asset` bit — PanopticMath.getLiquidityChunk polarity:
+--   asset == 0 → getLiquidityForAmount0 (token0):  L = amt·(a·b/Q96)/(b − a)
+--   asset == 1 → getLiquidityForAmount1 (token1):  L = amt·Q96/(b − a)
+-- volOrderToTokenId sets asset = 1 on every leg (single token1 basis, spec
+-- 2026-08-24 §2), so all four legs are token1-sized. `asset` is independent
+-- of `tokenType` (which still decides the token RECEIVED at mint).
 --
 -- ΔQ_υ is the SFPM positionSize = liquidity field of the envelope 'mintChunk'
 -- (what 'targetVegaFromMint' reads).  The envelope chunk itself is NOT a leg.
@@ -26,13 +26,13 @@ module Panoptic.LegChunk
 import Liquidity.LiquidityChunk (LiquidityChunk, chunkLiquidity, createChunk)
 import Panoptic.MintPlan (MintPlan(..), PanopticTokenId, fourLegNumLegs)
 import Panoptic.NId
-  ( panopticOptionRatio
+  ( panopticAsset
+  , panopticOptionRatio
   , panopticStrike
   , panopticTickSpacing
-  , panopticTokenType
   , panopticWidth
   )
-import SqrtGrid (SqrtPriceX96(..), Tick, pattern Q96, sqrtPriceX96)
+import SqrtGrid (SqrtPriceX96(..), Tick, mulDiv, pattern Q96, sqrtPriceX96)
 
 -- | (i⁻, i⁺) of a leg, decoded from the tokenId (Panoptic asTicks).
 legTicks :: PanopticTokenId -> Int -> (Tick, Tick)
@@ -54,11 +54,11 @@ legLiquidity plan leg
       error "Panoptic.LegChunk.legLiquidity: leg out of range"
   | b <= a =
       error "Panoptic.LegChunk.legLiquidity: degenerate leg range"
-  | tokenType == 0 = (amt * Q96) `div` (b - a)              -- put:  getLiquidityForAmount1
-  | otherwise      = (amt * a * b) `div` ((b - a) * Q96)    -- call: getLiquidityForAmount0
+  | asset == 0 = mulDiv amt (mulDiv a b Q96) (b - a)   -- Math.getLiquidityForAmount0: mulDiv(amt, mulDiv96(a,b), b−a)
+  | otherwise  = mulDiv amt Q96 (b - a)                -- Math.getLiquidityForAmount1: mulDiv(amt, Q96, b−a)
   where
     tid = mintTokenId plan
-    tokenType = panopticTokenType tid (toInteger leg)
+    asset = panopticAsset tid (toInteger leg)
     amt = legNotional plan leg
     (lo, hi) = legTicks tid leg
     SqrtPriceX96 a = sqrtPriceX96 lo

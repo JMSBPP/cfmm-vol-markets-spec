@@ -11,6 +11,7 @@ module Panoptic.NId
   , panopticTickSpacing
   , panopticOptionRatio
   , panopticIsLong
+  , panopticAsset
   , panopticTokenType
   , panopticStrike
   , panopticWidth
@@ -89,7 +90,10 @@ volOrderToTokenId vo poolId (r0, r1, r2, r3)
         tid5 = addTokenType tid4 0 1
         tid6 = addTokenType tid5 1 2
         tid7 = addTokenType tid6 1 3
-        tid8 = addIsLong tid7 1 0
+        -- asset = 1 on every leg: single token1 basis for positionSize·optionRatio
+        -- (PanopticMath.getLiquidityChunk: asset==1 → getLiquidityForAmount1). TODO #28 item 0.
+        tidA = addAsset (addAsset (addAsset (addAsset tid7 1 0) 1 1) 1 2) 1 3
+        tid8 = addIsLong tidA 1 0
         tid9 = addIsLong tid8 1 1
         tid10 = addIsLong tid9 1 2
         tid11 = addIsLong tid10 1 3
@@ -156,6 +160,11 @@ panopticOptionRatio :: PanopticTokenId -> Integer -> Integer
 panopticOptionRatio tid leg =
   shiftR (tokenId tid) (legBase leg + 1) .&. 0x7f
 
+-- | asset bit: TokenId bit 64 + 48·leg (TokenId.sol `asset`).
+panopticAsset :: PanopticTokenId -> Integer -> Integer
+panopticAsset tid leg =
+  shiftR (tokenId tid) (legBase leg) .&. 0x1
+
 panopticIsLong :: PanopticTokenId -> Integer -> Integer
 panopticIsLong tid leg =
   shiftR (tokenId tid) (legBase leg + 8) .&. 0x1
@@ -188,6 +197,10 @@ addTickSpacing tid ts = addField tid 48 0xffff ts
 addOptionRatio :: Integer -> Integer -> Integer -> Integer
 addOptionRatio tid v leg =
   addField tid (legBase leg + 1) 0x7f v
+
+addAsset :: Integer -> Integer -> Integer -> Integer
+addAsset tid v leg =
+  addField tid (legBase leg) 0x1 v
 
 addIsLong :: Integer -> Integer -> Integer -> Integer
 addIsLong tid v leg =

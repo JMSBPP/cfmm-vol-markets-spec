@@ -31,7 +31,7 @@ import Panoptic.NId (panopticTokenType)
 import qualified Payoffs.CLMMPosition as CLMM
 import qualified Payoffs.Payoff as Payoff
 import Plotting.PlotSqrt (PlotY(..), sqrtFunctionLayout)
-import SqrtGrid (PayoffX96(..), SqrtPlot, SqrtPriceX96(..), pattern Q96)
+import SqrtGrid (PayoffX96(..), SqrtPlot, SqrtPriceX96(..), mulDiv, pattern Q96)
 
 -- | π^φ(𝓛𝓒_leg; p).
 legPrincipal :: LiquidityChunk -> SqrtPriceX96 -> PayoffX96
@@ -43,7 +43,7 @@ legMintValue plan leg (SqrtPriceX96 p)
   | panopticTokenType (mintTokenId plan) (toInteger leg) == 0 = chunkAmount1 ch
   | otherwise =
       let PayoffX96 am0 = chunkAmount0 ch
-      in  PayoffX96 $ ((p * p) `div` Q96 * am0) `div` Q96
+      in  PayoffX96 $ mulDiv (mulDiv p p Q96) am0 Q96   -- two mulDivs: p²/Q96 ≤ 2^224, × am0 ≤ 2^128
   where
     ch = legChunk plan leg
 

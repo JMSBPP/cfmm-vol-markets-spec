@@ -24,6 +24,7 @@ import Panoptic.NId
   , fourLegSkeleton
   , mkNId
   , nSigma
+  , panopticAsset
   , panopticIsLong
   , panopticOptionRatio
   , panopticStrike
@@ -407,6 +408,8 @@ main = do
   mapM_
     (\leg -> do
       assertEqual ("isLong leg " ++ show leg) 1 (panopticIsLong skeleton leg)
+      -- TODO #28 item 0: asset bit (TokenId bit 64+48·leg) = 1 on every leg — single token1 basis
+      assertEqual ("asset leg " ++ show leg) 1 (panopticAsset skeleton leg)
       assertEqual ("width leg " ++ show leg) 1 (panopticWidth skeleton leg)
     )
     [0, 1, 2, 3]
@@ -934,6 +937,12 @@ main = do
   if abs (hi - am1) <= max 1 (am1 `div` 1000000) then pure ()
     else error ("fromChunk above range /= amount1: " ++ show hi ++ " vs " ++ show am1)
   putStrLn "ok: per-tick CLMM identity fromChunk = amount0 · unit fromCall"
+  -- TODO #28 item 0: strike of a chunk position is the integer sqrt of a·b (no Double).
+  let chS = unitChunk 40000 (mkTickSpacing 60)
+      SqrtPriceX96 aS = sqrtPriceX96 40000
+      SqrtPriceX96 bS = sqrtPriceX96 40060
+      StrikeX96 kS = CLMM.chunkStrike chS
+  assertEqual "chunkStrike = integerSqrt(a·b)" (integerSqrt (aS * bS)) kS
 
   -- TODO #25 (#36): four leg chunks 𝓛𝓒_leg from a MintPlan (≙ PanopticMath.getLiquidityChunk)
   -- and the 4-leg replica π̂^σ = Σ_leg [ H_leg(p) − π^φ(𝓛𝓒_leg; p) ].
@@ -954,10 +963,11 @@ main = do
         if abs (got - want) <= max 1 (want `div` 100000)
           then pure ()
           else error (lbl ++ ": want " ++ show want ++ " got " ++ show got)
-  relClose "put leg0 amount1 = or·ΔQ" (orOf 0 * 10 ^ (18 :: Int)) (chunkAmount1 (chunks !! 0))
-  relClose "put leg1 amount1 = or·ΔQ" (orOf 1 * 10 ^ (18 :: Int)) (chunkAmount1 (chunks !! 1))
-  relClose "call leg2 amount0 = or·ΔQ" (orOf 2 * 10 ^ (18 :: Int)) (chunkAmount0 (chunks !! 2))
-  relClose "call leg3 amount0 = or·ΔQ" (orOf 3 * 10 ^ (18 :: Int)) (chunkAmount0 (chunks !! 3))
+  -- TODO #28 item 0: asset = 1 on all legs (PanopticMath.getLiquidityChunk: asset==1 →
+  -- getLiquidityForAmount1), so or(leg)·ΔQ_υ is the token1 notional of EVERY leg.
+  sequence_
+    [ relClose ("leg " ++ show leg ++ " amount1 = or·ΔQ (asset=1)") (orOf leg * 10 ^ (18 :: Int)) (chunkAmount1 (chunks !! leg))
+    | leg <- [0 .. 3] ]
   assertEqual "legLiquidity = chunkLiquidity" (chunkLiquidity (chunks !! 3)) (legLiquidity planBig 3)
   -- Replica: zero at p* (all legs OTM), non-negative everywhere, and each leg's
   -- mint value H_leg dominates its principal.

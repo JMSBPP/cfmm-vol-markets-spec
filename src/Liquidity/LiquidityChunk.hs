@@ -18,6 +18,7 @@ import SqrtGrid
   , SqrtPriceX96(..)
   , Tick
   , TickSpacing
+  , mulDiv
   , pattern Q96
   , sqrtPriceX96
   , unTickSpacing
@@ -82,11 +83,20 @@ sqrtBounds ch =
 chunkAmount0 :: LiquidityChunk -> PayoffX96
 chunkAmount0 ch =
   let (a, b) = sqrtBounds ch
-  in  PayoffX96 $ (chunkLiquidity ch * (b - a) * Q96) `div` (a * b)
+      -- Math.getAmount0ForLiquidity: mulDiv(L << 96, b − a, b) / a  (staged; equals floor(L(b−a)Q96/(ab)))
+      amt = mulDiv (chunkLiquidity ch * Q96) (b - a) b `div` a
+  in  PayoffX96 (checkU128 "chunkAmount0" amt)
 
 -- | token1 amount of the chunk when price is at/above p^ask:
 --   L · (b − a)   (LiquidityAmounts.getAmount1ForLiquidity)
 chunkAmount1 :: LiquidityChunk -> PayoffX96
 chunkAmount1 ch =
   let (a, b) = sqrtBounds ch
-  in  PayoffX96 $ (chunkLiquidity ch * (b - a)) `div` Q96
+      -- Math.getAmount1ForLiquidity: mulDiv(L, b − a, Q96)
+  in  PayoffX96 (checkU128 "chunkAmount1" (mulDiv (chunkLiquidity ch) (b - a) Q96))
+
+-- Panoptic casts token amounts with toUint128; mirror the bound.
+checkU128 :: String -> Integer -> Integer
+checkU128 lbl x
+  | x < 0 || x > u128Max = error ("Liquidity.LiquidityChunk." ++ lbl ++ ": amount exceeds uint128")
+  | otherwise = x
