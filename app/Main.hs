@@ -50,11 +50,16 @@ import Pricing.InterestSqrt (interestSqrtX96, mkInterestTick)
 import qualified Payoffs.Payoff as Payoff
 import Greeks.Delta (deltaLayout)
 import Greeks.Gamma (gammaLayout, kristensenGammaLayoutVsGamma)
-import Payoffs.CLMMPosition (rhsPayoffLayout)
+import Payoffs.CLMMPosition (chunkFromStrike, rhsPayoffLayout, scaledVsUnitLayout)
 import Payoffs.Forward (AtmForward(..))
 import Panoptic.NId (MintPlan(..), fourLegSkeleton, mkNId)
 import TargetVega (mkTargetVega, positionSizeForTargetVega)
-import Liquidity.LiquidityChunk (createChunk)
+import Liquidity.LiquidityChunk
+  ( chunkLiquidity
+  , chunkTickLower
+  , chunkTickUpper
+  , createChunk
+  )
 import Payoffs.VariancePortfolio
   ( variancePortfolioLayout
   , variancePortfolioLayoutVsGamma
@@ -270,6 +275,17 @@ main = do
       (Cell (rhsPayoffLayout config strikePrice ratio etaTwoThirds))
       (Cell (gammaLayout config strikePrice ratio))
     )
+
+  -- TODO #27: CLMMPosition is chunk-constructed. Unit chunk of (k, r)
+  -- (amount0 = 1 token0) vs the same ticks at 2× liquidity (amount0 = 2).
+  let
+    unitCh   = chunkFromStrike strikePrice ratio
+    doubleCh = createChunk (chunkTickLower unitCh) (chunkTickUpper unitCh) (2 * chunkLiquidity unitCh)
+  writePanel
+    "outputs/Payoffs/clmm-chunk-vs-unit.png"
+    (Cell (scaledVsUnitLayout
+             (retitleSqrt config "CLMMPosition: unit chunk vs 2× liquidity chunk (amount0 scale)" "PayoffX96")
+             doubleCh))
 
   let
     spacing10 = mkTickSpacing 10
