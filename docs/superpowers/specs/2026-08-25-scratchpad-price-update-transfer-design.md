@@ -1,7 +1,7 @@
 # Scratchpad — price-update transfer: arbitrageurs as the buyer's delta-hedgers (replaces "MEV tax")
 
 **Date:** 2026-08-25  
-**Status:** design note (no reviewer pass, by user instruction)  
+**Status:** design note (no reviewer pass, by user instruction). **§2 (Defs 9–11) superseded** by `2026-08-25-scratchpad-delta-hedge-rebate-design.md` (TODO #32); §1 Prop A and §3 stand.  
 **TODO:** #31 — re-scopes #23/#34 (`volume_path.gms` coupling) and the \(\tau_{\mathrm{MEV}}\) objective  
 **Notation anchor:** `VOLATILITY_INSTRUMENTS.md`; README § REPLICATION_THEORY, § CHANNEL_STATICS, § MODEL_CLOSURE
 

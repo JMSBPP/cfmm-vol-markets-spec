@@ -383,7 +383,7 @@ Payoff decomposition (spec `docs/superpowers/specs/2026-08-22-scratchpad-pi-varp
 \pi^{c|p} + \pi^{\mathrm{RAN}} \equiv \pi^{\varphi} \equiv \pi^{\phi} - \pi^{\mathrm{LVR}}
 \]
 
-Objective (anchor \(e^{\sigma} = |\pi^{\sigma} - \hat{\pi^{\sigma}}|\); **\(\tau_{\mathrm{MEV}}\) is superseded by the signed price-update transfer \(s\)** — `docs/superpowers/specs/2026-08-25-scratchpad-price-update-transfer-design.md`, TODO #31: subsidy inside the fee band, tax above, budget = streamia, equilibrium \(\mathrm{LVR}_{\mathrm{net}} = s^\star\nu_{\mathrm{arb}}\); the form below is unchanged with \(s\) for \(\tau\)): \(\pi^{\sigma} = \Delta Q_{\upsilon}(\sigma - \sigma_K)^{+}\) is \(\tau_{\mathrm{MEV}}\)-free, so all \(\tau_{\mathrm{MEV}}\) dependence of \(e^{\sigma}\) runs through the replica, along one explicit chain:
+Objective (anchor \(e^{\sigma} = |\pi^{\sigma} - \hat{\pi^{\sigma}}|\); **\(\tau_{\mathrm{MEV}}\) and the signed transfer \(s\) (TODO #31) are both superseded by the delta-hedge rebate** — `docs/superpowers/specs/2026-08-25-scratchpad-delta-hedge-rebate-design.md`, TODO #32: the holder hedges their own replica delta \(\hat\Delta^\sigma\) (Def 12) and the fee on the qualifying portion is refunded from streamia through the ledger of Defs 13–14; nothing is solved, \([\nu_{\mathrm{arb}}/\nu]\) is the residual output; the chain below is kept for the residual arb steps only): \(\pi^{\sigma} = \Delta Q_{\upsilon}(\sigma - \sigma_K)^{+}\) is \(\tau_{\mathrm{MEV}}\)-free, so all \(\tau_{\mathrm{MEV}}\) dependence of \(e^{\sigma}\) runs through the replica, along one explicit chain:
 
 \[
 	\begin{aligned}

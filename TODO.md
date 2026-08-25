@@ -182,6 +182,7 @@ r_{\Delta Q_{\mathrm{trans}}}^{e}
    - Synthetic tagged path (LCG + Bresenham share); 4-leg roll-up; panels vs \([\nu_{\mathrm{arb}}/\nu]\) and vs step size; prover path replaces it in #34
 
 31. **Price-update transfer \(s\) replaces \(\tau_{\mathrm{MEV}}\); arbs as delta-hedgers; #34 re-scoped** — `docs` — [#82](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/82)
+32. **Delta-hedge rebate: holder-hedged replication supersedes the signed transfer \(s\) (Defs 12–14, Prop B); #34 re-scoped into trans / holder-hedge / residual-arb** — `docs` — [#84](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/84) / [#85](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/85) — `docs/superpowers/specs/2026-08-25-scratchpad-delta-hedge-rebate-design.md`
    - Note: `docs/superpowers/specs/2026-08-25-scratchpad-price-update-transfer-design.md` — Prop A (roles), Defs 9–11 (signed \(s\), budget, equilibrium \(\mathrm{LVR}_{\mathrm{net}}=s^\star\nu_{\mathrm{arb}}\)), two-source path (GAMS round trips + external update rule)
    - #34 becomes: trans half = GAMS replay (given \([\nu_{\mathrm{trans}}/\nu]\), \(u\)); arb half = \(P_{\mathrm{ext}}\) + rule at \(s\) (\([\nu_{\mathrm{arb}}/\nu]\) as output). Implementation item next.
 
