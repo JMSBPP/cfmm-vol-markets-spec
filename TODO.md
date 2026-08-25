@@ -34,7 +34,7 @@ Workflow: see `AGENTS.md` / `CLAUDE.md` / `QWEN.md` (classify → branch → iss
 | 1 | #35 (TODO 24) | \(\chi(\mathcal{LC})\) via per-tick CLMM identity | `CLMMPosition` witness test → Aristotle |
 | 2 | #36 (TODO 25 `feat`) | four \(\mathcal{LC}_{\mathrm{leg}}\), \(\mathrm{or}(\mathrm{leg})\to L_{\mathrm{leg}}\) in Haskell | Hop B vs 4-leg sum |
 | 3 | #34 (TODO 23) + TODO 19/20 | \(u\), atomic \([\nu_{\mathrm{arb}}/\nu]\), \(\sigma_{IV}=2\phi e^{u/2}\) | `volume_path.gms` golden table |
-| 4 | #51 (TODO 26) | the claim: spec → ex-post LVR check → Aristotle statement | **derived** (Prop 4, TODO #36); Lean statement with the peer |
+| 4 | #51 (TODO 26) | the claim: spec → ex-post LVR check → Aristotle statement | ✓ **derived** (Prop 4, TODO #36, PR #94); Lean C1–C3 with the peer |
 | 5 | #3 (TODO 7) | \(r^{\phi}=\phi\delta_{\mathrm{trans}}\) — fee side of §3 | after 3 |
 | 6 | #31 (TODO 21 Slice 2) | \(r^e_{\mathrm{arb}}=\Lambda(\gamma(u-u^\star))\) — mixture weight | after 3 |
 | 7 | #28 (TODO 22) | ex-ante price of the bracket — downgraded | after 6 |
@@ -188,7 +188,7 @@ r_{\Delta Q_{\mathrm{trans}}}^{e}
 33. **ReplicaDelta — \(\hat\Delta^\sigma=\partial_P\hat\pi^\sigma\) as a `Greeks.Delta` instance on the 4-leg replica (Def 12; rebate-note test §5.1)** — `feat` — [#86](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/86) / [#87](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/87) ✓ merged
 34. **Hedge.Ledger — (h, B_s, B_r), `hedgeStep` (Defs 13–14; rebate-note test §5.2)** — `feat` — [#89](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/89) / [#90](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/90) ✓ merged
 35. **HolderPath — composed path (trans / holder / residual arb), `hedgeAlong` (Prop B), \([\nu_{\mathrm{arb}}/\nu]\) as output; rebate-note tests §5.3–5.5; re-scoped #34 (TODO #23) closed** — `feat` — [#91](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/91) / [#92](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/92) ✓ merged
-36. **λ_{X/M} derived (Prop 4) + χ = amount0 (Prop 3) — `Payoffs.LvrRate`, ex-post panel, spec; closes the MODEL_CLOSURE §2 design claim (TODO #26 / #51)** — `feat` — [#51](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/51)
+36. **λ_{X/M} derived (Prop 4) + χ = amount0 (Prop 3) — `Payoffs.LvrRate`, ex-post panel, spec; closes the MODEL_CLOSURE §2 design claim (TODO #26 / #51)** — `feat` — [#51](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/51) / [#94](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/94) ✓ merged
 
 Later (not opened yet): compose \(r_{\Delta Q}^{e}\) from #19+#21; wire into parametrized \(\pi^{\Delta Q}/\pi^{\phi}\); then unblock #6.
 
