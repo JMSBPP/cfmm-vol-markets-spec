@@ -46,7 +46,7 @@ Workflow: see `AGENTS.md` / `CLAUDE.md` / `QWEN.md` (classify → branch → iss
 |------|------|-------|-----|--------|
 | 6 | `feat` | [#2](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/2) | [#15](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/15) | **blocked** (prereqs 17–21) |
 | 7 | `feat` | [#3](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/3) | [#16](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/16) | ✓ `Payoffs.TransactionalReturn` — r^φ = φ_X δ_X + φ_M δ_M exact (2026-08-25) |
-| 9 | `feat` | [#5](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/5) | [#18](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/18) | open |
+| 9 | `feat` | [#5](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/5) | [#18](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/18) | ✓ Algebra `AdaptiveFee.sol` port (2026-08-25) |
 | 10 | `refactor` | [#6](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/6) | [#19](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/19) | open |
 | 11 | `refactor` | [#7](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/7) | [#20](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/20) | open |
 | 12 | `refactor` | [#8](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/8) | [#21](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/21) | open |
@@ -78,7 +78,7 @@ Workflow: see `AGENTS.md` / `CLAUDE.md` / `QWEN.md` (classify → branch → iss
    - **Notation:** keep scratchpad \(r^\phi\) / \(r_{\Delta Q_{\mathrm{trans}}}^{e}\) language; do **not** adopt MEV-doc \(\Delta\pi_{\mathrm{trans}}/\pi_{\mathrm{trans}}\) labels (wrong)
    - **Done (PR #16, 2026-08-25):** `Payoffs.TransactionalReturn` — `transTurnover` (δ_X, δ_M in pips of the position's token1 notional), `refTransactionalReturn` = φ_X δ_X + φ_M δ_M, `measuredFeeReturn` = fees_trans/N; equal within 2 pips on composed and round-trip paths (decision: typed `ReturnPips`, not notes-only)
 
-9. **`AdaptiveStremia` body** — `feat` — [#5](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/5) — still stub \(\phi(\Theta_\phi;\sigma^2,\nu)\)
+9. **`AdaptiveStremia` body** — `feat` — [#5](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/5) / [#18](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/18) — **done 2026-08-25:** integer-exact port of Algebra `AdaptiveFee.sol` (user ruling: that IS the functional form); Θ_φ = the 7-field config, ν argument dropped (V1-only); `pathVolatility` in oracle units
 
 Yes, those issues matches the intention, but the numbered order that is as it is right now does not imply the hierarchy of importance and the hierarchy of importance is now defined as follows. We are choosing to implement the issues as they have less like semantic impact. For example, renames are less semantically impactful because for example, the fee structure to mark up structure is just refactoring code. And then we start like imposing an order of execution of the issues based on that
 ### Measure / expectation / \(r_{\Delta Q}^{e}\) split (README affine story; prereqs for #6)

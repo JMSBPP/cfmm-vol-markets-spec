@@ -57,6 +57,7 @@ import Panoptic.NId (MintPlan(..), fourLegSkeleton, mkNId, volOrderToMintPlan)
 import Payoffs.ReplicaDelta (replicaDeltaLayout)
 import Payoffs.HolderPath (Regime(..), arbShare, composedPath)
 import Payoffs.LvrRate (lvrRateLayout, lvrRateOn, naiveBandTicks, rationalBandTicks)
+import Pricing.AdaptiveStremia (adaptiveFeeLayout, initialFeeConfiguration)
 import Payoffs.VolatilityReplica (ErrorX96(..), legsLayout, replicaError, replicaLayout, windowTicks)
 import Panoptic.Binning (binToLegs, ladderFromVolOrder, mintPlanFromLadder, quantizationReport)
 import Payoffs.LadderPosition (ladderN1, ladderT1)
@@ -457,6 +458,11 @@ main = do
 
   -- TODO #26 (#51): λ_{X/M} ex post — LVR_net per arb tick vs external step, three fee levels.
   -- Naive band φ crosses zero at s = 2φ ticks; rational band 2φ is ≥ 0 (Prop 4 and its corollary).
+  -- TODO #9 (#5): Algebra AdaptiveFee.getFee, integer-exact port.  Axes: oracle uint88 units × pips.
+  writePanel
+    "outputs/Pricing/panel-adaptive-fee.png"
+    (Cell (adaptiveFeeLayout initialFeeConfiguration [0, 15000 .. 15 * 120000]))
+
   let chWideP = createChunk (-4000) 4000 (10 ^ (20 :: Int))
       phiW    = mkFeePips 1000
       wideLine band = [ (toInteger sv, lvrRateOn 5 0 600 2 phiW band [chWideP] sv) | sv <- [2, 4 .. 60] ]

@@ -221,6 +221,7 @@ import Payoffs.LvrRate (chi, lvrRateOn, lvrRateTable, naiveBandTicks, rationalBa
 import Payoffs.ReplicaDelta (principalDelta)
 import Payoffs.TransactionalReturn (TransTurnover(..), measuredFeeReturn, refTransactionalReturn, transTurnover)
 import Payoffs.Return (ReturnPips(..))
+import Pricing.AdaptiveStremia (AdaptiveStremia(..), Volatility(..), adaptiveFeePips, expXg4, initialFeeConfiguration, pathVolatility, sigmoid, validateFeeConfiguration)
 import Hedge.Ledger (HolderSwap(..), Ledger(..), RebateX96(..), emptyLedger, hedgeStep, ledgerInvariant, payStreamia, qualifying)
 import Panoptic.Binning (binNotionals, binToLegs, ladderFromVolOrder, mintPlanFromLadder, quantizationReport, QuantizationRow(..))
 import qualified Payoffs.PathAccrual as PA
@@ -1354,6 +1355,39 @@ main = do
         else error ("gas > band > 0 should leave arb share > 0: seed " ++ show sd)
     | sd <- [1, 3, 5, 7] ]
   putStrLn "ok: Def 15: holder active with gas 5 > band 2 ⇒ arb share > 0 (branch order)"
+
+  -- TODO #9 (#5): Pricing.AdaptiveStremia = integer-exact port of Algebra AdaptiveFee.sol.
+  let cfg = initialFeeConfiguration
+      feeAt v = unFeePips (adaptiveFeePips cfg (Volatility v))
+  assertEqual "AdaptiveFee: initial config validates" (Right cfg) (validateFeeConfiguration cfg)
+  assertEqual "AdaptiveFee: getFee(0) = baseFee (both sigmoids beyond the 6γ cut-off)" 100 (feeAt 0)
+  assertEqual "AdaptiveFee: getFee at x = β₁ (v = 15·360) = baseFee + α₁/2 exactly" (100 + 2900 `div` 2) (feeAt (15 * 360))
+  assertEqual "AdaptiveFee: cap = baseFee + α₁ + α₂" 15000 (feeAt (15 * 10 ^ (6 :: Int)))
+  let volGrid = [0, 1000 .. 15 * 130000]
+      fees = map feeAt volGrid
+  if and (zipWith (<=) fees (drop 1 fees)) then putStrLn "ok: AdaptiveFee: getFee nondecreasing in volatility" else error "AdaptiveFee not monotone"
+  -- sigmoid symmetry at the centre and bounds
+  assertEqual "sigmoid(β) = α/2" 1450 (sigmoid 360 59 2900 360)
+  if all (\x -> let sg = sigmoid x 8500 12000 60000 in sg >= 0 && sg <= 12000) [0, 5000 .. 200000] then putStrLn "ok: sigmoid ∈ [0, α]" else error "sigmoid bounds"
+  -- expXg4 vs e^{x/g}: table + e^{1/2} shift + series.  Solidity subtracts g / 2 as INTEGER
+  -- division, so odd γ carries a half-unit bias (g = 59: up to ~0.9 % at x ≈ g/2) — the port
+  -- reproduces it; tolerance 1e-2 (even γ = 8500 is ~1e-4).
+  sequence_
+    [ let g4 = g ^ (4 :: Int)
+          got = fromInteger (expXg4 x g g4) / fromInteger g4 :: Double
+          want = exp (fromInteger x / fromInteger g)
+      in  if abs (got - want) / want < 1e-2 then pure () else error ("expXg4 g=" ++ show g ++ " x=" ++ show x ++ ": " ++ show (got, want))
+    | g <- [59, 8500], x <- [0, g `div` 3 .. 6 * g - 1] ]
+  putStrLn "ok: expXg4 = e^{x/g}·g⁴ within 1e-2 (g = 59, 8500; x < 6g; odd-γ floor bias reproduced)"
+  -- validation branches
+  assertEqual "validate: max fee exceeded" (Left "Max fee exceeded") (validateFeeConfiguration cfg { alpha2 = 65535 })
+  assertEqual "validate: gamma = 0" (Left "Gammas must be > 0") (validateFeeConfiguration cfg { gamma1 = 0 })
+  -- path volatility: constant window → 0; symmetric ±k → k²
+  assertEqual "pathVolatility: constant = 0" (Volatility 0) (pathVolatility 15 (replicate 8 7))
+  assertEqual "pathVolatility: ±3 → 9" (Volatility 9) (pathVolatility 15 (concat (replicate 4 [3, -3])))
+  let Volatility vPath = pathVolatility 15 (map PA.stepTo (composedPath 5 0 300 3 4 (Regime 1 30 False)))
+  if vPath > 0 && feeAt vPath >= 100 then putStrLn ("ok: AdaptiveFee on composed path: volatility " ++ show vPath ++ " → fee " ++ show (feeAt vPath) ++ " pips") else error "path fee"
+
 
   -- TODO #26 (#51): λ_{X/M}.  Prop 3: χ(𝓛𝓒) = amount0 = ∂_Pπ(a²) − ∂_Pπ(b²) (Thm 5 + Def 12).
   let chB = chunks !! 1
