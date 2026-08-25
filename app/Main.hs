@@ -56,6 +56,7 @@ import Payoffs.Log (nakedLogQ96, nakedLogTickQ96)
 import Panoptic.NId (MintPlan(..), fourLegSkeleton, mkNId, volOrderToMintPlan)
 import Payoffs.ReplicaDelta (replicaDeltaLayout)
 import Payoffs.HolderPath (Regime(..), arbShare, composedPath)
+import Payoffs.LvrRate (lvrRateLayout, lvrRateOn, naiveBandTicks, rationalBandTicks)
 import Payoffs.VolatilityReplica (ErrorX96(..), legsLayout, replicaError, replicaLayout, windowTicks)
 import Panoptic.Binning (binToLegs, ladderFromVolOrder, mintPlanFromLadder, quantizationReport)
 import Payoffs.LadderPosition (ladderN1, ladderT1)
@@ -453,6 +454,19 @@ main = do
     "outputs/Payoffs/Accrual/panel-arbshare-vs-band.png"
     (Cell (PA.linesLayout "[ν_arb/ν] read off the composed path (trans ±3, ext ±4 ticks/round)" "fee band (ticks)" "arb share (pips)"
              [ ("holder inactive", shareLine False), ("holder active, gas = 1 tick", shareLine True) ]))
+
+  -- TODO #26 (#51): λ_{X/M} ex post — LVR_net per arb tick vs external step, three fee levels.
+  -- Naive band φ crosses zero at s = 2φ ticks; rational band 2φ is ≥ 0 (Prop 4 and its corollary).
+  let chWideP = createChunk (-4000) 4000 (10 ^ (20 :: Int))
+      phiW    = mkFeePips 1000
+      wideLine band = [ (toInteger sv, lvrRateOn 5 0 600 2 phiW band [chWideP] sv) | sv <- [2, 4 .. 60] ]
+  writePanel
+    "outputs/Payoffs/Accrual/panel-lvr-rate-vs-step.png"
+    (Beside
+      (Cell (lvrRateLayout 5 0 600 2 replicaPlan (map mkFeePips [1000, 2000]) [2, 4 .. 60]))
+      (Cell (PA.linesLayout "continuous liquidity (one chunk over the path), φ = 1000 pips" "external step s (ticks / round)" "LVR_net / Σ amount_in (pips)"
+               [ ("band φ (naive): crosses at 2φ = 20 ticks", wideLine (naiveBandTicks phiW))
+               , ("band 2φ (rational): ≥ 0", wideLine (rationalBandTicks phiW)) ])))
 
   -- TODO #28.2: T1 geometric ladder (S = 4000, Δ = 10, ι = 400, ξ*) — README § REPLICATION_THEORY
   -- Theorem 10 overlay (same units: T1/N_1 vs c(S)·logPortfolio), residual, rung density.

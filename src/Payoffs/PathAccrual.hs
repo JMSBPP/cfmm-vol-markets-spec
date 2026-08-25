@@ -24,6 +24,7 @@ module Payoffs.PathAccrual
   , pattern PIPS_ONE
   , syntheticPath
   , stepAccrual
+  , stepVolume1
   , pathAccrual
   , planAccrual
   , netAccrual
@@ -127,6 +128,26 @@ stepAccrual phiX phiM ch (Step iFrom iTo tag)
             Holder -> Accrual 0 fee (max 0 lvr)
   where
     goingUp = iTo > iFrom
+    SqrtPriceX96 a = sqrtPriceX96 (chunkTickLower ch)
+    SqrtPriceX96 b = sqrtPriceX96 (chunkTickUpper ch)
+    SqrtPriceX96 pFrom = sqrtPriceX96 iFrom
+    SqrtPriceX96 pTo = sqrtPriceX96 iTo
+    lo = max a (min pFrom pTo)
+    hi = min b (max pFrom pTo)
+
+-- | Token1 value of the amount paid in over the step's overlap with the chunk
+-- (up: amount1; down: amount0 valued at p_j) — the `amount_in` of Prop 4, so that
+-- LVR_net / Σ stepVolume1 is the dimensionless per-token rate.
+stepVolume1 :: LiquidityChunk -> Step -> Integer
+stepVolume1 ch (Step iFrom iTo _)
+  | iFrom == iTo || hi <= lo = 0
+  | otherwise =
+      let l = chunkLiquidity ch
+          amt0 = mulDiv (l * Q96) (hi - lo) hi `div` lo
+          amt1 = mulDiv l (hi - lo) Q96
+          SqrtPriceX96 pj = sqrtPriceX96 iTo
+      in  if iTo > iFrom then amt1 else mulDiv (mulDiv pj pj Q96) amt0 Q96
+  where
     SqrtPriceX96 a = sqrtPriceX96 (chunkTickLower ch)
     SqrtPriceX96 b = sqrtPriceX96 (chunkTickUpper ch)
     SqrtPriceX96 pFrom = sqrtPriceX96 iFrom

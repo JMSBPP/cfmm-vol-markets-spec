@@ -507,7 +507,9 @@ Proof shape: rung edges geometric; primitive \(W(p,t)=\ln t + p^2/(2t^2)\); tele
 
 **Proposition 2 (off-midpoint strike).** Theorem 10 with \(i^\star\) at an arbitrary rung (skew \(\ne\tfrac12\)) — pending.
 
-**Proposition 3 (\(\chi\) from the gamma carrier).** \(\chi(\mathcal{LC}) = \int_{a^2}^{b^2} -\tfrac12 L\,\Gamma_\varphi(P)\,dP\) is the in-range gamma exposure entering \(\lambda_{X/M}\) (MODEL_CLOSURE §2, issue #51) — to be stated via Theorem 5.
+**Proposition 3 (\(\chi\) from the gamma carrier — closed).** \(\int_{a^2}^{b^2} -\tfrac12 L\,\Gamma_\varphi(P)\,dP = \partial_P\pi(b^2)-\partial_P\pi(a^2) = -\,\mathrm{amount0}(\mathcal{LC})\) by Theorem 5 and the principal's price-delta \(\partial_P\pi^{\Delta Q_X} = \mathrm{amount0}(L,\bar p,b)\) (`Payoffs.ReplicaDelta.principalDelta`, the per-leg component of Definition 12). Convention \(\chi := \mathrm{amount0} > 0\) (`Payoffs.LvrRate.chi`). Checked by finite differences of the payoff; Lean twin `chi_eq_amount0` pending (peer C1–C2).
+
+**Proposition 4 (LVR rate per correction segment — derived; issue #51).** On a segment \([lo,hi]\) of a chunk marked at the corrected price \(p_j\): \(\mathrm{LVR}_{\mathrm{net}} = \mathrm{amount}_{in}\,[\rho-\phi]\), \(\rho = p_j^2/(lo\,hi)-1\) (up) or \((lo\,hi)/p_j^2-1\) (down), both token sides; when the segment ends at \(p_j\), \(\rho = r_{1/2}-1\), the sqrt-price return of the correction. So \(\lambda_{X/M} = r_{1/2}-1-\phi_{X/M}\) per unit arb volume: zero at a gap of \(2\phi\) ticks, slope 1 beyond. The MODEL_CLOSURE §2 form \(\phi(2e^{u/2}-1)^{+} = (\sigma_{IV}-\phi)^{+}\) is this under the *identification* \(\sigma_{IV}\equiv r_{1/2}-1\) (a relabeling; the map from the transactional \(u\) is open). Clipped segments (\(p_j\) beyond the chunk) follow the general \(\rho\); a narrow leg can be net-negative on the tail of a wide correction. Spec `docs/superpowers/specs/2026-08-25-scratchpad-lambda-xm-lvr-rate-design.md`; regressions on continuous liquidity (6 seeds × 3 amps × 3 fees: crossing window, \(\ge0\) under the rational band \(2\phi\), slope 1); `panel-lvr-rate-vs-step.png`.
 
 ### Corollaries (what replaces tuning)
 
@@ -559,7 +561,7 @@ Exact functional forms for \(\pi^{\phi}(\pi^{\Delta Q}_{\mathrm{trans}}(r^{e}_{\
 	\end{aligned}
 \]
 
-> DESIGN CLAIM — not derived; needs the #24 CLMM identity and an Aristotle / empirical check. Convention: LVR is the arb's **after-fee** profit, so the fee paid by arbs is netted inside \(\lambda_{X/M}\) and \(\pi^{\phi}\) stays transactional-only.
+> **Derived (Proposition 4, 2026-08-25):** \(\lambda_{X/M} = \rho-\phi_{X/M}\) per unit arb volume on each correction segment, \(\rho = r_{1/2}-1\) (sqrt-price return) when the segment ends at the corrected price; rational corrections need gaps \(>2\phi\) ticks. \(\chi = \mathrm{amount0}\) (Proposition 3) enters through \(\mathrm{amount}_{in}\). The form above holds under the identification \(\sigma_{IV}\equiv r_{1/2}-1\) (the anchor's \(2\phi e^{u/2}\) with the transactional \(u\) is NOT derived from it). \(\lambda_X,\lambda_M\) are no longer primitives. Convention unchanged: LVR is the arb's **after-fee** profit; \(\pi^{\phi}\) stays transactional-only. Under the rebate the correction is the holder's at \(\phi_{\mathrm{eff}}=0\).
 
 **3. Closure.** Every symbol on the right is observed or defined above except \(\lambda_X, \lambda_M\); the tax enters only through the bracket:
 

@@ -217,6 +217,8 @@ import Payoffs.VolatilityReplica (ErrorX96(..), fourLegReplica, legMintValue, re
 import Greeks.Delta (PayoffDelta(..), PriceDeltaX96(..), deltaOfPayoff)
 import Payoffs.ReplicaDelta (replicaDelta)
 import Payoffs.HolderPath (HolderReport(..), Regime(..), arbShare, composedPath, hedgeAlong, holderPnL, pathEndTicks, trianglePath)
+import Payoffs.LvrRate (chi, lvrRateOn, lvrRateTable, naiveBandTicks, rationalBandTicks)
+import Payoffs.ReplicaDelta (principalDelta)
 import Hedge.Ledger (HolderSwap(..), Ledger(..), RebateX96(..), emptyLedger, hedgeStep, ledgerInvariant, payStreamia, qualifying)
 import Panoptic.Binning (binNotionals, binToLegs, ladderFromVolOrder, mintPlanFromLadder, quantizationReport, QuantizationRow(..))
 import qualified Payoffs.PathAccrual as PA
@@ -1318,6 +1320,107 @@ main = do
     else error ("5.5 holder gap " ++ show (maxGap rgOn))
   if maxGap rgOff > maxGap rgOn then putStrLn ("ok: 5.5 stale zone without holder: max correction " ++ show (maxGap rgOff) ++ " vs " ++ show (maxGap rgOn))
     else error ("5.5 gaps: " ++ show (maxGap rgOff, maxGap rgOn))
+
+  -- TODO #26 (#51): λ_{X/M}.  Prop 3: χ(𝓛𝓒) = amount0 = ∂_Pπ(a²) − ∂_Pπ(b²) (Thm 5 + Def 12).
+  let chB = chunks !! 1
+      dAtEdge i = let PriceDeltaX96 d = principalDelta chB (sqrtPriceX96 i) in d
+  assertEqual "Prop 3: χ = amount0 = delta shed across the range"
+    (chi chB) (dAtEdge (chunkTickLower chB) - dAtEdge (chunkTickUpper chB))
+  -- Prop 4 (derived form): one arb correction lo → hi inside the chunk has
+  -- LVR_net = amount_in · [(r½ − 1) − φ], r½ = hi/lo — band-crossing exact, linear in r½ − 1.
+  let
+    phiL   = mkFeePips 1000                                   -- band 10 ticks
+    lo1    = chunkTickLower chB
+    stepOf g = PA.Step lo1 (lo1 + g) PA.Arb
+    netOf g = let PA.Accrual _ fa lg = PA.stepAccrual phiL phiL chB (stepOf g) in lg - fa
+    SqrtPriceX96 sLo = sqrtPriceX96 lo1
+    predicted g = let SqrtPriceX96 sHi = sqrtPriceX96 (lo1 + g)
+                      amt1 = mulDiv (chunkLiquidity chB) (sHi - sLo) Q96
+                  in  mulDiv amt1 (sHi - sLo) sLo - mulDiv amt1 1000 1000000
+  sequence_
+    [ if abs (netOf g - predicted g) <= max 2 (abs (predicted g) `div` 100000) then pure ()
+        else error ("Prop 4 step identity (up) at g = " ++ show g ++ ": " ++ show (netOf g, predicted g))
+    | g <- [1 .. 10] ]
+  -- down side: hi → lo, amount_in = amount0 valued at lo, same bracket.
+  let hi1 = chunkTickUpper chB
+      netDn g = let PA.Accrual _ fa lg = PA.stepAccrual phiL phiL chB (PA.Step hi1 (hi1 - g) PA.Arb) in lg - fa
+      SqrtPriceX96 sHi1 = sqrtPriceX96 hi1
+      predDn g = let SqrtPriceX96 sL = sqrtPriceX96 (hi1 - g)
+                     amt0 = mulDiv (chunkLiquidity chB * Q96) (sHi1 - sL) sHi1 `div` sL
+                     amtIn = mulDiv (mulDiv sL sL Q96) amt0 Q96
+                 in  mulDiv amtIn (sHi1 - sL) sL - mulDiv amtIn 1000 1000000
+  sequence_
+    [ if abs (netDn g - predDn g) <= max 2 (abs (predDn g) `div` 100000) then pure ()
+        else error ("Prop 4 step identity (down) at g = " ++ show g ++ ": " ++ show (netDn g, predDn g))
+    | g <- [1 .. 10] ]
+  putStrLn "ok: Prop 4 step identity, up and down sides"
+  -- Prop 3 independent check: ∫_{a²}^{b²} ∂²π dP = Δ(b⁻) − Δ(a⁺) with deltas from finite
+  -- differences of the PAYOFF (deltaOfPayoff on fromChunk), not from principalDelta.
+  let fdDelta i = let PriceDeltaX96 d = runPayoffDelta (deltaOfPayoff (CLMM.toPayoff (CLMM.fromChunk chB))) (sqrtPriceX96 i) in d
+      integral = fdDelta (chunkTickUpper chB - 1) - fdDelta (chunkTickLower chB + 1)
+  if abs (integral + chi chB) <= chi chB `div` 4   -- one tick in from each edge on a 10-tick chunk: ≤ 20 % + bump
+    then putStrLn "ok: Prop 3 ∫∂²π dP ≈ −χ by finite differences of the payoff"
+    else error ("Prop 3 FD integral: " ++ show (integral, chi chB))
+  -- zero crossing at g = 2·band ticks (sqrt-price return = fee) on a chunk wide enough to
+  -- contain the step: negative at 19, positive at 21, |net(20)| tiny (r½ − 1 = φ up to 1.0001 curvature).
+  let chW = createChunk (-100) 100 (10 ^ (20 :: Int))
+      netW g = let PA.Accrual _ fa lg = PA.stepAccrual phiL phiL chW (PA.Step (-100) (-100 + g) PA.Arb) in lg - fa
+  if netW 19 < 0 && netW 21 > 0 && abs (netW 20) < abs (netW 19) `div` 10
+    then putStrLn "ok: Prop 4 zero crossing at g = 2·band (r½ − 1 = φ)"
+    else error ("Prop 4 crossing: " ++ show (netW 19, netW 20, netW 21))
+  -- Clipped segment (p_j beyond the chunk): LVR_net = amount_in·[p_j²/(lo·hi) − 1 − φ] (up).
+  let hiB = chunkTickUpper chB
+      netClip g = let PA.Accrual _ fa lg = PA.stepAccrual phiL phiL chB (PA.Step lo1 (hiB + g) PA.Arb) in lg - fa
+      SqrtPriceX96 sHiB = sqrtPriceX96 hiB
+      predClip g = let SqrtPriceX96 sPj = sqrtPriceX96 (hiB + g)
+                       amt1 = mulDiv (chunkLiquidity chB) (sHiB - sLo) Q96
+                       ratio = mulDiv (mulDiv sPj sPj Q96) Q96 (mulDiv sLo sHiB Q96)   -- p_j²/(lo·hi), Q96
+                   in  mulDiv amt1 (ratio - Q96) Q96 - mulDiv amt1 1000 1000000
+  sequence_
+    [ if abs (netClip g - predClip g) <= max 4 (abs (predClip g) `div` 10000) then pure ()
+        else error ("Prop 4 clipped segment at g = " ++ show g ++ ": " ++ show (netClip g, predClip g))
+    | g <- [1, 5, 20, 60] ]
+  putStrLn "ok: Prop 4 clipped-segment form (marked at p_j)"
+  -- Path level on CONTINUOUS liquidity (one chunk covering the path, every correction inside):
+  -- seeds × trans amplitudes × fees.  Corrections after a round have size s ± transAmp, so with
+  -- the naive band φ: all steps < 2·band ⇔ s ≤ 2·band − 2·transAmp (λ ≤ 0); smallest step
+  -- ≥ 2·band ⇔ s ≥ 2·band + transAmp (λ > 0).  Rational band 2φ ⇒ λ ≥ 0 everywhere.
+  let chWide = createChunk (-4000) 4000 (10 ^ (20 :: Int))
+      seeds  = [1, 2, 3, 5, 7, 11]
+      amps   = [1, 2, 4]
+      grid   = [2, 4 .. 80]
+  sequence_
+    [ let phiF = mkFeePips phiP
+          band = naiveBandTicks phiF
+          tbl  = [ (sv, lvrRateOn sd 0 600 ta phiF band [chWide] sv) | sv <- grid ]
+          below = [ l | (sv, l) <- tbl, sv <= 2 * band - 2 * ta ]
+          above = [ l | (sv, l) <- tbl, sv >= 2 * band + ta ]
+      in  if all (<= 0) below && all (> 0) above && not (null above) then pure ()
+            else error ("naive band crossing: seed " ++ show sd ++ " amp " ++ show ta ++ " φ " ++ show phiP ++ " " ++ show tbl)
+    | sd <- seeds, ta <- amps, phiP <- [1000, 2000, 3000] ]
+  putStrLn "ok: continuous liquidity + naive band φ ⇒ λ crosses zero in [2φ − 2·transAmp, 2φ + transAmp] ticks (6 seeds × 3 amps × 3 fees)"
+  sequence_
+    [ let phiF = mkFeePips phiP
+          tbl = [ (sv, lvrRateOn sd 0 600 ta phiF (rationalBandTicks phiF) [chWide] sv) | sv <- grid ]
+      in  if all ((>= 0) . snd) tbl then pure () else error ("rational band λ < 0: seed " ++ show sd ++ " amp " ++ show ta ++ " φ " ++ show phiP ++ " " ++ show tbl)
+    | sd <- seeds, ta <- amps, phiP <- [1000, 2000, 3000] ]
+  putStrLn "ok: continuous liquidity + rational band 2φ ⇒ λ ≥ 0 (6 seeds × 3 amps × 3 fees)"
+  -- Slope 1 (Prop 4, linear beyond): with transAmp 1 every correction has size s ± 1, so
+  -- λ(s) ≈ (s/2 − band)·100 pips (1 tick = 100 pips of price = 50 pips of sqrt-return).
+  sequence_
+    [ let phiF = mkFeePips phiP
+          band = naiveBandTicks phiF
+          lamS sv = lvrRateOn sd 0 600 1 phiF band [chWide] sv
+      in  sequence_
+            [ if abs (lamS sv - (50 * toInteger sv - 100 * toInteger band)) <= 60 then pure ()
+                else error ("slope: seed " ++ show sd ++ " φ " ++ show phiP ++ " s " ++ show sv ++ ": " ++ show (lamS sv, 50 * toInteger sv - 100 * toInteger band))
+            | sv <- grid, sv >= 2 * band + 2 ]
+    | sd <- seeds, phiP <- [1000, 2000, 3000] ]
+  putStrLn "ok: continuous liquidity, transAmp 1: λ(s) = (s/2 − band)·100 pips ± 60 (slope 1 in sqrt-return)"
+  -- 4-leg position (legs 10 ticks wide): most corrections are clipped, so the path rate is a
+  -- volume-weighted mean of the clipped form — printed as a regression, not asserted (seed 5).
+  putStrLn ("4-leg λ(s) regression, φ = 1000 naive band, seed 5: "
+    ++ show (lvrRateTable 5 0 600 2 (mkFeePips 1000) (naiveBandTicks (mkFeePips 1000)) planBig [10, 20 .. 60]))
 
   _ <- evaluate (gammaCoordinate (unXiX96 xiPinned) eta spacing10 (-10 :: Tick))
   putStrLn "ok: gammaCoordinate negative tick"
