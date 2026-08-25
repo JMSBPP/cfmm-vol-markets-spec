@@ -186,6 +186,7 @@ r_{\Delta Q_{\mathrm{trans}}}^{e}
    - Note: `docs/superpowers/specs/2026-08-25-scratchpad-price-update-transfer-design.md` — Prop A (roles), Defs 9–11 (signed \(s\), budget, equilibrium \(\mathrm{LVR}_{\mathrm{net}}=s^\star\nu_{\mathrm{arb}}\)), two-source path (GAMS round trips + external update rule)
    - #34 becomes: trans half = GAMS replay (given \([\nu_{\mathrm{trans}}/\nu]\), \(u\)); arb half = \(P_{\mathrm{ext}}\) + rule at \(s\) (\([\nu_{\mathrm{arb}}/\nu]\) as output). Implementation item next.
 33. **ReplicaDelta — \(\hat\Delta^\sigma=\partial_P\hat\pi^\sigma\) as a `Greeks.Delta` instance on the 4-leg replica (Def 12; rebate-note test §5.1)** — `feat` — [#86](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/86) / [#87](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/87) ✓ merged
+34. **Hedge.Ledger — (h, B_s, B_r), `hedgeStep` (Defs 13–14; rebate-note test §5.2)** — `feat` — [#89](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/89)
 
 Later (not opened yet): compose \(r_{\Delta Q}^{e}\) from #19+#21; wire into parametrized \(\pi^{\Delta Q}/\pi^{\phi}\); then unblock #6.
 

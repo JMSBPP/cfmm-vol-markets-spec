@@ -216,6 +216,7 @@ import Panoptic.LegChunk (legChunk, legChunks, legLiquidity)
 import Payoffs.VolatilityReplica (ErrorX96(..), fourLegReplica, legMintValue, replicaError, windowTicks)
 import Greeks.Delta (PayoffDelta(..), PriceDeltaX96(..), deltaOfPayoff)
 import Payoffs.ReplicaDelta (replicaDelta)
+import Hedge.Ledger (HolderSwap(..), Ledger(..), RebateX96(..), emptyLedger, hedgeStep, ledgerInvariant, payStreamia, qualifying)
 import Panoptic.Binning (binNotionals, binToLegs, ladderFromVolOrder, mintPlanFromLadder, quantizationReport, QuantizationRow(..))
 import qualified Payoffs.PathAccrual as PA
 import Payoffs.LadderPosition
@@ -1250,6 +1251,35 @@ main = do
             ++ show right
         )
     else putStrLn "ok: gammaCoordinate ratio Theorem 38"
+
+  -- TODO #34: hedge ledger (rebate note Defs 13–14, test §5.2): invariant, no double claim,
+  -- direction rule, cap at |Δ* − h|, budget cap.
+  let
+    phiH    = mkFeePips 3000
+    dHatPD  = replicaDelta planBig
+    led0    = payStreamia (10 ^ (15 :: Int)) emptyLedger          -- B_s = 1e-3 token1
+    p20     = sqrtPriceX96 20
+    dStar20 = dAt dHat 20                                          -- > 0 above p*
+    (led1, RebateX96 r1) = hedgeStep phiH dHatPD led0 (HolderSwap p20 dStar20)
+    (led2, RebateX96 r2) = hedgeStep phiH dHatPD led1 (HolderSwap p20 dStar20)   -- same delta again
+    (led3, RebateX96 r3) = hedgeStep phiH dHatPD led0 (HolderSwap p20 (negate dStar20)) -- wrong direction
+    (led4, _)            = hedgeStep phiH dHatPD led0 (HolderSwap p20 (3 * dStar20))    -- over-hedge capped
+  assertEqual "qualifying: sign rule" 0 (qualifying 10 0 (-5))
+  assertEqual "qualifying: cap at |Δ*−h|" 10 (qualifying 10 0 25)
+  assertEqual "qualifying: partial" (-4) (qualifying (-10) 0 (-4))
+  if r1 > 0 && ledgerInvariant led1 && hedged led1 == dStar20 then putStrLn "ok: hedgeStep rebates a qualifying hedge"
+    else error ("hedgeStep first hedge: " ++ show (led1, r1))
+  assertEqual "hedgeStep: re-submitting hedged delta → ρ = 0" 0 r2
+  assertEqual "hedgeStep: re-submitting → h unchanged" (hedged led1) (hedged led2)
+  assertEqual "hedgeStep: wrong direction → ρ = 0, h unchanged" (0, 0) (r3, hedged led3)
+  assertEqual "hedgeStep: over-hedge capped at Δ*" dStar20 (hedged led4)
+  -- budget cap: tiny streamia, rebate = B_s − B_r exactly, invariant holds
+  let ledTiny = payStreamia 7 emptyLedger
+      (led5, RebateX96 r5) = hedgeStep phiH dHatPD ledTiny (HolderSwap p20 dStar20)
+      (led6, RebateX96 r6) = hedgeStep phiH dHatPD (payStreamia 0 led5) (HolderSwap (sqrtPriceX96 40) (dAt dHat 40))
+  assertEqual "hedgeStep: rebate capped by budget" 7 r5
+  if ledgerInvariant led5 && ledgerInvariant led6 && r6 == 0 then putStrLn "ok: ledger invariant B_r ≤ B_s under exhausted budget"
+    else error ("ledger invariant broken: " ++ show (led5, led6, r6))
 
   _ <- evaluate (gammaCoordinate (unXiX96 xiPinned) eta spacing10 (-10 :: Tick))
   putStrLn "ok: gammaCoordinate negative tick"

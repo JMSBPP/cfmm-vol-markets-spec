@@ -29,6 +29,7 @@ library
       Greeks.Gamma
       Greeks.Theta
       Greeks.Vega
+      Hedge.Ledger
       Lib
       Liquidity.LiquidityChunk
       Liquidity.LiquidityDensity
