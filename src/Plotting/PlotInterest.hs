@@ -70,6 +70,8 @@ interestFunctionEC config plotY labeledFunctions = do
           fromIntegral
             (unReturnPips
               (mkReturn (interestFunction sample) (savingsPayoff sample)))
+        RawY _ ->
+          payoffToDouble (interestFunction sample)
 
     functionPoints interestFunction =
       [ (interestToDouble sample, yValue sample interestFunction)
@@ -80,6 +82,7 @@ interestFunctionEC config plotY labeledFunctions = do
       case plotY of
         PayoffY -> "PayoffX96"
         ReturnY -> "ReturnPips"
+        RawY unit -> unit
 
   layout_title .= plotTitle config
   layout_x_axis . laxis_title .= xAxisTitle config
@@ -150,6 +153,8 @@ plotInterestTickFunction output config plotY tMin tMax tickFunctions =
             in  fromIntegral
                   (unReturnPips
                     (mkReturn (tickFunction t) (savingsPayoff sr)))
+          RawY _ ->
+            payoffToDouble (tickFunction t)
 
       functionPoints tickFunction =
         [ (interestToDouble (interestSqrtX96 t), yValue t tickFunction)
@@ -160,6 +165,7 @@ plotInterestTickFunction output config plotY tMin tMax tickFunctions =
         case plotY of
           PayoffY -> "PayoffX96"
           ReturnY -> "ReturnPips"
+          RawY unit -> unit
 
     layout_title .= plotTitle config
     layout_x_axis . laxis_title .= xAxisTitle config

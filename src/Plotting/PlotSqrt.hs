@@ -21,7 +21,8 @@ import SqrtGrid
   , toDouble
   )
 
-data PlotY = PayoffY | ReturnY
+-- | RawY: signed EVM word on the y axis (no clamp at 0), with its unit label.
+data PlotY = PayoffY | ReturnY | RawY String
   deriving (Show, Eq)
 
 sqrtFunctionEC
@@ -56,6 +57,8 @@ sqrtFunctionEC config plotY labeledFunctions = do
         ReturnY ->
           fromIntegral
             (unReturnPips (mkReturn (sqrtFunction sample) (linearPayoff sample)))
+        RawY _ ->
+          payoffToDouble (sqrtFunction sample)
 
     functionPoints sqrtFunction =
       [ (toDouble sample, yValue sample sqrtFunction)
@@ -66,6 +69,7 @@ sqrtFunctionEC config plotY labeledFunctions = do
       case plotY of
         PayoffY -> "PayoffX96"
         ReturnY -> "ReturnPips"
+        RawY unit -> unit
 
   layout_title .= plotTitle config
   layout_x_axis . laxis_title .= xAxisTitle config

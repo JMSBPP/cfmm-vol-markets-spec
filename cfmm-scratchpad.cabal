@@ -49,6 +49,7 @@ library
       Payoffs.PathAccrual
       Payoffs.Payoff
       Payoffs.RangeAccrualNote
+      Payoffs.ReplicaDelta
       Payoffs.Return
       Payoffs.Savings
       Payoffs.Swap

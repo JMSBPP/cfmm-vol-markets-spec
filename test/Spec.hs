@@ -214,6 +214,8 @@ import qualified Payoffs.CLMMPosition as CLMM
 import Payoffs.CLMMPosition (clmmChunk)
 import Panoptic.LegChunk (legChunk, legChunks, legLiquidity)
 import Payoffs.VolatilityReplica (ErrorX96(..), fourLegReplica, legMintValue, replicaError, windowTicks)
+import Greeks.Delta (PayoffDelta(..), PriceDeltaX96(..), deltaOfPayoff)
+import Payoffs.ReplicaDelta (replicaDelta)
 import Panoptic.Binning (binNotionals, binToLegs, ladderFromVolOrder, mintPlanFromLadder, quantizationReport, QuantizationRow(..))
 import qualified Payoffs.PathAccrual as PA
 import Payoffs.LadderPosition
@@ -1187,6 +1189,33 @@ main = do
     replica = fourLegReplica planBig pStar
     at p    = let PayoffX96 y = Payoff.runPayoff replica p in y
   let tolRep = 10 ^ (9 :: Int)  -- 1e-9 of ΔQ_υ = 1e18; X96 floors between branches
+
+  -- TODO #33 (#86): Δ̂^σ = ∂_P π̂^σ (rebate note Def 12, test §5.1).  Closed form
+  -- (Payoffs.ReplicaDelta) vs the generic finite-difference Greeks.Delta instance,
+  -- 0 at p*, sign, nondecreasing (convexity of π̂^σ).
+  let
+    dHat   = runPayoffDelta (replicaDelta planBig)
+    dFD    = runPayoffDelta (deltaOfPayoff replica)
+    dAt f i = let PriceDeltaX96 d = f (sqrtPriceX96 i) in d
+    dH = dAt dHat
+    dF = dAt dFD
+    legEdges = concat [ [chunkTickLower c, chunkTickUpper c] | c <- chunks ]
+    interior i = all (\e -> abs (i - e) > 2) legEdges   -- bump ≈ 0.3 tick; stay > 2 ticks off kinks
+    relTol want got = abs (got - want) <= max (10 ^ (6 :: Int)) (abs want `div` 1000)  -- 1e-3 (bump curvature)
+  sequence_
+    [ if relTol (dH i) (dF i) then pure ()
+        else error ("replicaDelta /= finite difference at tick " ++ show i ++ ": " ++ show (dH i, dF i))
+    | i <- [-60, -40, -25, -17, -12, -7, -3, 3, 7, 12, 17, 25, 40, 60], interior i ]
+  if abs (dAt dHat 0) <= tolRep then putStrLn "ok: replicaDelta(p*) = 0"
+    else error ("replicaDelta(p*) /= 0: " ++ show (dAt dHat 0))
+  sequence_
+    [ if (i < 0 && dAt dHat i <= 0) || (i > 0 && dAt dHat i >= 0) then pure ()
+        else error ("replicaDelta sign wrong at tick " ++ show i)
+    | i <- [-60, -20, -5, 5, 20, 60] ]
+  let ticksMono = [-60, -55 .. 60] :: [Int]
+  if and (zipWith (\i j -> dAt dHat i <= dAt dHat j) ticksMono (drop 1 ticksMono))
+    then putStrLn "ok: replicaDelta nondecreasing (π̂^σ convex)"
+    else error "replicaDelta not nondecreasing"
   if abs (at pStar) <= tolRep then putStrLn "ok: replica(p*) = 0 (X96 tol)"
     else error ("replica(p*) /= 0: " ++ show (at pStar))
   sequence_

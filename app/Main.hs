@@ -54,6 +54,7 @@ import Payoffs.CLMMPosition (chunkFromStrike, rhsPayoffLayout, scaledVsUnitLayou
 import Payoffs.Forward (AtmForward(..))
 import Payoffs.Log (nakedLogQ96, nakedLogTickQ96)
 import Panoptic.NId (MintPlan(..), fourLegSkeleton, mkNId, volOrderToMintPlan)
+import Payoffs.ReplicaDelta (replicaDeltaLayout)
 import Payoffs.VolatilityReplica (ErrorX96(..), legsLayout, replicaError, replicaLayout, windowTicks)
 import Panoptic.Binning (binToLegs, ladderFromVolOrder, mintPlanFromLadder, quantizationReport)
 import Payoffs.LadderPosition (ladderN1, ladderT1)
@@ -435,6 +436,12 @@ main = do
       (Cell (legsLayout legsCfg replicaPlan))
       (Cell (replicaLayout replicaCfg replicaPlan pStar0 []))
     )
+
+  -- TODO #33 (#86): Δ̂^σ = ∂_P π̂^σ — closed form vs central difference (rebate note Def 12).
+  let deltaCfg = retitleSqrt replicaCfg "Δ̂^σ = ∂_P π̂^σ (raw token0): closed form vs central difference" "token0 (raw)"
+  writePanel
+    "outputs/Payoffs/Replica/panel-replica-delta.png"
+    (Cell (replicaDeltaLayout deltaCfg replicaPlan pStar0))
 
   -- TODO #28.2: T1 geometric ladder (S = 4000, Δ = 10, ι = 400, ξ*) — README § REPLICATION_THEORY
   -- Theorem 10 overlay (same units: T1/N_1 vs c(S)·logPortfolio), residual, rung density.

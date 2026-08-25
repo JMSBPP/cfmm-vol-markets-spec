@@ -20,6 +20,8 @@ Operand ranges: sqrt prices `a, b, p` ≤ 2^160 (Q64.96); liquidity `L` ≤ 2^12
 | rung liquidity `L(i_x)` | `mulDiv ΔQ ℓ Q96` | `positionSize`-style scaling | `ΔQ·ℓ` ≤ 2^224 | fits 256 |
 | binning `n_leg` | `Σ mulDiv L_x c_x Q96`, `c_x = b_x − a_x` | off-chain / view | ≤ 2^288 per term | `positionSize = n_max / 127` must be < 2^128 → require `n_max < 2^135` |
 | `ErrorX96` | `mulDiv d Q96 N_1`, square, sum, `integerSqrt` | **off-chain only** | unbounded on-chain | no EVM bound claimed |
+| `principalDelta` (∂_P principal = token0 held) | `mulDiv (L·Q96) (b − p̄) b `div` p̄`, p̄ = clamp(p; a, b) | `getAmount0ForLiquidity` at (p̄, b) | `L·Q96` ≤ 2^224 | fits 256; result < 2^128 |
+| `deltaOfPayoff` (generic ∂_P) | `mulDiv (ΔV) Q96 (ΔP)` | **off-chain / tests only** | `ΔV·Q96` ≤ 2^224 | signed; twin is the closed form, not the difference |
 | `lnQ96` (Item 1) | port of Solady `lnWad` on `mulDiv p WAD p*`, then `mulDiv (2·ln) Q96 WAD` | `FixedPointMathLib.lnWad` | int256 | signed: floor (Haskell `div`) vs truncate (Solidity `/`) — floor chosen |
 
 Rounding direction: `chunkAmount0/1` round **down**; Panoptic rounds long-closing amounts **up** (`getAmountsMoved`).
