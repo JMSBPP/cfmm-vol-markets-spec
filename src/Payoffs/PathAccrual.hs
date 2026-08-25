@@ -45,7 +45,11 @@ import Panoptic.MintPlan (MintPlan)
 import Pricing.Stremia (FeePips, unFeePips)
 import SqrtGrid (PayoffX96(..), SqrtPriceX96(..), Tick, mulDiv, pattern Q96, sqrtPriceX96)
 
-data Tag = Trans | Arb
+-- | Holder = the position holder correcting the pool toward the external price
+-- (rebate note §3).  To the LP's book a holder correction accrues like an arb
+-- correction (fee + concavity gap); who receives the gap is tracked in
+-- Payoffs.HolderPath, not here.
+data Tag = Trans | Arb | Holder
   deriving (Show, Eq)
 
 -- | One price move on the path with its flow tag.
@@ -118,8 +122,9 @@ stepAccrual phiX phiM ch (Step iFrom iTo tag)
                   else mulDiv amt0AtPj (unFeePips phiX) 1000000
           lvr = if goingUp then amt0AtPj - amt1 else amt1 - amt0AtPj
       in  case tag of
-            Trans -> Accrual fee 0 0
-            Arb   -> Accrual 0 fee (max 0 lvr)
+            Trans  -> Accrual fee 0 0
+            Arb    -> Accrual 0 fee (max 0 lvr)
+            Holder -> Accrual 0 fee (max 0 lvr)
   where
     goingUp = iTo > iFrom
     SqrtPriceX96 a = sqrtPriceX96 (chunkTickLower ch)

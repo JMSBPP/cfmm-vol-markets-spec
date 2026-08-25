@@ -216,6 +216,7 @@ import Panoptic.LegChunk (legChunk, legChunks, legLiquidity)
 import Payoffs.VolatilityReplica (ErrorX96(..), fourLegReplica, legMintValue, replicaError, windowTicks)
 import Greeks.Delta (PayoffDelta(..), PriceDeltaX96(..), deltaOfPayoff)
 import Payoffs.ReplicaDelta (replicaDelta)
+import Payoffs.HolderPath (HolderReport(..), Regime(..), arbShare, composedPath, hedgeAlong, holderPnL, pathEndTicks, trianglePath)
 import Hedge.Ledger (HolderSwap(..), Ledger(..), RebateX96(..), emptyLedger, hedgeStep, ledgerInvariant, payStreamia, qualifying)
 import Panoptic.Binning (binNotionals, binToLegs, ladderFromVolOrder, mintPlanFromLadder, quantizationReport, QuantizationRow(..))
 import qualified Payoffs.PathAccrual as PA
@@ -1280,6 +1281,43 @@ main = do
   assertEqual "hedgeStep: rebate capped by budget" 7 r5
   if ledgerInvariant led5 && ledgerInvariant led6 && r6 == 0 then putStrLn "ok: ledger invariant B_r ≤ B_s under exhausted budget"
     else error ("ledger invariant broken: " ++ show (led5, led6, r6))
+
+  -- TODO #35: holder path (rebate note §5.3–5.5).
+  -- 5.3 round trip (Trans only): LVR = 0, fees > 0, replica back to start, rebates = fees
+  -- paid (every hedge qualifying, budget ample), Σγ ≥ 0.
+  let
+    tri      = trianglePath 0 40 5
+    accTri   = foldr PA.addAccrual PA.zeroAccrual (PA.planAccrual phiXp phiMp planBig tri)
+    ledAmple = payStreamia (10 ^ (24 :: Int)) emptyLedger
+    repTri   = hedgeAlong phiH planBig 0 ledAmple tri
+    atRep p  = let PayoffX96 y = Payoff.runPayoff replica (sqrtPriceX96 p) in y
+  assertEqual "5.3 round trip: LVR_gross = 0" 0 (PA.lvrGross accTri)
+  if PA.feesTrans accTri > 0 then putStrLn "ok: 5.3 round trip fees > 0" else error "5.3 no fees"
+  assertEqual "5.3 round trip: p_T = p_0" 0 (last (pathEndTicks tri))
+  assertEqual "5.3 round trip: replica back to start" (atRep 0) (atRep (last (pathEndTicks tri)))
+  assertEqual "5.3 rebates = fees on qualifying hedges (ample budget)" (rpFeesPaid repTri) (rpRebates repTri)
+  if rpGamma repTri >= 0 && rpHedges repTri > 0 then putStrLn ("ok: 5.3 Σγ ≥ 0 over " ++ show (rpHedges repTri) ++ " hedges")
+    else error ("5.3 gamma: " ++ show repTri)
+  assertEqual "5.3 holder P&L = Σγ − B_s (rebates offset fees)" (rpGamma repTri - 10 ^ (24 :: Int)) (holderPnL repTri)
+  -- 5.4 convergence: coarser hedging (stride m) leaves more un-hedged convexity — Σγ nondecreasing in m, all ≥ 0.
+  let gammaAt m = rpGamma (hedgeAlong phiH planBig 0 ledAmple (trianglePath 0 40 m))
+      gs = map gammaAt [1, 2, 4, 8]
+  if and (zipWith (<=) gs (drop 1 gs)) && all (>= 0) gs then putStrLn ("ok: 5.4 Σγ nondecreasing in hedge stride " ++ show gs)
+    else error ("5.4 gamma vs stride: " ++ show gs)
+  -- 5.5 stale mark: holder active (gas = 1 tick) keeps |e − p| ≤ 1 after every round and leaves no
+  -- arb volume; holder inactive lets the gap reach the band, arb share > 0 read off the path.
+  let
+    rgOn  = Regime 1 30 True
+    rgOff = Regime 1 30 False
+    maxGap rg = maximum (0 : [ abs (PA.stepTo s - PA.stepFrom s) | s <- composedPath 5 0 300 3 4 rg, PA.stepTag s /= PA.Trans ])
+    -- a correction step's size IS the gap at that round (the pool sits at e after it)
+  assertEqual "5.5 holder active: no residual arb volume" 0 (PA.unArbSharePips (arbShare (composedPath 5 0 300 3 4 rgOn)))
+  if PA.unArbSharePips (arbShare (composedPath 5 0 300 3 4 rgOff)) > 0 then putStrLn "ok: 5.5 holder inactive: arb share > 0 (output)"
+    else error "5.5 no arb volume without holder"
+  if maxGap rgOn <= 1 + 2 * 4 + 3 then putStrLn "ok: 5.5 holder corrections are at most one round of drift"
+    else error ("5.5 holder gap " ++ show (maxGap rgOn))
+  if maxGap rgOff > maxGap rgOn then putStrLn ("ok: 5.5 stale zone without holder: max correction " ++ show (maxGap rgOff) ++ " vs " ++ show (maxGap rgOn))
+    else error ("5.5 gaps: " ++ show (maxGap rgOff, maxGap rgOn))
 
   _ <- evaluate (gammaCoordinate (unXiX96 xiPinned) eta spacing10 (-10 :: Tick))
   putStrLn "ok: gammaCoordinate negative tick"

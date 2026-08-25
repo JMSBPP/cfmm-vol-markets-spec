@@ -55,6 +55,7 @@ import Payoffs.Forward (AtmForward(..))
 import Payoffs.Log (nakedLogQ96, nakedLogTickQ96)
 import Panoptic.NId (MintPlan(..), fourLegSkeleton, mkNId, volOrderToMintPlan)
 import Payoffs.ReplicaDelta (replicaDeltaLayout)
+import Payoffs.HolderPath (Regime(..), arbShare, composedPath)
 import Payoffs.VolatilityReplica (ErrorX96(..), legsLayout, replicaError, replicaLayout, windowTicks)
 import Panoptic.Binning (binToLegs, ladderFromVolOrder, mintPlanFromLadder, quantizationReport)
 import Payoffs.LadderPosition (ladderN1, ladderT1)
@@ -442,6 +443,16 @@ main = do
   writePanel
     "outputs/Payoffs/Replica/panel-replica-delta.png"
     (Cell (replicaDeltaLayout deltaCfg replicaPlan pStar0))
+
+  -- TODO #35: [ν_arb/ν] as an OUTPUT of the update rule — pips vs fee band (ticks),
+  -- holder active (gas = 1 tick) vs inactive.  Axes: ticks, pips (uint24).
+  let shareLine active =
+        [ (toInteger band, PA.unArbSharePips (arbShare (composedPath 5 0 400 3 4 (Regime 1 band active))))
+        | band <- [0, 2 .. 40] ]
+  writePanel
+    "outputs/Payoffs/Accrual/panel-arbshare-vs-band.png"
+    (Cell (PA.linesLayout "[ν_arb/ν] read off the composed path (trans ±3, ext ±4 ticks/round)" "fee band (ticks)" "arb share (pips)"
+             [ ("holder inactive", shareLine False), ("holder active, gas = 1 tick", shareLine True) ]))
 
   -- TODO #28.2: T1 geometric ladder (S = 4000, Δ = 10, ι = 400, ξ*) — README § REPLICATION_THEORY
   -- Theorem 10 overlay (same units: T1/N_1 vs c(S)·logPortfolio), residual, rung density.

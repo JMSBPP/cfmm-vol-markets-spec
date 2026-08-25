@@ -5,7 +5,8 @@
 --
 -- State per position: (h, B_s, B_r) = (token0 delta already hedged, streamia paid,
 -- rebates paid), invariant B_r ≤ B_s.  A holder swap moving p_before → p_after
--- with signed token0 flow q (q > 0: holder receives token0) has target
+-- with signed token0 flow q (q > 0: holder SELLS token0 to the pool — the hedge of a
+-- long-convexity position above p*, where Δ̂^σ > 0) has target
 -- Δ* = Δ̂^σ(p_after) (Payoffs.ReplicaDelta, raw token0); the qualifying part is
 -- the portion of q that moves h toward Δ*:
 --   q* = sgn(Δ* − h) · min(|q|, |Δ* − h|)  if sgn q = sgn(Δ* − h), else 0.
@@ -47,7 +48,7 @@ payStreamia s led
 -- | One swap by the position holder.
 data HolderSwap = HolderSwap
   { swapAfter  :: SqrtPriceX96   -- p_after
-  , swapToken0 :: Integer        -- q, signed raw token0 the holder receives
+  , swapToken0 :: Integer        -- q, signed raw token0 the holder sells to the pool
   }
   deriving (Show, Eq)
 
