@@ -181,6 +181,10 @@ r_{\Delta Q_{\mathrm{trans}}}^{e}
    - `Payoffs.PathAccrual`: per-step amounts moved (Uniswap), fee on the token paid in, LVR on arb steps = concavity gap (Thm 5); split fees_trans/fees_arb/LVR_gross; LVR_net = LVR_gross − fees_arb; \(\pi^{\varphi}\) = fees_trans − LVR_net
    - Synthetic tagged path (LCG + Bresenham share); 4-leg roll-up; panels vs \([\nu_{\mathrm{arb}}/\nu]\) and vs step size; prover path replaces it in #34
 
+31. **Price-update transfer \(s\) replaces \(\tau_{\mathrm{MEV}}\); arbs as delta-hedgers; #34 re-scoped** — `docs` — [#82](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/82)
+   - Note: `docs/superpowers/specs/2026-08-25-scratchpad-price-update-transfer-design.md` — Prop A (roles), Defs 9–11 (signed \(s\), budget, equilibrium \(\mathrm{LVR}_{\mathrm{net}}=s^\star\nu_{\mathrm{arb}}\)), two-source path (GAMS round trips + external update rule)
+   - #34 becomes: trans half = GAMS replay (given \([\nu_{\mathrm{trans}}/\nu]\), \(u\)); arb half = \(P_{\mathrm{ext}}\) + rule at \(s\) (\([\nu_{\mathrm{arb}}/\nu]\) as output). Implementation item next.
+
 Later (not opened yet): compose \(r_{\Delta Q}^{e}\) from #19+#21; wire into parametrized \(\pi^{\Delta Q}/\pi^{\phi}\); then unblock #6.
 
 ### Package / tree moves (README `//` notes; not done)

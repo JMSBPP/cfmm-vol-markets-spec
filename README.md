@@ -383,7 +383,7 @@ Payoff decomposition (spec `docs/superpowers/specs/2026-08-22-scratchpad-pi-varp
 \pi^{c|p} + \pi^{\mathrm{RAN}} \equiv \pi^{\varphi} \equiv \pi^{\phi} - \pi^{\mathrm{LVR}}
 \]
 
-Objective (anchor \(e^{\sigma} = |\pi^{\sigma} - \hat{\pi^{\sigma}}|\)): \(\pi^{\sigma} = \Delta Q_{\upsilon}(\sigma - \sigma_K)^{+}\) is \(\tau_{\mathrm{MEV}}\)-free, so all \(\tau_{\mathrm{MEV}}\) dependence of \(e^{\sigma}\) runs through the replica, along one explicit chain:
+Objective (anchor \(e^{\sigma} = |\pi^{\sigma} - \hat{\pi^{\sigma}}|\); **\(\tau_{\mathrm{MEV}}\) is superseded by the signed price-update transfer \(s\)** — `docs/superpowers/specs/2026-08-25-scratchpad-price-update-transfer-design.md`, TODO #31: subsidy inside the fee band, tax above, budget = streamia, equilibrium \(\mathrm{LVR}_{\mathrm{net}} = s^\star\nu_{\mathrm{arb}}\); the form below is unchanged with \(s\) for \(\tau\)): \(\pi^{\sigma} = \Delta Q_{\upsilon}(\sigma - \sigma_K)^{+}\) is \(\tau_{\mathrm{MEV}}\)-free, so all \(\tau_{\mathrm{MEV}}\) dependence of \(e^{\sigma}\) runs through the replica, along one explicit chain:
 
 \[
 	\begin{aligned}
