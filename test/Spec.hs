@@ -216,7 +216,7 @@ import Panoptic.LegChunk (legChunk, legChunks, legLiquidity)
 import Payoffs.VolatilityReplica (ErrorX96(..), fourLegReplica, legMintValue, replicaError, windowTicks)
 import Greeks.Delta (PayoffDelta(..), PriceDeltaX96(..), deltaOfPayoff)
 import Payoffs.ReplicaDelta (replicaDelta)
-import Payoffs.HolderPath (HolderReport(..), Regime(..), arbShare, composedPath, hedgeAlong, holderPnL, pathEndTicks, trianglePath)
+import Payoffs.HolderPath (HolderReport(..), Regime(..), arbShare, arbShareToken1, composedPath, hedgeAlong, holderPnL, pathEndTicks, trianglePath)
 import Payoffs.LvrRate (chi, lvrRateOn, lvrRateTable, naiveBandTicks, rationalBandTicks)
 import Payoffs.ReplicaDelta (principalDelta)
 import Payoffs.TransactionalReturn (TransTurnover(..), measuredFeeReturn, refTransactionalReturn, transTurnover)
@@ -1322,6 +1322,38 @@ main = do
     else error ("5.5 holder gap " ++ show (maxGap rgOn))
   if maxGap rgOff > maxGap rgOn then putStrLn ("ok: 5.5 stale zone without holder: max correction " ++ show (maxGap rgOff) ++ " vs " ++ show (maxGap rgOn))
     else error ("5.5 gaps: " ++ show (maxGap rgOff, maxGap rgOn))
+  -- TODO #22 (#28), Definition 15 statics (holder inactive): the share is nondecreasing in
+  -- external vol (token1 share on continuous liquidity and tick share); in the band, what
+  -- falls is the NUMBER of corrections — a wider band makes corrections rarer but larger, so
+  -- the volume share need not be monotone (seen: 240819 at band 20 vs 245063 at 40, seed 5).
+  let chCont = createChunk (-4000) 4000 (10 ^ (20 :: Int))
+      pathOf sd band ext = composedPath sd 0 400 2 ext (Regime 1 band False)
+      shareT sd band ext = PA.unArbSharePips (arbShareToken1 [chCont] (pathOf sd band ext))
+      shareK sd band ext = PA.unArbSharePips (arbShare (pathOf sd band ext))
+      nArb sd band ext   = length [ () | st <- pathOf sd band ext, PA.stepTag st == PA.Arb ]
+      monoDown xs = and (zipWith (>=) xs (drop 1 xs))
+      monoUp xs   = and (zipWith (<=) xs (drop 1 xs))
+      bands = [0, 10, 20, 40]
+      exts  = [1, 2, 4, 8]
+  sequence_
+    [ if monoUp [ f sd 10 e | e <- exts ] then pure ()
+        else error ("share ↑ vol fails: seed " ++ show sd ++ " " ++ lbl ++ " " ++ show [ f sd 10 e | e <- exts ])
+    | sd <- [1, 3, 5, 7], (lbl, f) <- [("token1", shareT), ("tick", shareK)] ]
+  sequence_
+    [ if monoDown [ nArb sd b 4 | b <- bands ] then pure ()
+        else error ("#corrections ↓ band fails: seed " ++ show sd ++ " " ++ show [ nArb sd b 4 | b <- bands ])
+    | sd <- [1, 3, 5, 7] ]
+  putStrLn "ok: Def 15 statics: share ↑ in external vol (token1 on continuous liquidity, tick); #corrections ↓ in band (4 seeds)"
+  sequence_
+    [ if PA.unArbSharePips (arbShare (composedPath sd 0 400 2 4 (Regime 1 b True))) == 0 then pure ()
+        else error ("holder active but arb share > 0: seed " ++ show sd ++ " band " ++ show b)
+    | sd <- [1, 3, 5, 7], b <- [2, 10, 40] ]
+  putStrLn "ok: Def 15: holder active with gas 1 ⇒ share = 0 for every band ≥ 2 (4 seeds)"
+  sequence_
+    [ if PA.unArbSharePips (arbShare (composedPath sd 0 400 2 4 (Regime 5 2 True))) > 0 then pure ()
+        else error ("gas > band > 0 should leave arb share > 0: seed " ++ show sd)
+    | sd <- [1, 3, 5, 7] ]
+  putStrLn "ok: Def 15: holder active with gas 5 > band 2 ⇒ arb share > 0 (branch order)"
 
   -- TODO #26 (#51): λ_{X/M}.  Prop 3: χ(𝓛𝓒) = amount0 = ∂_Pπ(a²) − ∂_Pπ(b²) (Thm 5 + Def 12).
   let chB = chunks !! 1

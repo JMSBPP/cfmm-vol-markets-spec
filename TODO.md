@@ -135,6 +135,7 @@ r_{\Delta Q_{\mathrm{trans}}}^{e}
    - Brainstorm: what object is \(\beta\) (scalar weight? pool parameter? function of \(\kappa\)/\(\phi\)/liquidity?); units; bounds; who sets it; relation to measure \(m(\cdot)\) and \(\mathbb E[m\cdot\pi]\)
    - Deliverable: short design note (spec in `docs/superpowers/specs/`) before #21 implement; may stay notes-only if no code twin warranted this cycle
    - Prereq for composing full \(r_{\Delta Q}^{e}\) and unblocking #6
+   - **Answered (2026-08-25):** Definition 15 — \(\partial = \mathbb{E}^{\mathbb{Q}}[\text{share}\cdot r_{\mathrm{arb}}]/\mathbb{E}^{\mathbb{Q}}[r_{\mathrm{arb}}]\) (token1 share `HolderPath.arbShareToken1`; \(\mathbb{E}[\text{share}]\) is the zero-covariance approximation); the share is an output of the update rule; expectation notes-only until #17/#21. `docs/superpowers/specs/2026-08-25-scratchpad-arb-weight-design.md`
 
 23. **\(\nu_{\mathrm{trans}}\) from `volume_path.gms` (prover-native \(u\leftrightarrow\nu\))** — `feat` — [#34](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/34)
    - Spec: `docs/superpowers/specs/2026-08-22-scratchpad-rarb-trans-flow-design.md` §3 (option **B** approved)

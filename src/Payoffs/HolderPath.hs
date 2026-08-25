@@ -19,6 +19,7 @@ module Payoffs.HolderPath
   , composedPath
   , pathEndTicks
   , arbShare
+  , arbShareToken1
   , HolderReport(..)
   , hedgeAlong
   , holderPnL
@@ -28,7 +29,8 @@ module Payoffs.HolderPath
 import Greeks.Delta (PayoffDelta(..), PriceDeltaX96(..))
 import Hedge.Ledger (HolderSwap(..), Ledger(..), RebateX96(..), hedgeStep)
 import Panoptic.MintPlan (MintPlan)
-import Payoffs.PathAccrual (ArbSharePips, Step(..), Tag(..), mkArbSharePips, pattern PIPS_ONE)
+import Liquidity.LiquidityChunk (LiquidityChunk)
+import Payoffs.PathAccrual (ArbSharePips, Step(..), Tag(..), mkArbSharePips, pattern PIPS_ONE, stepVolume1)
 import qualified Payoffs.Payoff as Payoff
 import Payoffs.ReplicaDelta (replicaDelta)
 import Payoffs.VolatilityReplica (fourLegReplica)
@@ -71,6 +73,15 @@ pathEndTicks = map stepTo
 arbShare :: [Step] -> ArbSharePips
 arbShare steps =
   let vol tag = sum [ toInteger (abs (stepTo s - stepFrom s)) | s <- steps, stepTag s == tag ]
+      total = vol Trans + vol Arb + vol Holder
+  in  mkArbSharePips (if total == 0 then 0 else mulDiv (vol Arb) PIPS_ONE total)
+
+-- | [ν_arb/ν] in TOKEN1 volume over a chunk list (Σ stepVolume1 of arb steps / Σ of all
+-- steps) — the share that weights a per-unit-volume rate (Prop 4's λ) in (RARB).
+-- `arbShare` (tick volume) is the liquidity-free proxy; this one is the accounting share.
+arbShareToken1 :: [LiquidityChunk] -> [Step] -> ArbSharePips
+arbShareToken1 chs steps =
+  let vol tag = sum [ stepVolume1 ch st | ch <- chs, st <- steps, stepTag st == tag ]
       total = vol Trans + vol Arb + vol Holder
   in  mkArbSharePips (if total == 0 then 0 else mulDiv (vol Arb) PIPS_ONE total)
 
