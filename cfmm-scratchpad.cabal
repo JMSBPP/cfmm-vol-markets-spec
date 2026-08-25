@@ -57,6 +57,7 @@ library
       Payoffs.Savings
       Payoffs.Swap
       Payoffs.TransactionalFeeCapture
+      Payoffs.TransactionalReturn
       Payoffs.VariancePortfolio
       Payoffs.VolatilityCall
       Payoffs.VolatilityReplica

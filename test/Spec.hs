@@ -219,6 +219,8 @@ import Payoffs.ReplicaDelta (replicaDelta)
 import Payoffs.HolderPath (HolderReport(..), Regime(..), arbShare, composedPath, hedgeAlong, holderPnL, pathEndTicks, trianglePath)
 import Payoffs.LvrRate (chi, lvrRateOn, lvrRateTable, naiveBandTicks, rationalBandTicks)
 import Payoffs.ReplicaDelta (principalDelta)
+import Payoffs.TransactionalReturn (TransTurnover(..), measuredFeeReturn, refTransactionalReturn, transTurnover)
+import Payoffs.Return (ReturnPips(..))
 import Hedge.Ledger (HolderSwap(..), Ledger(..), RebateX96(..), emptyLedger, hedgeStep, ledgerInvariant, payStreamia, qualifying)
 import Panoptic.Binning (binNotionals, binToLegs, ladderFromVolOrder, mintPlanFromLadder, quantizationReport, QuantizationRow(..))
 import qualified Payoffs.PathAccrual as PA
@@ -1421,6 +1423,27 @@ main = do
   -- volume-weighted mean of the clipped form — printed as a regression, not asserted (seed 5).
   putStrLn ("4-leg λ(s) regression, φ = 1000 naive band, seed 5: "
     ++ show (lvrRateTable 5 0 600 2 (mkFeePips 1000) (naiveBandTicks (mkFeePips 1000)) planBig [10, 20 .. 60]))
+
+  -- TODO #7 (#3): r^φ = φ_X δ_X + φ_M δ_M exactly (fee on the token paid in), = φ δ_trans when equal.
+  let chsBig = legChunks planBig
+      n1Big  = PayoffX96 (sum [ let PayoffX96 a1 = chunkAmount1 c in a1 | c <- chsBig ])   -- position token1 notional
+      pathTR = composedPath 3 0 300 3 4 (Regime 1 30 False)          -- trans + arb steps; only trans count
+      tov    = transTurnover chsBig pathTR n1Big
+      ReturnPips rRef  = refTransactionalReturn phiXp phiMp tov
+      ReturnPips rMeas = measuredFeeReturn phiXp phiMp chsBig pathTR n1Big
+      ReturnPips rEq   = refTransactionalReturn phiH phiH tov
+      ReturnPips rEqM  = measuredFeeReturn phiH phiH chsBig pathTR n1Big
+  if turnoverX tov > 0 && turnoverM tov > 0 then putStrLn ("ok: δ_trans by side (pips) " ++ show tov) else error ("δ_trans zero: " ++ show tov)
+  if abs (rRef - rMeas) <= 2 then putStrLn ("ok: r^φ = φ_X δ_X + φ_M δ_M = " ++ show rMeas ++ " pips (φ_X ≠ φ_M)")
+    else error ("r^φ mismatch: " ++ show (rRef, rMeas))
+  if abs (rEq - rEqM) <= 2 && abs (rEq - mulDiv 3000 (turnoverX tov + turnoverM tov) 1000000) <= 2
+    then putStrLn ("ok: φ_X = φ_M ⇒ r^φ = φ δ_trans = " ++ show rEq ++ " pips")
+    else error ("r^φ equal-fee: " ++ show (rEq, rEqM))
+  let tri2 = trianglePath 0 40 5
+      ReturnPips rTri = measuredFeeReturn phiH phiH chsBig tri2 n1Big
+      TransTurnover tX tM = transTurnover chsBig tri2 n1Big
+  if rTri > 0 && abs (rTri - mulDiv 3000 (tX + tM) 1000000) <= 2 then putStrLn "ok: round trip: r^φ = φ δ_trans > 0 with zero LVR"
+    else error ("round trip r^φ: " ++ show (rTri, tX, tM))
 
   _ <- evaluate (gammaCoordinate (unXiX96 xiPinned) eta spacing10 (-10 :: Tick))
   putStrLn "ok: gammaCoordinate negative tick"

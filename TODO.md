@@ -45,7 +45,7 @@ Workflow: see `AGENTS.md` / `CLAUDE.md` / `QWEN.md` (classify → branch → iss
 | TODO | Type | Issue | PR | Status |
 |------|------|-------|-----|--------|
 | 6 | `feat` | [#2](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/2) | [#15](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/15) | **blocked** (prereqs 17–21) |
-| 7 | `feat` | [#3](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/3) | [#16](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/16) | open |
+| 7 | `feat` | [#3](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/3) | [#16](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/16) | ✓ `Payoffs.TransactionalReturn` — r^φ = φ_X δ_X + φ_M δ_M exact (2026-08-25) |
 | 9 | `feat` | [#5](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/5) | [#18](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/18) | open |
 | 10 | `refactor` | [#6](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/6) | [#19](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/19) | open |
 | 11 | `refactor` | [#7](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/7) | [#20](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/20) | open |
@@ -76,6 +76,7 @@ Workflow: see `AGENTS.md` / `CLAUDE.md` / `QWEN.md` (classify → branch → iss
    - Distinct from payoff \(\pi^\phi\); scope in `refs/VOLATILITY_INTRUMENTS_MEV.md`
    - Decide: scalar control return type vs leave in notes only
    - **Notation:** keep scratchpad \(r^\phi\) / \(r_{\Delta Q_{\mathrm{trans}}}^{e}\) language; do **not** adopt MEV-doc \(\Delta\pi_{\mathrm{trans}}/\pi_{\mathrm{trans}}\) labels (wrong)
+   - **Done (PR #16, 2026-08-25):** `Payoffs.TransactionalReturn` — `transTurnover` (δ_X, δ_M in pips of the position's token1 notional), `refTransactionalReturn` = φ_X δ_X + φ_M δ_M, `measuredFeeReturn` = fees_trans/N; equal within 2 pips on composed and round-trip paths (decision: typed `ReturnPips`, not notes-only)
 
 9. **`AdaptiveStremia` body** — `feat` — [#5](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/5) — still stub \(\phi(\Theta_\phi;\sigma^2,\nu)\)
 
