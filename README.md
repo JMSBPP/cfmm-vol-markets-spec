@@ -7,6 +7,7 @@
 | anchor | `notes/VOLATILITY_INSTRUMENTS.md`, `notes/agents/vol_markets/*_ADDENDUM.md`, `notes/agents/vol_markets/LEAN_TRACEABILITY.md` | fixes every glyph (Definitions / Theorems / Rules) and maps statements to proofs |
 | proofs | `lean/{vol_markets,exp,tao}/` — Lean 4 + Mathlib, `lake build` at the root | machine-checks the statements (Aristotle-proved; no `sorry`, no `axiom`) |
 | twin | `src/`, `test/`, `app/` — Haskell, `stack build && stack test` | computes, plots and regression-tests the proved statements with EVM fixed-point types |
+| protocol | `protocol/` — on-chain protocol spec (entities, Panoptic integration, controller, oracle, requirements) | imported from `JMSBPP/cfmm-vol-markets@627566e` (`docs/protocol-import-commit-map.txt`); that repo pins it back as a submodule |
 
 Rule: the twin cites theorem names (`LadderPrincipal.principal_inRange`, `GeomMixture.xiStar_argmin`, `ClmmIdentity.principal_price_second_deriv`, …) and never re-proves. Before introducing a symbol, grep the anchor — bare `κ` is taken; `κ_φ` is the curvature coordinate.
 
