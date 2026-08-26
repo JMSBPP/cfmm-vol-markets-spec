@@ -20,7 +20,7 @@ Theorem 5: \(\partial^2_P \pi^{\Delta Q_X} = -\tfrac12 L\,\Gamma_\varphi(P)\) on
 \]
 **Convention.** \(\chi(\mathcal{LC}) := \mathrm{amount0}(\mathcal{LC}) > 0\) (raw token0), so the integral equals \(-\chi\): \(\chi\) is the total delta the chunk sheds across its range. `Payoffs.LvrRate.chi = chunkAmount0`.
 
-Status: the identity `chi = principalDelta(a) − principalDelta(b)` is a consistency check of one formula against itself; the **independent** check is `∫∂²π dP ≈ −χ` with deltas taken by finite differences of the payoff (`deltaOfPayoff` on `CLMMPosition.fromChunk`), test "Prop 3 ∫∂²π dP". The proof is the pending Lean `chi_eq_amount0` from `principal_price_deriv` (`lean4-spec/scratch/peer-from-scratchpad-chi.md`, C1–C2).
+Status: the identity `chi = principalDelta(a) − principalDelta(b)` is a consistency check of one formula against itself; the **independent** check is `∫∂²π dP ≈ −χ` with deltas taken by finite differences of the payoff (`deltaOfPayoff` on `CLMMPosition.fromChunk`), test "Prop 3 ∫∂²π dP". The proof is the pending Lean `chi_eq_amount0` from `principal_price_deriv` (peer scratch note `peer-from-scratchpad-chi.md`, not imported into this repo; C1–C2).
 
 ## 3. The form is exact per correction segment (Proposition 4)
 

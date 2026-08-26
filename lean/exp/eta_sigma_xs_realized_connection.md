@@ -68,7 +68,7 @@ project's workspace):
 
 ```bash
 # set ARISTOTLE_API_KEY in your shell first (do NOT paste inline)
-cd lean4-spec
+# from the repository root of cfmm-vol-markets-spec (lakefile.toml lives there)
 aristotle continue 88d393e7-ec4e-438f-a5fd-9f34aab1c2e5 \
   'Discharge the new sorry in exp/eta.lean: theorem \
    sigma_xs_eq_sharp_mul_sigma_realized in CFMM.Eta. If the bare \

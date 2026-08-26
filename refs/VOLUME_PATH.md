@@ -1,7 +1,7 @@
 # VolumePath — the GAMS prover for `mev_tax_model_one`
 
 > **Provenance.** Copied from
-> `cfmms-playground/cfmm-wt/gams/model/mev_tax_model_one/VOLUME_PATH.md`.
+> `cfmm-replicationPlank` (GAMS prover, stays there — not part of the TODO #37 import) `model/mev_tax_model_one/VOLUME_PATH.md`.
 > Sibling in this `refs/`: `MEV_TAX_MODEL_ONE_NOTES.md` (source spec),
 > `volume_path.gms` (prover).
 

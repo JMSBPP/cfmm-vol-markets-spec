@@ -70,7 +70,7 @@ trader's long-realized-variance exposure π.
 
 ```bash
 # set ARISTOTLE_API_KEY in your shell first (do NOT paste inline)
-cd lean4-spec
+# from the repository root of cfmm-vol-markets-spec (lakefile.toml lives there)
 aristotle continue 88d393e7-ec4e-438f-a5fd-9f34aab1c2e5 \
   'New sorry in exp/eta.lean: theorem pi_trader_half_small_trade_quadratic \
    in CFMM.Eta. Use slippage_residual to rewrite pi/(Δ^I)² = g(Δ^I)² with \

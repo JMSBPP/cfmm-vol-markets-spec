@@ -68,7 +68,7 @@ is asked):
 
 ```bash
 # set ARISTOTLE_API_KEY in your shell first (do NOT paste inline)
-cd lean4-spec
+# from the repository root of cfmm-vol-markets-spec (lakefile.toml lives there)
 aristotle submit 'Discharge the sorry in exp/eta.lean: theorem \
   pi_trader_half_strictly_increasing_in_Δi in namespace CFMM.Eta. \
   If global monotonicity over Δ^I > 0 fails, narrow with a precondition.' \

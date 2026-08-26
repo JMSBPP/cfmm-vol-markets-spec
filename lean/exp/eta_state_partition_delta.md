@@ -41,7 +41,7 @@ they separate — **tick spacing CANNOT replicate all effects of elasticity**.
 
 ```bash
 # set ARISTOTLE_API_KEY in your shell first (do NOT paste inline)
-cd lean4-spec
+# from the repository root of cfmm-vol-markets-spec (lakefile.toml lives there)
 aristotle submit "Discharge the two new sorries in exp/eta.lean: \
   sigmaVTS_invariant_under_eta_Δi_rescaling and \
   eta_Δi_independent_in_sigma_and_L_eta in namespace CFMM.Eta." \

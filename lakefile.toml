@@ -1,4 +1,7 @@
-name = "cfmmReplicationPlank"
+# cfmm-vol-markets-spec — Lean 4 layer of the spec reference for protocols building
+# volatility instruments on top of CFMMs. Notation anchor: notes/VOLATILITY_INSTRUMENTS.md.
+# Sources live under lean/ (srcDir); module names are exp.*, vol_markets.*, tao.*.
+name = "cfmmVolMarketsSpec"
 defaultTargets = ["exp", "vol_markets", "tao"]
 
 [[require]]
@@ -12,7 +15,7 @@ rev = "v4.28.0"
 
 [[lean_lib]]
 name = "exp"
-srcDir = "."
+srcDir = "lean"
 roots = ["exp.eta", "exp.CESLongVolPayoff", "exp.EtaReplication",
   "exp.EtaPartitionChange", "exp.EtaLiquidityPayoff",
   "exp.SocialChoiceParameters", "exp.MeanVarianceEta",
@@ -23,7 +26,7 @@ roots = ["exp.eta", "exp.CESLongVolPayoff", "exp.EtaReplication",
 
 [[lean_lib]]
 name = "vol_markets"
-srcDir = "."
+srcDir = "lean"
 roots = ["vol_markets.Main", "vol_markets.PosSpec", "vol_markets.Flow",
   "vol_markets.RiskDesign", "vol_markets.Panoptic", "vol_markets.Upsilon",
   "vol_markets.GeomProfile", "vol_markets.FeeSchedule",
@@ -47,6 +50,6 @@ roots = ["vol_markets.Main", "vol_markets.PosSpec", "vol_markets.Flow",
 
 [[lean_lib]]
 name = "tao"
-srcDir = "."
+srcDir = "lean"
 roots = ["tao.AMM", "tao.Injection", "tao.Halving", "tao.Rewards",
   "tao.GBM", "tao.APY", "tao.Model", "tao.Main"]

@@ -39,3 +39,27 @@ jobs:
       - name: stack test
         # Spec is a long IO script with intentional reuse; keep build pedantic.
         run: stack test
+
+  lean:
+    name: lake build
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install elan (toolchain pinned by ./lean-toolchain)
+        run: |
+          curl -sSf https://elan.lean-lang.org/elan-init.sh | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: lake build (no sorry/admit)
+        # Mathlib oleans via `lake exe cache get` only; .lake/packages (~7 GB) is deliberately
+        # NOT cached with actions/cache (10 GB repo cap would evict the Stack cache).
+        # The sorry-guard reads Lean's own compiler warning, so our modules must compile fresh.
+        run: |
+          lake exe cache get
+          out="$(lake build 2>&1)"; echo "$out"
+          if echo "$out" | grep -qE "declaration uses '(sorry|admit)'"; then
+            echo "::error::Lean proof uses sorry/admit"; exit 1
+          fi
+          echo "lean: lake build clean, no sorry/admit"

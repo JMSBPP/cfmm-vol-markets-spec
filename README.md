@@ -1,3 +1,15 @@
+# ROLE
+
+**cfmm-vol-markets-spec** is the spec reference for protocols building volatility instruments on top of CFMMs. Three layers, one notation contract:
+
+| layer | where | does |
+|---|---|---|
+| anchor | `notes/VOLATILITY_INSTRUMENTS.md`, `model/vol_markets/*_ADDENDUM.md`, `model/vol_markets/LEAN_TRACEABILITY.md` | fixes every glyph (Definitions / Theorems / Rules) and maps statements to proofs |
+| proofs | `lean/{vol_markets,exp,tao}/` — Lean 4 + Mathlib, `lake build` at the root | machine-checks the statements (Aristotle-proved; no `sorry`, no `axiom`) |
+| twin | `src/`, `test/`, `app/` — Haskell, `stack build && stack test` | computes, plots and regression-tests the proved statements with EVM fixed-point types |
+
+Rule: the twin cites theorem names (`LadderPrincipal.principal_inRange`, `GeomMixture.xiStar_argmin`, `ClmmIdentity.principal_price_second_deriv`, …) and never re-proves. Before introducing a symbol, grep the anchor — bare `κ` is taken; `κ_φ` is the curvature coordinate.
+
 # PRICE_GRID
 
 Fee-deformed sqrt-price quotes; the chunk bounds are identified with them: \(p_{1/2}^{(\mathrm{bid})} \equiv p_{1/2}^{(\mathrm{bid})}\), \(p_{1/2}^{(\mathrm{ask})} \equiv p_{1/2}^{(\mathrm{ask})}\), and bid/ask notation is used throughout.
@@ -420,7 +432,7 @@ The return parameter \(r_{\Delta Q_{\mathrm{arb}}}^{e}\) does not appear: it par
 
 ## REPLICATION_THEORY
 
-Arc: the continuum \(\Pi^\sigma_{\mathrm{opt}}\) (`VariancePortfolio`) is not EVM-realizable; the 4-leg Panoptic replica \(\hat\pi^\sigma\) (`VolatilityReplica`) is. The intended route was to tune a Bunni liquidity density so that the realizable position matches the continuum. The results below (Lean, `lean4-spec`, Aristotle 18/18, axiom-clean) replace that tuning by closed forms; what remains numerical is stated in Corollary 3.
+Arc: the continuum \(\Pi^\sigma_{\mathrm{opt}}\) (`VariancePortfolio`) is not EVM-realizable; the 4-leg Panoptic replica \(\hat\pi^\sigma\) (`VolatilityReplica`) is. The intended route was to tune a Bunni liquidity density so that the realizable position matches the continuum. The results below (Lean, `lean/vol_markets/` in this repo, Aristotle 18/18, axiom-clean) replace that tuning by closed forms; what remains numerical is stated in Corollary 3.
 
 **Standing notation.** \(\lambda = 1.0001\); ticks \(i\), spacing \(\Delta_i\); \(p_{1/2}(i) = \lambda^{i/2}\), \(P = p_{1/2}^2\). Chunk \(\mathcal{LC} = (i^-, i^+, L)\), \(a = p_{1/2}(i^-)\), \(b = p_{1/2}(i^+)\), \(k_{1/2} = \sqrt{ab}\), \(r = b/a\). Span \([i_L, i_U]\), \(S = i_U - i_L\), rungs \(i_x = i_L + x\Delta_i\), \(x \in [0,\iota)\), \(\iota = S/\Delta_i\), mint tick \(i^\star\), \(\iota_P = (i^\star - i_L)/\Delta_i\). \(\mathrm{Id}_i = (i, i+\Delta_i, L_{\mathrm{unit}})\).
 
@@ -521,7 +533,7 @@ Proof shape: rung edges geometric; primitive \(W(p,t)=\ln t + p^2/(2t^2)\); tele
 
 **Corollary 3 (residual numerical problem).** \(e^\sigma_W\) decomposes as truncation (in \(S\)) + tick discretization (Proposition 1) + binning/7-bit quantization (relative \(\le1/(2\,\mathrm{or}(\mathrm{leg}))\)). The optimizer reduces to a 1-D sweep in \(S\) (equivalently `VolRangeWidth`) with a quantization report; the remaining theory gap is norm C (reweighting by the pricing measure \(m\), #17–#18).
 
-**Implementation status.** T0 with continuous \(\ln\) (`lnQ96`, PR #64), T2 (`LegChunk`, `VolatilityReplica`, PR #57; token1 basis PR #62) and **T1** (`Payoffs.LadderPosition`: `ladderChunks`, `hedgedRung`, `ladderT1`, `ladderN1`, `cOfS`; regressions of Theorems 7(i), 9, 10 and Proposition 1 — T1/\(\mathcal N_1\) matches \(c(4000)\cdot\)logPortfolio to \(2.8\times10^{-6}\) at \(\Delta_i=10\); `outputs/Payoffs/Replica/panel-t1-vs-t0.png`) exist; \(\mathcal B\) (`Panoptic.Binning`: `ladderFromVolOrder`, `binToLegs`, `mintPlanFromLadder`, `quantizationReport`) and \(e^\sigma_W\) (`VolatilityReplica.replicaError`, `windowTicks`) exist — the optimizer is now a `VolRangeWidth` sweep (`outputs/Payoffs/Replica/panel-t2-vs-t1.png`, sweep printed by the app). Lean modules: `GeomProfile`, `GeomMixture`, `LadderPrincipal` (`develop` 8fdd875), `ClmmIdentity`, `LadderLimit` (`feat/lean4-spec` 36a560b, PR #46).
+**Implementation status.** T0 with continuous \(\ln\) (`lnQ96`, PR #64), T2 (`LegChunk`, `VolatilityReplica`, PR #57; token1 basis PR #62) and **T1** (`Payoffs.LadderPosition`: `ladderChunks`, `hedgedRung`, `ladderT1`, `ladderN1`, `cOfS`; regressions of Theorems 7(i), 9, 10 and Proposition 1 — T1/\(\mathcal N_1\) matches \(c(4000)\cdot\)logPortfolio to \(2.8\times10^{-6}\) at \(\Delta_i=10\); `outputs/Payoffs/Replica/panel-t1-vs-t0.png`) exist; \(\mathcal B\) (`Panoptic.Binning`: `ladderFromVolOrder`, `binToLegs`, `mintPlanFromLadder`, `quantizationReport`) and \(e^\sigma_W\) (`VolatilityReplica.replicaError`, `windowTicks`) exist — the optimizer is now a `VolRangeWidth` sweep (`outputs/Payoffs/Replica/panel-t2-vs-t1.png`, sweep printed by the app). Lean modules: `GeomProfile`, `GeomMixture`, `LadderPrincipal`, `ClmmIdentity`, `LadderLimit` (all under `lean/vol_markets/`, imported with history in TODO #37 — originally Plank `develop` 8fdd875 / `feat/lean4-spec` 36a560b, PR #46).
 
 ## CHANNEL_STATICS
 

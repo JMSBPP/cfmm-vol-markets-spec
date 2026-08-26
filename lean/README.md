@@ -1,16 +1,28 @@
 # `lean/` — Lean4 formalization layer
 
-Formal (machine-checked) counterpart of the `model/` markdown layer.
-Convention: markdown math/design specs live under `model/`; their Lean
-formalizations live here under the same family name.
+Proof layer of **cfmm-vol-markets-spec**, the spec reference for protocols
+building volatility instruments on top of CFMMs. Notation is fixed by
+`notes/VOLATILITY_INSTRUMENTS.md` (+ `model/vol_markets/*_ADDENDUM.md`);
+`model/vol_markets/LEAN_TRACEABILITY.md` maps anchor statements to theorems.
+The Haskell package (`src/`, `test/`) is the executable twin: it cites
+theorem names from here and never re-proves.
+
+Convention: markdown math/design specs live under `model/<family>/`; their
+Lean formalizations live here under the same family name. Imported with
+history from `cfmm-replicationPlank@fdc714e` (TODO #37, 2026-08-26); the
+`lakefile.toml`, `lake-manifest.json` and `lean-toolchain` sit at the repo
+root with `srcDir = "lean"`, so module names are unchanged.
 
 ## Build
 
 ```bash
-cd lean
-lake exe cache get   # multi-GB mathlib cache; network required
+# from the repository root (elan reads ./lean-toolchain)
+lake exe cache get   # Mathlib oleans; network required
 lake build           # builds all three libs: exp, vol_markets, tao
 ```
+
+CI runs the same two commands (`.github/workflows/ci.yml`, job `lake build`)
+and fails on Lean's own `declaration uses 'sorry'` / `'admit'` warning.
 
 Toolchain: `leanprover/lean4:v4.28.0` (matches the toolchain all canonical
 Aristotle runs were proven under). Mathlib: tag `v4.28.0`
@@ -26,7 +38,7 @@ together when on-chain proofs begin.
 | Lib | Modules | Proves | Docs (model layer) |
 |---|---|---|---|
 | `exp` | `eta`, `CESLongVolPayoff`, `EtaReplication`, `EtaPartitionChange`, `EtaLiquidityPayoff`, `SocialChoiceParameters`, `MeanVarianceEta`, `EtaIndexConsistency`, `MeanVarianceOptimization`, `ComparativeStatics`, `EnvelopeTheorem`, `DynamicsOptimization`, `BondingCurveCurvature`, `InventoryObserverDynamics` | η bonding-curve trading invariant, band optimization, FOC/comparative statics, mean-variance | `model/exp/`, `model/exp/aristotle/` |
-| `vol_markets` | `Main`, `PosSpec`, `Flow`, `RiskDesign` | admissible region, skew-tick position map, bang-bang collateral schedule (`Flow.schedule_isLeast`), risk-design (`p_risk = oracle/(1−h)`) | `model/vol_markets/` (consumed by the plank worktree) |
+| `vol_markets` | 42 modules — see the `roots` list in `lakefile.toml`. Hub: `VolInstrument` (Demeterfi `logPortfolio`); ladder track: `GeomProfile`, `GeomMixture`, `LadderPrincipal`, `ClmmIdentity`, `LadderLimit`; curvature/κ: `KappaCoordinate`, `KappaStructure`, `GeneralKappa`, `GammaGrid`, `GammaCoordinate`, `EtaCurvature`, `CurvatureTwo`; CES/φ family: `PhiCES`, `PhiMix`, `CanonicalCurve`, `CanonicalParam`, `ReparamSigma`, `CapponiEmbed`; MEV/JIT: `MevOptimization`, `MevJointProgram`, `TauMevAlgebra`, `JitLiquidity`, `TauJit`, `SandwichTol`, `FlairOptimization`; fees/payoffs: `FeeSchedule`, `FeeTree`, `PiPayoffs`, `PayoffGeometry`, `Upsilon`, `EllIntrinsic`, `MarketMaking`, `EndogenousMaturity`, `PricePullback`, `NuKappa`, `EtaTilde`; base: `Main`, `PosSpec`, `Flow`, `RiskDesign`, `Panoptic` | admissible region, position map, collateral schedule, risk design, geometric ladder replication of the log contract (A1–A6, P1–P3, P17), κ_φ curvature coordinate, CES family, MEV/JIT programs | `model/vol_markets/` |
 | `tao` | `AMM`, `Injection`, `Halving`, `Rewards`, `GBM`, `APY`, `Model`, `Main` | DTAO investment-market consistency (corrections C1–C3) | `model/tao/` |
 
 Aliases: `tao` ↔ DTAO/TaoCFMM. Modules `vol_markets.X` were named
@@ -39,11 +51,12 @@ Aliases: `tao` ↔ DTAO/TaoCFMM. Modules `vol_markets.X` were named
   Renaming is a conscious re-verification event, not a drive-by cleanup.
 - Cross-family imports are technically possible (shared `srcDir`) but
   **allowed only via explicit recorded decision**; Lake will not police the
-  boundary. Today there are none.
+  boundary. Recorded ones: `vol_markets.EtaCurvature` and
+  `vol_markets.PhiCES` import `exp.*`.
 
 ## Proof status
 
-**Zero code `sorry`s.** The three `grep -w sorry` hits are comment prose:
+**Zero code `sorry`s, zero `axiom`s.** Every `grep -w sorry` hit is comment prose or a refuted statement kept inside a `/- … -/` block (e.g. `SandwichTol`, `EllIntrinsic`, `MarketMaking`); CI enforces this via the compiler warning, not a source grep. Historical note on the first three hits:
 `exp/eta.lean:602` (describes the *absent* small-trade band-max theorem —
 future Aristotle work), `exp/DynamicsOptimization.lean:23` and
 `exp/BondingCurveCurvature.lean:26` ("no sorry" notes). Flagship theorems
@@ -51,7 +64,7 @@ depend only on `propext`, `Classical.choice`, `Quot.sound`.
 
 ## Provenance
 
-Canonical runs (tracked in `archive/`): `aristotleFOCThree.tar.gz`
+Canonical Aristotle runs (tarballs are **not** tracked in this repo — `lean/archive/` is gitignored; they remain in the `cfmm-replicationPlank` history): `aristotleFOCThree.tar.gz`
 (family exp, Jun 30 2026), `9804c2b5-a6a5-4a7f-a67b-89119b4b7bfb-aristotle.tar.gz`
 (family vol_markets, Jul 15 2026),
 `arsitotleTaoCFMM.tar.gz` (family tao, Jun 30 2026). All other archived

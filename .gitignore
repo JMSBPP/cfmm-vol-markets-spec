@@ -40,3 +40,10 @@ tmp/
 *~
 .DS_Store
 .#*
+
+# Lean / Lake (lakefile.toml at root, sources under lean/)
+.lake/
+.aristotle-*.tar.gz
+.aristotle-out/
+lean/archive/
+scratch/

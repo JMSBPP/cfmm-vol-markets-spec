@@ -82,7 +82,7 @@ theorem (the closed-form Bregman is manifestly analytic; the user-stated
 
 ```bash
 # set ARISTOTLE_API_KEY in your shell first (do NOT paste inline)
-cd lean4-spec
+# from the repository root of cfmm-vol-markets-spec (lakefile.toml lives there)
 aristotle continue 88d393e7-ec4e-438f-a5fd-9f34aab1c2e5 \
   'Discharge the sorry for theorem pi_eta_extends_half in the new \
    file exp/CESLongVolPayoff.lean. At η = 1/2 the Bregman exponents \
