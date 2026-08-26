@@ -6,6 +6,13 @@ on:
   push:
     branches: [main]
 
+# A force-push cancels the superseded run (the lake build alone is ~7 min); least-privilege token.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+
 jobs:
   stack:
     name: stack build && stack test
