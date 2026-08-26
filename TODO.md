@@ -194,6 +194,14 @@ r_{\Delta Q_{\mathrm{trans}}}^{e}
 
 Later (not opened yet): compose \(r_{\Delta Q}^{e}\) from #19+#21; wire into parametrized \(\pi^{\Delta Q}/\pi^{\phi}\); then unblock #6.
 
+### Lean spec migration
+
+37. **Bring the Lean work into this repo and disassociate from `cfmm-replicationPlank`; name it — repo becomes `cfmm-vol-markets-spec` (taxonomy: spec reference for protocols building vol-instruments on top of CFMMs)** — `feat` — `docs/superpowers/specs/2026-08-26-lean-migration-design.md`
+   - import `lean/{vol_markets,exp,tao}`, `notes/VOLATILITY_INSTRUMENTS.md`, `model/{exp,vol_markets,tao}` with history (filter-repo + merge commit); Lake files at root, `srcDir = "lean"`
+   - CI job `lake build` (sorry/admit guard) → second required check on `main`
+   - re-anchor citations to repo-relative paths; README **Role** section
+   - follow-ups: `chore/` rename PR; Plank-side deletion + archive `cfmm-lean4-spec`; dangling links `../refs/DemeterfietalVarianceSwaps.pdf`, `./tbd.md`, `./pos_spec.md`; Haskell package still `cfmm-scratchpad`
+
 ### Package / tree moves (README `//` notes; not done)
 
 10. **`Panoptic/` package** — `refactor` — [#6](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/6) — move `NId.hs`, `MintPlan.hs` out of `Payoffs/`

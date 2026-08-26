@@ -1,6 +1,6 @@
 
 > **Provenance.** Copied from
-> `cfmms-playground/cfmm-wt/gams/model/mev_tax_model_one/notes.md`.
+> `cfmm-replicationPlank` (GAMS prover, stays there — not part of the TODO #37 import) `model/mev_tax_model_one/notes.md`.
 > Companion: `VOLUME_PATH.md` / `volume_path.gms` in this `refs/`.
 
 Let \(n \in \mathbb{N}\) index state and output vectors and *fix* \(N \in \mathbb{N} > n\) be terminal state step:

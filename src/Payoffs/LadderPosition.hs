@@ -1,7 +1,7 @@
 {-# LANGUAGE PatternSynonyms #-}
 
 -- | T1 — the geometric liquidity ladder (README § REPLICATION_THEORY, Defs 4/6/7;
--- Lean lean4-spec LadderLimit / GeomMixture; TODO #28 item 2).
+-- Lean lean/vol_markets/LadderLimit.lean, GeomMixture.lean; TODO #28 item 2).
 --
 -- Rungs i_x = i_L + x·Δ_i, x ∈ [0, ι); L(i_x) = mulDiv(ΔQ_υ*, ℓ(ξ*, ι; x), Q96);
 -- hedged rung h_x(p) = H_x(p) − π^{ΔQ_X}(Id_{i_x}; p) with H_x = amount1 below i*,

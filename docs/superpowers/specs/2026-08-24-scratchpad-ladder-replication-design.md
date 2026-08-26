@@ -3,7 +3,7 @@
 **Date:** 2026-08-24 (v3 — two-reviewer pass ×2: Reality Checker + Solidity Smart Contract Engineer; residuals listed in §10)  
 **Status:** design  
 **TODO:** #28 (TODO numbering; not GitHub issue #28) — depends on #25 (`LegChunk`, `fourLegReplica`, PR #57), #27 (`CLMMPosition.fromChunk`, PR #55), #24/#35 (per-tick identity, PR #53)  
-**Notation anchor:** `~/cfmms-playground/cfmm-wt/lean4-spec/notes/VOLATILITY_INSTRUMENTS.md` (lines 192–235, 404–443, 1329–1334). New symbols relative to the anchor: \(\mathcal{B}\), \(W\), \(e^\sigma_W\), `ErrorX96`, \((\xi_P,\xi_C,\omega)\) — the latter is the concrete instance of the anchor's declared-but-undefined \(\theta_{\mathrm{LDF}}\).
+**Notation anchor:** `notes/VOLATILITY_INSTRUMENTS.md` (this repo since TODO #37; formerly the `cfmm-replicationPlank` worktree) (lines 192–235, 404–443, 1329–1334). New symbols relative to the anchor: \(\mathcal{B}\), \(W\), \(e^\sigma_W\), `ErrorX96`, \((\xi_P,\xi_C,\omega)\) — the latter is the concrete instance of the anchor's declared-but-undefined \(\theta_{\mathrm{LDF}}\).
 
 ## 1. Goal
 
@@ -170,7 +170,7 @@ Norm C (needs #17–#18); \(\lambda_{X/M}\) LVR claim (#51); porting `sqrtPriceX
 - The `asset = 1` basis makes all four notionals token1; if a future design wants token0-based sizing, \(\mathcal{B}\) must be re-derived with \(c_x = (b_x-a_x)Q96/(a_xb_x)\) for **all** legs — never mixed.
 - Panoptic `asset` semantics were read from `PanopticMath.sol:378–405` (vendored copy); re-verify against the pinned `lib/` before Item 0 lands.
 
-## 11. Lean status (lean4-spec `develop` 8fdd875, 2026-08-24; Aristotle 9/9, axiom-clean)
+## 11. Lean status (`lean/vol_markets/`, imported from Plank `develop` 8fdd875 on 2026-08-24; Aristotle 9/9, axiom-clean)
 
 | statement | Lean (vol_markets) | scratchpad twin |
 |---|---|---|
