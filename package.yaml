@@ -1,10 +1,10 @@
 name:                cfmm-scratchpad
 version:             0.1.0.0
-github:              "githubuser/cfmm-scratchpad"
+github:              "JMSBPP/cfmm-vol-markets-spec"
 license:             BSD-3-Clause
-author:              "Author name here"
-maintainer:          "example@example.com"
-copyright:           "2026 Author name here"
+author:              "JMSBPP"
+maintainer:          "juan.serranotmf@gmail.com"
+copyright:           "2026 JMSBPP"
 
 extra-source-files:
 - README.md
@@ -17,7 +17,7 @@ extra-source-files:
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
 # common to point users to the README.md file.
-description:         Please see the README on GitHub at <https://github.com/githubuser/cfmm-scratchpad#readme>
+description:         Haskell twin of cfmm-vol-markets-spec (spec reference for vol-instruments on CFMMs). See <https://github.com/JMSBPP/cfmm-vol-markets-spec#readme>
 
 dependencies:
 - base >= 4.7 && < 5

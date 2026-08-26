@@ -20,6 +20,10 @@
 
 ---
 
+37. ~~**Bring the Lean work into this repo and disassociate from `cfmm-replicationPlank`; name it — repo renamed `cfmm-vol-markets-spec`**~~ — `feat` — [#97](https://github.com/JMSBPP/cfmm-vol-markets-spec/issues/97) / [#98](https://github.com/JMSBPP/cfmm-vol-markets-spec/pull/98) ✓ merged (merge commit, history preserved) — `docs/superpowers/specs/2026-08-26-lean-migration-design.md`
+   - `lean/{vol_markets,exp,tao}`, `notes/VOLATILITY_INSTRUMENTS.md`, `model/{exp,vol_markets,tao}` imported with history; Lake files at root; CI `lake build` is a required check (7 min on ubuntu-latest)
+   - open follow-ups: Plank-side deletion of the moved paths + archive `JMSBPP/cfmm-lean4-spec`; dangling links `../refs/DemeterfietalVarianceSwaps.pdf`, `./tbd.md`, `./pos_spec.md`; Haskell package still `cfmm-scratchpad`
+
 ## Open
 
 **Role roadmap (read first):** `docs/superpowers/specs/2026-08-22-scratchpad-channel-roles-roadmap.md`  
@@ -193,14 +197,6 @@ r_{\Delta Q_{\mathrm{trans}}}^{e}
 36. **λ_{X/M} derived (Prop 4) + χ = amount0 (Prop 3) — `Payoffs.LvrRate`, ex-post panel, spec; closes the MODEL_CLOSURE §2 design claim (TODO #26 / #51)** — `feat` — [#51](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/51) / [#94](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/pull/94) ✓ merged
 
 Later (not opened yet): compose \(r_{\Delta Q}^{e}\) from #19+#21; wire into parametrized \(\pi^{\Delta Q}/\pi^{\phi}\); then unblock #6.
-
-### Lean spec migration
-
-37. **Bring the Lean work into this repo and disassociate from `cfmm-replicationPlank`; name it — repo becomes `cfmm-vol-markets-spec` (taxonomy: spec reference for protocols building vol-instruments on top of CFMMs)** — `feat` — `docs/superpowers/specs/2026-08-26-lean-migration-design.md`
-   - import `lean/{vol_markets,exp,tao}`, `notes/VOLATILITY_INSTRUMENTS.md`, `model/{exp,vol_markets,tao}` with history (filter-repo + merge commit); Lake files at root, `srcDir = "lean"`
-   - CI job `lake build` (sorry/admit guard) → second required check on `main`
-   - re-anchor citations to repo-relative paths; README **Role** section
-   - follow-ups: `chore/` rename PR; Plank-side deletion + archive `cfmm-lean4-spec`; dangling links `../refs/DemeterfietalVarianceSwaps.pdf`, `./tbd.md`, `./pos_spec.md`; Haskell package still `cfmm-scratchpad`
 
 ### Package / tree moves (README `//` notes; not done)
 
