@@ -21,7 +21,7 @@
 ---
 
 37. ~~**Bring the Lean work into this repo and disassociate from `cfmm-replicationPlank`; name it — repo renamed `cfmm-vol-markets-spec`**~~ — `feat` — [#97](https://github.com/JMSBPP/cfmm-vol-markets-spec/issues/97) / [#98](https://github.com/JMSBPP/cfmm-vol-markets-spec/pull/98) ✓ merged (merge commit, history preserved) — `docs/superpowers/specs/2026-08-26-lean-migration-design.md`
-   - `lean/{vol_markets,exp,tao}`, `notes/VOLATILITY_INSTRUMENTS.md`, `model/{exp,vol_markets,tao}` imported with history; Lake files at root; CI `lake build` is a required check (7 min on ubuntu-latest)
+   - `lean/{vol_markets,exp,tao}`, `notes/VOLATILITY_INSTRUMENTS.md`, `notes/agents/{exp,vol_markets,tao}` imported with history; Lake files at root; CI `lake build` is a required check (7 min on ubuntu-latest)
    - open follow-ups: Plank-side deletion of the moved paths + archive `JMSBPP/cfmm-lean4-spec`; dangling links `../refs/DemeterfietalVarianceSwaps.pdf`, `./tbd.md`, `./pos_spec.md`; Haskell package still `cfmm-scratchpad`
 
 ## Open

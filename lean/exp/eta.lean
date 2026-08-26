@@ -1,5 +1,5 @@
 /-
-  exp/eta.lean — formal counterpart to `model/exp/eta.md`.
+  exp/eta.lean — formal counterpart to `notes/agents/exp/eta.md`.
 
   Validity question (updated): can the η-pricing kernel be expressed as a
   product of TWO ½-pricing-kernel evaluations at η-dependent ticks,
@@ -84,7 +84,7 @@ theorem eta_split_kernel_identity
 
 /-! ## Section: are η and Δᵢ independent dimensions of the parameter space?
 
-    Open question forwarded from `model/exp/eta.md`: in the pricing kernel
+    Open question forwarded from `notes/agents/exp/eta.md`: in the pricing kernel
     P(i) = λ^{i · Δᵢ} and the KERNEL.md volatility term structure
     σ(η, ·) = δ · P^η = δ · λ^{η · i · Δᵢ}, the exponent on λ is the
     THREE-WAY PRODUCT  η · i · Δᵢ. So in σ ALONE, the parameters (η, Δᵢ)
@@ -155,7 +155,7 @@ theorem eta_Δi_independent_in_sigma_and_L_eta
 
 /-! ## Section: tick-spacing as a control knob for trader payoff (fixed η = 1/2)
 
-    Open question forwarded from `model/exp/eta.md`: at fixed η = 1/2, the
+    Open question forwarded from `notes/agents/exp/eta.md`: at fixed η = 1/2, the
     trader payoff is `π_{1/2}^trader = (P_{1/2}(i)·Δ^I − Δ^O)²` (squared
     slippage / variance-swap). With Δ^O the Plank-derived output, this
     becomes a function of Δᵢ via `P_{1/2}(i) = λ^{i·Δᵢ}`. What is the
@@ -226,7 +226,7 @@ noncomputable def sigma_xs (i_minus i_plus i_mu : Int) (Δi : ℝ) : ℝ :=
 
         σ_realized = (1/#) · Σ_{k=0}^{#-1} (i_- + k·Δᵢ − i_μ)².
 
-    User-posed (in `model/exp/eta.md`) as a candidate restatement of the
+    User-posed (in `notes/agents/exp/eta.md`) as a candidate restatement of the
     KERNEL.md cross-section vol-term-structure `sigma_xs`. -/
 noncomputable def sigma_realized (i_minus i_plus i_mu : Int) (Δi : ℝ) : ℝ :=
   let n := sharp i_minus i_plus Δi
@@ -353,7 +353,7 @@ lemma slippage_residual (lam Δi : ℝ) (i : Int) (L_bar Delta_I : ℝ)
     by adaptively choosing Δᵢ, the protocol monotonically moves π. Since
     `sigma_xs` is also a polynomial function of Δᵢ, both observables move
     together with Δᵢ — that is the formal connection between π and σ_{Δᵢ}
-    posed in `model/exp/eta.md`.
+    posed in `notes/agents/exp/eta.md`.
 
     NOTE (restriction on the statement). Global monotonicity over all
     Δᴵ > 0 does *not* hold: the squared-slippage residual simplifies to

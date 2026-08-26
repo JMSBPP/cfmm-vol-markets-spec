@@ -2,12 +2,12 @@
 
 Proof layer of **cfmm-vol-markets-spec**, the spec reference for protocols
 building volatility instruments on top of CFMMs. Notation is fixed by
-`notes/VOLATILITY_INSTRUMENTS.md` (+ `model/vol_markets/*_ADDENDUM.md`);
-`model/vol_markets/LEAN_TRACEABILITY.md` maps anchor statements to theorems.
+`notes/VOLATILITY_INSTRUMENTS.md` (+ `notes/agents/vol_markets/*_ADDENDUM.md`);
+`notes/agents/vol_markets/LEAN_TRACEABILITY.md` maps anchor statements to theorems.
 The Haskell package (`src/`, `test/`) is the executable twin: it cites
 theorem names from here and never re-proves.
 
-Convention: markdown math/design specs live under `model/<family>/`; their
+Convention: markdown math/design specs live under `notes/agents/<family>/` (was `model/` in the Plank repo); their
 Lean formalizations live here under the same family name. Imported with
 history from `cfmm-replicationPlank@fdc714e` (TODO #37, 2026-08-26); the
 `lakefile.toml`, `lake-manifest.json` and `lean-toolchain` sit at the repo
@@ -37,9 +37,9 @@ together when on-chain proofs begin.
 
 | Lib | Modules | Proves | Docs (model layer) |
 |---|---|---|---|
-| `exp` | `eta`, `CESLongVolPayoff`, `EtaReplication`, `EtaPartitionChange`, `EtaLiquidityPayoff`, `SocialChoiceParameters`, `MeanVarianceEta`, `EtaIndexConsistency`, `MeanVarianceOptimization`, `ComparativeStatics`, `EnvelopeTheorem`, `DynamicsOptimization`, `BondingCurveCurvature`, `InventoryObserverDynamics` | η bonding-curve trading invariant, band optimization, FOC/comparative statics, mean-variance | `model/exp/`, `model/exp/aristotle/` |
-| `vol_markets` | 42 modules — see the `roots` list in `lakefile.toml`. Hub: `VolInstrument` (Demeterfi `logPortfolio`); ladder track: `GeomProfile`, `GeomMixture`, `LadderPrincipal`, `ClmmIdentity`, `LadderLimit`; curvature/κ: `KappaCoordinate`, `KappaStructure`, `GeneralKappa`, `GammaGrid`, `GammaCoordinate`, `EtaCurvature`, `CurvatureTwo`; CES/φ family: `PhiCES`, `PhiMix`, `CanonicalCurve`, `CanonicalParam`, `ReparamSigma`, `CapponiEmbed`; MEV/JIT: `MevOptimization`, `MevJointProgram`, `TauMevAlgebra`, `JitLiquidity`, `TauJit`, `SandwichTol`, `FlairOptimization`; fees/payoffs: `FeeSchedule`, `FeeTree`, `PiPayoffs`, `PayoffGeometry`, `Upsilon`, `EllIntrinsic`, `MarketMaking`, `EndogenousMaturity`, `PricePullback`, `NuKappa`, `EtaTilde`; base: `Main`, `PosSpec`, `Flow`, `RiskDesign`, `Panoptic` | admissible region, position map, collateral schedule, risk design, geometric ladder replication of the log contract (A1–A6, P1–P3, P17), κ_φ curvature coordinate, CES family, MEV/JIT programs | `model/vol_markets/` |
-| `tao` | `AMM`, `Injection`, `Halving`, `Rewards`, `GBM`, `APY`, `Model`, `Main` | DTAO investment-market consistency (corrections C1–C3) | `model/tao/` |
+| `exp` | `eta`, `CESLongVolPayoff`, `EtaReplication`, `EtaPartitionChange`, `EtaLiquidityPayoff`, `SocialChoiceParameters`, `MeanVarianceEta`, `EtaIndexConsistency`, `MeanVarianceOptimization`, `ComparativeStatics`, `EnvelopeTheorem`, `DynamicsOptimization`, `BondingCurveCurvature`, `InventoryObserverDynamics` | η bonding-curve trading invariant, band optimization, FOC/comparative statics, mean-variance | `notes/agents/exp/`, `notes/agents/exp/aristotle/` |
+| `vol_markets` | 42 modules — see the `roots` list in `lakefile.toml`. Hub: `VolInstrument` (Demeterfi `logPortfolio`); ladder track: `GeomProfile`, `GeomMixture`, `LadderPrincipal`, `ClmmIdentity`, `LadderLimit`; curvature/κ: `KappaCoordinate`, `KappaStructure`, `GeneralKappa`, `GammaGrid`, `GammaCoordinate`, `EtaCurvature`, `CurvatureTwo`; CES/φ family: `PhiCES`, `PhiMix`, `CanonicalCurve`, `CanonicalParam`, `ReparamSigma`, `CapponiEmbed`; MEV/JIT: `MevOptimization`, `MevJointProgram`, `TauMevAlgebra`, `JitLiquidity`, `TauJit`, `SandwichTol`, `FlairOptimization`; fees/payoffs: `FeeSchedule`, `FeeTree`, `PiPayoffs`, `PayoffGeometry`, `Upsilon`, `EllIntrinsic`, `MarketMaking`, `EndogenousMaturity`, `PricePullback`, `NuKappa`, `EtaTilde`; base: `Main`, `PosSpec`, `Flow`, `RiskDesign`, `Panoptic` | admissible region, position map, collateral schedule, risk design, geometric ladder replication of the log contract (A1–A6, P1–P3, P17), κ_φ curvature coordinate, CES family, MEV/JIT programs | `notes/agents/vol_markets/` |
+| `tao` | `AMM`, `Injection`, `Halving`, `Rewards`, `GBM`, `APY`, `Model`, `Main` | DTAO investment-market consistency (corrections C1–C3) | `notes/agents/tao/` |
 
 Aliases: `tao` ↔ DTAO/TaoCFMM. Modules `vol_markets.X` were named
 `RequestProject.X` inside Aristotle runs — read run summaries with that map.

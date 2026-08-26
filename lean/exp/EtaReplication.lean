@@ -1,6 +1,6 @@
 /-
   exp/EtaReplication.lean — formal counterpart to the η̄-pricing /
-  custom-payoff / replication block of `model/exp/eta.md`.
+  custom-payoff / replication block of `notes/agents/exp/eta.md`.
 
   This file formalizes the structures introduced in the latest spec note:
 

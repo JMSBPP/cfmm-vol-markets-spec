@@ -10,7 +10,7 @@ This repository is the **spec reference for protocols building volatility instru
 
 | layer | artifact | what it does |
 |---|---|---|
-| anchor | `notes/VOLATILITY_INSTRUMENTS.md` + `model/vol_markets/*_ADDENDUM.md` | fixes every glyph (Definitions / Theorems / Rules); `LEAN_TRACEABILITY.md` maps statements to proofs |
+| anchor | `notes/VOLATILITY_INSTRUMENTS.md` + `notes/agents/vol_markets/*_ADDENDUM.md` | fixes every glyph (Definitions / Theorems / Rules); `LEAN_TRACEABILITY.md` maps statements to proofs |
 | proofs | `lean/{vol_markets,exp,tao}/` (Lean 4 + Mathlib, Aristotle-proved) | machine-checks the statements; no `sorry`, no `axiom` |
 | twin | `src/`, `test/` (Haskell) | computes, plots, and regression-tests the proved statements numerically |
 
@@ -23,7 +23,7 @@ Until now the anchor and the proofs lived in a git worktree of `JMSBPP/cfmm-repl
 ## 3. Decisions
 
 - All three Lean families move (`vol_markets` 42 modules, `exp` 14, `tao` 8) — zero refactor.
-- Anchor + `model/{exp,vol_markets,tao}` move; `model/mev_tax_model_one` and `model/BUILD.md` stay in Plank (they are its GAMS prover).
+- Anchor + `notes/agents/{exp,vol_markets,tao}` move; `model/mev_tax_model_one` and `model/BUILD.md` stay in Plank (they are its GAMS prover).
 - History preserved: `git filter-repo` (paths above; `*.tar.gz`/`*.pdf` stripped) then `git merge --allow-unrelated-histories --no-ff`. Result: 113 commits, 109 files, ~640 KB pack. SHAs are rewritten; the old→new commit map is attached to the PR so "integrated 36a560b"-style citations in the imported docs stay traceable.
 - **The migration PR is merged with a merge commit** (`gh pr merge --merge`), never squash/rebase.
 - Lake files live at the repo root (`lakefile.toml`, `lake-manifest.json`, `lean-toolchain`) beside `package.yaml`; sources stay under `lean/` via `srcDir = "lean"`; package name `cfmmVolMarketsSpec`; module names unchanged.
@@ -36,7 +36,7 @@ Until now the anchor and the proofs lived in a git worktree of `JMSBPP/cfmm-repl
 lakefile.toml  lake-manifest.json  lean-toolchain
 lean/{exp,vol_markets,tao}/  lean/README.md
 notes/VOLATILITY_INSTRUMENTS.md
-model/{exp,vol_markets,tao}/
+notes/agents/{exp,vol_markets,tao}/
 package.yaml stack.yaml src/ test/ app/        (untouched)
 .github/workflows/ci.yml                        (+ lake build)
 ```

@@ -4,7 +4,7 @@
 
 | layer | where | does |
 |---|---|---|
-| anchor | `notes/VOLATILITY_INSTRUMENTS.md`, `model/vol_markets/*_ADDENDUM.md`, `model/vol_markets/LEAN_TRACEABILITY.md` | fixes every glyph (Definitions / Theorems / Rules) and maps statements to proofs |
+| anchor | `notes/VOLATILITY_INSTRUMENTS.md`, `notes/agents/vol_markets/*_ADDENDUM.md`, `notes/agents/vol_markets/LEAN_TRACEABILITY.md` | fixes every glyph (Definitions / Theorems / Rules) and maps statements to proofs |
 | proofs | `lean/{vol_markets,exp,tao}/` — Lean 4 + Mathlib, `lake build` at the root | machine-checks the statements (Aristotle-proved; no `sorry`, no `axiom`) |
 | twin | `src/`, `test/`, `app/` — Haskell, `stack build && stack test` | computes, plots and regression-tests the proved statements with EVM fixed-point types |
 

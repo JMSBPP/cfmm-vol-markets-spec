@@ -31,7 +31,7 @@ We parametrize the schedule as the sigmoid family
 
 with parameters `θ = (f_min, f_max, σ̄_f, s_f)`.
 
-Notation (aligned with `model/vol_markets/*.md`; see `LEAN_TRACEABILITY.md`):
+Notation (aligned with `notes/agents/vol_markets/*.md`; see `LEAN_TRACEABILITY.md`):
 `f_min`/`f_max` (`feeMin`/`feeMax`) are the fee floor/plateau — the paper's
 `η¹` bounds, renamed because `η` is reserved project-wide for the pricing
 kernel (`exp/eta`); the paper's CEX fee `η⁰` is `cexFee`.  `σ̄_f`
