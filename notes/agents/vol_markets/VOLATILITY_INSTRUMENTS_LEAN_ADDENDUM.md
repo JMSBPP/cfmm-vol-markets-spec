@@ -4,8 +4,8 @@
 > `../cfmm-wt/plank/notes/VOLATILITY_INSTRUMENTS.md` per user approval
 > (todo.md `## LEAN4 - MATH`); block H left as an in-doc FLAG pending the
 > author's sign decision. Committing the plank file is the plank agent's.
-> Every block cites the machine-checked lemma (`lean/vol_markets/*`, mirrored at
-> `JMSBPP/cfmm-lean4-spec`). Minimal prose; each block is insert-ready LaTeX.
+> Every block cites the machine-checked lemma (`lean/vol_markets/*` in this repo;
+> the former `JMSBPP/cfmm-lean4-spec` mirror was deleted 2026-08-26). Minimal prose; each block is insert-ready LaTeX.
 
 ## A. [CORRECTION] Amount nonnegativity — insert after the `ΔQ_M^L, ΔQ_X^L` display
 

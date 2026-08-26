@@ -5,7 +5,7 @@
 Its claim-by-claim map is §7. The supporting reference documents are the
 markdowns in this directory. This file maps
 every claim in them to the machine-checked Lean layer
-(`lean/vol_markets/*.lean`, mirrored at `JMSBPP/cfmm-lean4-spec`), and fixes
+(`lean/vol_markets/*.lean` in this repo; the former `JMSBPP/cfmm-lean4-spec` mirror was deleted 2026-08-26), and fixes
 the shared notation. Statuses: **PROVEN** (sorry-free, axiom-clean:
 `propext`/`Classical.choice`/`Quot.sound` only), **CORRECTED** (doc claim was
 wrong; the true statement is proven), **REFUTED** (counterexample proven),
@@ -334,7 +334,9 @@ failure and none may be quietly dropped when this layer is cited downstream.
 | 8 | **`η⋆` is σ-INDEXED; η is a design constant** | The fee entering `etaStar` is a fixed scalar, whereas this document's fee is `multiFee(σ)` and `φ̄` is only its FLOOR. The Phase-11 corner therefore induces `η⋆(σ)` pointwise while the grid exponent is chosen once at pool creation. Reconciling the two is not addressed — and a beforeSwap/afterSwap hook cannot vary η | **OPEN** |
 | 9 | **The strict single-peakedness boundary** | Under `cOne ≤ 0` the LP payoff is flat in `κ_φ` and `etaStar` is not an argmax at all (`liquidity_freeze_minimal`, `lpPayoff_isMaxOn` are stated under `0 < cOne`); the sign of `c₁` at the fee corner is pinned by nothing in this layer | **OPEN** |
 
-## 8. `VOL ORDER COMPLETION — ENDOGENOUS MATURITY` (doc block, issue cfmm-lean4-spec#1 → `EndogenousMaturity.lean`)
+## 8. `VOL ORDER COMPLETION — ENDOGENOUS MATURITY` (doc block → `lean/vol_markets/EndogenousMaturity.lean`)
+
+> Provenance: formalized from the former mirror's issue `cfmm-lean4-spec#1` (VolOrder v2 delegation, 2026-07-30). That repo was deleted on 2026-08-26 and the issue is unreachable; the doc block was never merged into the anchor, so what survives of it is the claim table below (every claim ↔ theorem), the Aristotle run summary in `ARISTOTLE_SUMMARY.md` (run 128b24ae, task 311f81e5), and the module docstring of `EndogenousMaturity.lean`.
 
 Notation: `ΔQ_v★` → `dQvStar`; `t★` → `tStar`; `N_σ` → `Nσ`; `ΔM_req` → `dMReq`.
 

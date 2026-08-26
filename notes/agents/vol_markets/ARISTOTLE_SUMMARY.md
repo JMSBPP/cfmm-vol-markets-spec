@@ -142,7 +142,7 @@ untouched).
 - Docstring caveats recorded: traded-volume reading of `dp`; no demand
   elasticity in this functional (volume trade-off = FeeSchedule layer).
 
-# Summary of changes for run 128b24ae (task 311f81e5) — issue cfmm-lean4-spec#1
+# Summary of changes for run 128b24ae (task 311f81e5) — former mirror issue cfmm-lean4-spec#1 (repo deleted 2026-08-26; see LEAN_TRACEABILITY.md §8)
 Aristotle formalized the staged doc block `## VOL ORDER COMPLETION —
 ENDOGENOUS MATURITY` (VolOrder v2 delegation) into
 `vol_markets/EndogenousMaturity.lean` (331 lines, 8 defs + 34 theorems,
