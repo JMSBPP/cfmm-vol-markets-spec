@@ -20,7 +20,7 @@ Assign a conventional type from the item’s nature:
 
 ```bash
 git checkout main
-git pull
+git pull upstream main          # canonical = d2p-finance/cfmm-vol-markets-spec; origin = JMSBPP fork
 git checkout -b <type>/todo-<N>-<short-slug>
 ```
 
@@ -31,7 +31,7 @@ Examples: `feat/todo-5-param-fee-capture`, `refactor/todo-10-panoptic-package`.
 Write the TODO item body into the issue (title + full open-item text). Label or title-prefix with the type, e.g. `[feat] TODO #5: …`.
 
 ```bash
-gh issue create --title "[<type>] TODO #<N>: <short title>" --body "$(cat <<'EOF'
+gh issue create --repo d2p-finance/cfmm-vol-markets-spec --title "[<type>] TODO #<N>: <short title>" --body "$(cat <<'EOF'
 ## TODO.md item #<N>
 
 <paste open item>
@@ -43,7 +43,9 @@ EOF
 )"
 ```
 
-## 4. Open a PR (branch → `main`)
+## 4. Open a PR (fork branch → canonical `main`)
+
+Never push to `d2p-finance/*` directly: push the branch to the `JMSBPP` fork (`origin`) and open the PR against the canonical repo (`upstream`).
 
 Commit work (or a tracking stub if implementation is not started). Push and open PR targeting `main`.
 
@@ -61,8 +63,8 @@ Solves #<ISSUE_NUMBER>
 ```
 
 ```bash
-git push -u origin HEAD
-gh pr create --base main --title "<type>(todo-<N>): <short title>" --body "…"
+git push -u origin HEAD            # to the JMSBPP fork
+gh pr create --repo d2p-finance/cfmm-vol-markets-spec --base main --head JMSBPP:$(git branch --show-current) --title "<type>(todo-<N>): <short title>" --body "…"
 ```
 
 ## 5. Cross-comments (required)

@@ -11,6 +11,12 @@
 
 Rule: the twin cites theorem names (`LadderPrincipal.principal_inRange`, `GeomMixture.xiStar_argmin`, `ClmmIdentity.principal_price_second_deriv`, …) and never re-proves. Before introducing a symbol, grep the anchor — bare `κ` is taken; `κ_φ` is the curvature coordinate.
 
+## Contributing / Workflow
+
+**Fork → PR workflow (d2p-finance canonical):** the `d2p-finance` org owns the CANONICAL/upstream repos; the `JMSBPP/*` repos are the develop FORKS. ALL changes are made on the JMSBPP/* forks and reach the d2p-finance/* canonical repos ONLY through pull requests (fork → upstream). Never commit or push directly to a d2p-finance canonical repo — open a PR from the JMSBPP fork.
+
+For this repo: `origin` = `JMSBPP/cfmm-vol-markets-spec` (fork), `upstream` = `d2p-finance/cfmm-vol-markets-spec` (canonical). Branch from `upstream/main`, push to `origin`, open the PR against `d2p-finance:main`; `main` there requires the `stack build && stack test` and `lake build` checks. Issues live on the canonical repo.
+
 # PRICE_GRID
 
 Fee-deformed sqrt-price quotes; the chunk bounds are identified with them: \(p_{1/2}^{(\mathrm{bid})} \equiv p_{1/2}^{(\mathrm{bid})}\), \(p_{1/2}^{(\mathrm{ask})} \equiv p_{1/2}^{(\mathrm{ask})}\), and bid/ask notation is used throughout.
