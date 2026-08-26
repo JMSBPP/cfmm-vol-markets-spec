@@ -6,9 +6,9 @@ cabal-version: 2.2
 
 name:           cfmm-scratchpad
 version:        0.1.0.0
-description:    Haskell twin of cfmm-vol-markets-spec (spec reference for vol-instruments on CFMMs). See <https://github.com/JMSBPP/cfmm-vol-markets-spec#readme>
-homepage:       https://github.com/JMSBPP/cfmm-vol-markets-spec#readme
-bug-reports:    https://github.com/JMSBPP/cfmm-vol-markets-spec/issues
+description:    Haskell twin of cfmm-vol-markets-spec (spec reference for vol-instruments on CFMMs). See <https://github.com/d2p-finance/cfmm-vol-markets-spec#readme>
+homepage:       https://github.com/d2p-finance/cfmm-vol-markets-spec#readme
+bug-reports:    https://github.com/d2p-finance/cfmm-vol-markets-spec/issues
 author:         JMSBPP
 maintainer:     juan.serranotmf@gmail.com
 copyright:      2026 JMSBPP
@@ -21,7 +21,7 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/JMSBPP/cfmm-vol-markets-spec
+  location: https://github.com/d2p-finance/cfmm-vol-markets-spec
 
 library
   exposed-modules:

@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - Working directory: `/home/jmsbpp/learning/cfmm-theory/scratchpad`
-- Branch: `feat/todo-21-expected-volatility-slice1` (issue [#31](https://github.com/JMSBPP/cfmm-volInstrumentsFormal/issues/31))
+- Branch: `feat/todo-21-expected-volatility-slice1` (issue [#31](https://github.com/d2p-finance/cfmm-vol-markets-spec/issues/31))
 - σ^e and σ_X use **same integer units** as `VolatilityAverage` — not FeePips, not u88 sqrt trick
 - `OracleWindowHorizon` Slice 1 = **identity stub** from realized average (documented non-𝔼^Q placeholder)
 - `TenorHorizon` Slice 1 = **uniform** path — `averageVolatility` on `InterestPriceMap` tick ladder
