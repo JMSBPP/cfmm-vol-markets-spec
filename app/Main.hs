@@ -12,19 +12,16 @@ import OptionRatio (OptionRatio(..))
 import Plotting.PlotUtils (Panel(..), writePanel)
 import Pricing.PriceDeformation
   ( EtaX96(..)
-  , deformationLayout
-  , plotDeformation
-  , plotVarSigmaEta
   , pattern BASE_ETA
   )
+
 import Pricing.Stremia
   ( defaultFeePipsGrid
   , mkFeePips
   , nakedAskQ96
   , nakedBidQ96
-  , plotFeeRateVsSqrt
-  , plotFeeVsReturn
   )
+
 import Payoffs.Linear (linearPayoff)
 import Plotting.PlotSqrt (PlotY(..), plotSqrtFunction, sqrtFunctionLayout)
 import Plotting.PlotInterest
@@ -48,24 +45,41 @@ import Pricing.FeeStructure (mkFeeStructure)
 import Pricing.InterestPriceMap (mkInterestPriceMap)
 import Pricing.InterestSqrt (interestSqrtX96, mkInterestTick)
 import qualified Payoffs.Payoff as Payoff
-import Greeks.Delta (deltaLayout)
-import Greeks.Gamma (gammaLayout, kristensenGammaLayoutVsGamma)
-import Payoffs.CLMMPosition (chunkFromStrike, rhsPayoffLayout, scaledVsUnitLayout)
+
+import Payoffs.CLMMPosition
+  ( chunkFromStrike
+  )
 import Payoffs.Forward (AtmForward(..))
 import Payoffs.Log (nakedLogQ96, nakedLogTickQ96)
 import Panoptic.NId (MintPlan(..), fourLegSkeleton, mkNId, volOrderToMintPlan)
-import Payoffs.ReplicaDelta (replicaDeltaLayout)
+
 import Payoffs.HolderPath (Regime(..), arbShare, composedPath)
-import Payoffs.LvrRate (lvrRateLayout, lvrRateOn, naiveBandTicks, rationalBandTicks)
-import Pricing.AdaptiveStremia (adaptiveFeeLayout, initialFeeConfiguration)
-import Payoffs.VolatilityReplica (ErrorX96(..), legsLayout, replicaError, replicaLayout, windowTicks)
+import Payoffs.LvrRate
+  ( lvrRateOn
+  , naiveBandTicks
+  , rationalBandTicks
+  )
+import Pricing.AdaptiveStremia
+  ( initialFeeConfiguration
+  )
+import Payoffs.VolatilityReplica
+  ( ErrorX96(..)
+  , replicaError
+  , windowTicks
+  )
 import Panoptic.Binning (binToLegs, ladderFromVolOrder, mintPlanFromLadder, quantizationReport)
 import Payoffs.LadderPosition (ladderN1, ladderT1)
 import Volatility.VolOrder (VolOrder, mkVolOrder, mkVolRangeWidth, mkVolSkew)
 import Payoffs.VolatilityReplica (fourLegReplica)
 import Panoptic.NId (volOrderToTokenId)
 import qualified Payoffs.PathAccrual as PA
-import Payoffs.LadderPosition (cOfS, ladderDensityLayout, ladderFromSpan, ladderLayout, ladderReturnQ96, logPortfolioQ96)
+import qualified Plot.Payoffs.PathAccrual as PA
+import Payoffs.LadderPosition
+  ( cOfS
+  , ladderFromSpan
+  , ladderReturnQ96
+  , logPortfolioQ96
+  )
 import Volatility.VolOrder (fixtureSymmetricVolOrder)
 import TargetVega (mkTargetVega, positionSizeForTargetVega)
 import Liquidity.LiquidityChunk
@@ -74,25 +88,17 @@ import Liquidity.LiquidityChunk
   , chunkTickUpper
   , createChunk
   )
-import Payoffs.VariancePortfolio
-  ( variancePortfolioLayout
-  , variancePortfolioLayoutVsGamma
-  , variancePortfolioLayoutVsXi
-  )
+
 import Payoffs.VolatilityCall
   ( mkVolStrike
-  , volatilityCallLayout
-  , volatilityCallLayoutVsSqrtPrice
-  , volatilityCallLayoutVsXi
   )
+
 import Liquidity.LiquidityGrid
-  ( liquidityLayout
-  , liquidityLayoutVsGamma
-  , liquidityLayoutVsSqrtPrice
-  , mkLadderResolution
+  ( mkLadderResolution
   , unXiX96
   , xiStar
   )
+
 import SqrtGrid
   ( SqrtPlot(..)
   , SqrtPriceX96(..)
@@ -106,7 +112,9 @@ import State
   ( pattern SQRT_PRICE_1_4
   , pattern SQRT_PRICE_4_1
   )
-import TickPath (mkTickPath, tickPathLayout)
+import TickPath
+  ( mkTickPath
+  )
 import Volatility.CevField
   ( cevLayoutVsGamma
   , cevLayoutVsSqrtPrice
@@ -114,6 +122,20 @@ import Volatility.CevField
   )
 import Volatility.VolTermStructure (BarL(..), FlowVol(..), cevFromPhi)
 import StrikeX96 (strike)
+import Plot.Greeks.Delta (deltaLayout)
+import Plot.Greeks.Gamma (gammaLayout, kristensenGammaLayoutVsGamma)
+import Plot.Liquidity.LiquidityGrid (liquidityLayout, liquidityLayoutVsGamma, liquidityLayoutVsSqrtPrice)
+import Plot.Payoffs.CLMMPosition (rhsPayoffLayout, scaledVsUnitLayout)
+import Plot.Payoffs.LadderPosition (ladderDensityLayout, ladderLayout)
+import Plot.Payoffs.LvrRate (lvrRateLayout)
+import Plot.Payoffs.ReplicaDelta (replicaDeltaLayout)
+import Plot.Payoffs.VariancePortfolio (variancePortfolioLayout, variancePortfolioLayoutVsGamma, variancePortfolioLayoutVsXi)
+import Plot.Payoffs.VolatilityCall (volatilityCallLayout, volatilityCallLayoutVsSqrtPrice, volatilityCallLayoutVsXi)
+import Plot.Payoffs.VolatilityReplica (legsLayout, replicaLayout)
+import Plot.Pricing.AdaptiveStremia (adaptiveFeeLayout)
+import Plot.Pricing.PriceDeformation (deformationLayout, plotDeformation, plotVarSigmaEta)
+import Plot.Pricing.Stremia (plotFeeRateVsSqrt, plotFeeVsReturn)
+import Plot.TickPath (tickPathLayout)
 
 -- Avoid DuplicateRecordFields update/selector ambiguity with InterestPlot.
 retitleSqrt :: SqrtPlot -> String -> String -> SqrtPlot

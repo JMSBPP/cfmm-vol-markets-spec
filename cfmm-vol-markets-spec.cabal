@@ -1,4 +1,4 @@
-cabal-version: 2.2
+cabal-version: 3.0
 
 -- This file has been generated from package.yaml by hpack version 0.39.6.
 --
@@ -61,9 +61,6 @@ library
       Payoffs.VariancePortfolio
       Payoffs.VolatilityCall
       Payoffs.VolatilityReplica
-      Plotting.PlotInterest
-      Plotting.PlotSqrt
-      Plotting.PlotUtils
       Pricing.AdaptiveStremia
       Pricing.ExpectedReturn
       Pricing.FeeStructure
@@ -80,7 +77,6 @@ library
       Trading.KappaCoordinate
       Trading.PriceImpact
       Trading.Quote
-      Volatility.CevField
       Volatility.ExpectedVolatility
       Volatility.ImpliedVolatility
       Volatility.TickVolatility
@@ -95,9 +91,47 @@ library
       src
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
+      base >=4.7 && <5
+    , mwc-random
+    , vector
+  default-language: Haskell2010
+
+library plot
+  exposed-modules:
+      Plot.Greeks.Delta
+      Plot.Greeks.Gamma
+      Plot.Liquidity.LiquidityGrid
+      Plot.Payoffs.CashSecuredPut
+      Plot.Payoffs.CLMMPosition
+      Plot.Payoffs.CoveredCall
+      Plot.Payoffs.LadderPosition
+      Plot.Payoffs.LvrRate
+      Plot.Payoffs.PathAccrual
+      Plot.Payoffs.RangeAccrualNote
+      Plot.Payoffs.ReplicaDelta
+      Plot.Payoffs.VariancePortfolio
+      Plot.Payoffs.VolatilityCall
+      Plot.Payoffs.VolatilityReplica
+      Plot.Pricing.AdaptiveStremia
+      Plot.Pricing.PriceDeformation
+      Plot.Pricing.Stremia
+      Plot.TickPath
+      Plotting.PlotInterest
+      Plotting.PlotSqrt
+      Plotting.PlotUtils
+      Volatility.CevField
+  other-modules:
+      Paths_cfmm_vol_markets_spec
+  autogen-modules:
+      Paths_cfmm_vol_markets_spec
+  hs-source-dirs:
+      plot
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  build-depends:
       Chart
     , Chart-cairo
     , base >=4.7 && <5
+    , cfmm-vol-markets-spec
     , colour
     , mwc-random
     , vector
@@ -113,11 +147,9 @@ executable cfmm-vol-markets-spec-exe
       app
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      Chart
-    , Chart-cairo
-    , base >=4.7 && <5
+      base >=4.7 && <5
     , cfmm-vol-markets-spec
-    , colour
+    , cfmm-vol-markets-spec:plot
     , directory
     , mwc-random
     , vector
@@ -135,10 +167,9 @@ test-suite cfmm-vol-markets-spec-test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N -Wno-name-shadowing -Wno-type-defaults -Wno-gadt-mono-local-binds
   build-depends:
       Chart
-    , Chart-cairo
     , base >=4.7 && <5
     , cfmm-vol-markets-spec
-    , colour
+    , cfmm-vol-markets-spec:plot
     , mwc-random
     , vector
   default-language: Haskell2010

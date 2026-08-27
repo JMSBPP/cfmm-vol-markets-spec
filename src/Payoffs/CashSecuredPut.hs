@@ -2,7 +2,6 @@ module Payoffs.CashSecuredPut
   ( payoff
   , cashSecuredPut
   , strikeDerivative
-  , plotPayoff
   ) where
 
 import qualified Payoffs.Payoff as Payoff
@@ -11,9 +10,7 @@ import qualified StrikeX96 as Strike
 import SqrtGrid
   ( SqrtPriceX96(..)
   , PayoffX96(..)
-  , SqrtPlot
   )
-import Plotting.PlotSqrt (PlotY(..), plotSqrtFunction)
 
 payoff
   :: SqrtPriceX96
@@ -47,23 +44,3 @@ cashSecuredPut
   -> Payoff.Payoff SqrtPriceX96
 cashSecuredPut strikePrice =
   Payoff.Payoff (`payoff` strikePrice)
-
-plotPayoff
-  :: FilePath
-  -> SqrtPlot
-  -> Strike.StrikeX96
-  -> Strike.StrikeVariation
-  -> IO ()
-plotPayoff path config strikePrice variation =
-  let
-    originalPayoff = cashSecuredPut strikePrice
-    variedStrike   = Strike.applyStrikeVariation strikePrice variation
-    variedPayoff   = cashSecuredPut variedStrike
-  in
-    plotSqrtFunction
-      path
-      config
-      PayoffY
-      [ Payoff.runPayoff originalPayoff
-      , Payoff.runPayoff variedPayoff
-      ]

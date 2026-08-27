@@ -19,11 +19,10 @@ extra-source-files:
 # common to point users to the README.md file.
 description:         Haskell twin of cfmm-vol-markets-spec (spec reference for vol-instruments on CFMMs). See <https://github.com/d2p-finance/cfmm-vol-markets-spec#readme>
 
+# Package-level deps are the PURE numeric core only.  Chart/Chart-cairo/colour
+# belong to the `plot` internal library alone -- see the note on `library:` below.
 dependencies:
 - base >= 4.7 && < 5
-- Chart
-- Chart-cairo
-- colour
 - mwc-random
 - vector
 
@@ -38,8 +37,22 @@ ghc-options:
 - -Wpartial-fields
 - -Wredundant-constraints
 
+# The public library is plot-free: depending on `cfmm-vol-markets-spec` must not
+# drag in cairo/pango.  Downstream consumers (e.g. evm-spec-bridge, which reaches
+# this package for bit-packing and tick math over JSON-RPC) compile none of the
+# plotting stack.  Chart lives in the `plot` internal library, which is visible
+# to this package's own exe and test suite but not to `build-depends` outside it.
 library:
   source-dirs: src
+
+internal-libraries:
+  plot:
+    source-dirs: plot
+    dependencies:
+    - cfmm-vol-markets-spec
+    - Chart
+    - Chart-cairo
+    - colour
 
 executables:
   cfmm-vol-markets-spec-exe:
@@ -51,6 +64,7 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - cfmm-vol-markets-spec
+    - cfmm-vol-markets-spec:plot
     - directory
 
 tests:
@@ -67,3 +81,6 @@ tests:
     - -Wno-gadt-mono-local-binds
     dependencies:
     - cfmm-vol-markets-spec
+    - cfmm-vol-markets-spec:plot
+    # Spec.hs builds Layouts inline to exercise the panel helpers.
+    - Chart

@@ -28,12 +28,7 @@ module Payoffs.PathAccrual
   , pathAccrual
   , planAccrual
   , netAccrual
-  , linesLayout
   ) where
-
-import Data.Colour
-import Data.Colour.Names
-import Graphics.Rendering.Chart.Easy
 
 import Liquidity.LiquidityChunk
   ( LiquidityChunk
@@ -167,13 +162,3 @@ netAccrual :: Accrual -> (PayoffX96, PayoffX96)
 netAccrual (Accrual ft fa lg) =
   let lvrNet = lg - fa
   in  (PayoffX96 lvrNet, PayoffX96 (ft - lvrNet))
-
--- | Named-lines layout. Axes carry EVM-representable numbers only (pips, ticks,
--- raw PayoffX96 words); Double appears here solely as the chart's coordinate type.
-linesLayout :: String -> String -> String -> [(String, [(Integer, Integer)])] -> Layout Double Double
-linesLayout title xTitle yTitle series = execEC $ do
-  layout_title .= title
-  layout_x_axis . laxis_title .= xTitle
-  layout_y_axis . laxis_title .= yTitle
-  setColors (map opaque [blue, red, darkgreen, orange, purple, black])
-  mapM_ (\(name, pts) -> plot (line name [[ (fromIntegral x, fromIntegral y) | (x, y) <- pts ]])) series

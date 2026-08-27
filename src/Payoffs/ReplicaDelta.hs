@@ -14,18 +14,14 @@ module Payoffs.ReplicaDelta
   ( replicaDelta
   , legDelta
   , principalDelta
-  , replicaDeltaLayout
   ) where
 
-import Graphics.Rendering.Chart.Easy (Layout)
-
-import Greeks.Delta (PayoffDelta(..), PriceDeltaX96(..), deltaOfPayoff, payoffDeltaLayout)
+import Greeks.Delta (PayoffDelta(..), PriceDeltaX96(..))
 import Liquidity.LiquidityChunk (LiquidityChunk, chunkAmount0, chunkLiquidity, chunkTickLower, chunkTickUpper)
 import Panoptic.LegChunk (legChunk)
 import Panoptic.MintPlan (MintPlan(..), fourLegNumLegs)
 import Panoptic.NId (panopticTokenType)
-import Payoffs.VolatilityReplica (fourLegReplica)
-import SqrtGrid (PayoffX96(..), SqrtPlot, SqrtPriceX96(..), mulDiv, pattern Q96, sqrtPriceX96)
+import SqrtGrid (PayoffX96(..), SqrtPriceX96(..), mulDiv, pattern Q96, sqrtPriceX96)
 
 -- | ∂_P of the chunk principal at p: token0 held = L·(b − p̄)·Q96/(p̄·b), p̄ = clamp(p; a, b).
 -- Staged as `getAmount0ForLiquidity`: mulDiv(L << 96, b − p̄, b) / p̄.
@@ -53,11 +49,3 @@ replicaDelta plan =
     PriceDeltaX96 $ sum
       [ d | leg <- [0 .. fourLegNumLegs (mintTokenId plan) - 1]
           , let PriceDeltaX96 d = legDelta plan leg p ]
-
--- | Closed form vs the generic finite-difference instance on the same axis.
-replicaDeltaLayout :: SqrtPlot -> MintPlan -> SqrtPriceX96 -> Layout Double Double
-replicaDeltaLayout config plan pStar =
-  payoffDeltaLayout config
-    [ ("Δ̂^σ closed form (Σ_leg)", replicaDelta plan)
-    , ("∂_P π̂^σ central difference", deltaOfPayoff (fourLegReplica plan pStar))
-    ]

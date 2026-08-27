@@ -50,9 +50,8 @@ import Payoffs.VariancePortfolio
   , fromLegs
   , scaleByTargetVega
   , toPayoff
-  , variancePortfolioLayoutVsGamma
-  , variancePortfolioLayoutVsXi
   )
+
 import TargetVega
   ( mkTargetVega
   , positionSizeForTargetVega
@@ -225,6 +224,7 @@ import Pricing.AdaptiveStremia (AdaptiveStremia(..), Volatility(..), adaptiveFee
 import Hedge.Ledger (HolderSwap(..), Ledger(..), RebateX96(..), emptyLedger, hedgeStep, ledgerInvariant, payStreamia, qualifying)
 import Panoptic.Binning (binNotionals, binToLegs, ladderFromVolOrder, mintPlanFromLadder, quantizationReport, QuantizationRow(..))
 import qualified Payoffs.PathAccrual as PA
+import qualified Plot.Payoffs.PathAccrual as PA
 import Payoffs.LadderPosition
   ( cOfS, hedgedRung, ladderChunks, ladderFromSpan, ladderN1, ladderReturnQ96, ladderT1 )
 import Data.Vector ((!))
@@ -235,9 +235,8 @@ import Payoffs.VolatilityCall
   , payoff
   , unVolStrike
   , volatilityCall
-  , volatilityCallLayoutVsSqrtPrice
-  , volatilityCallLayoutVsXi
   )
+
 import Volatility.VolOrder
   ( fixtureSymmetricVolOrder
   , legIntervals
@@ -270,6 +269,8 @@ import Volatility.ExpectedVolatility
   )
 import Volatility.ImpliedVolatility (impliedVolatilityFromAverage)
 import Volatility.VolatilityGrid (gammaCoordinate)
+import Plot.Payoffs.VariancePortfolio (variancePortfolioLayoutVsGamma, variancePortfolioLayoutVsXi)
+import Plot.Payoffs.VolatilityCall (volatilityCallLayoutVsSqrtPrice, volatilityCallLayoutVsXi)
 
 assertThrows :: forall a. String -> a -> IO ()
 assertThrows label value = do
@@ -1387,7 +1388,6 @@ main = do
   assertEqual "pathVolatility: ±3 → 9" (Volatility 9) (pathVolatility 15 (concat (replicate 4 [3, -3])))
   let Volatility vPath = pathVolatility 15 (map PA.stepTo (composedPath 5 0 300 3 4 (Regime 1 30 False)))
   if vPath > 0 && feeAt vPath >= 100 then putStrLn ("ok: AdaptiveFee on composed path: volatility " ++ show vPath ++ " → fee " ++ show (feeAt vPath) ++ " pips") else error "path fee"
-
 
   -- TODO #26 (#51): λ_{X/M}.  Prop 3: χ(𝓛𝓒) = amount0 = ∂_Pπ(a²) − ∂_Pπ(b²) (Thm 5 + Def 12).
   let chB = chunks !! 1

@@ -6,31 +6,22 @@ module Greeks.Delta
   , PriceDeltaX96(..)
   , PayoffDelta(..)
   , deltaOfPayoff
-  , payoffDeltaLayout
   , pattern DELTA_ATM
   , coveredCallDelta
   , rangeAccrualDelta
   , cpmmDelta
   , strikeFromDelta
-  , deltaLayout
   ) where
-
-import Data.Colour
-import Data.Colour.Names
-import Graphics.Rendering.Chart.Easy
 
 import qualified Payoffs.Payoff as Payoff
 
 import OptionRatio (OptionRatio(..))
-import Plotting.PlotSqrt (PlotY(..), sqrtFunctionLayout)
 import SqrtGrid
   ( integerSqrt
   , mulDiv
   , SqrtPriceX96(..)
   , PayoffX96(..)
-  , SqrtPlot(..)
   , pattern Q96
-  , toDouble
   )
 import StrikeX96 (StrikeX96(..))
 
@@ -66,18 +57,9 @@ deltaOfPayoff (Payoff.Payoff f) =
         PayoffX96 pDn = Payoff.squareSqrtPrice (SqrtPriceX96 (p - h))
     in  PriceDeltaX96 (mulDiv (vUp - vDn) Q96 (pUp - pDn))
 
--- | Deltas on one sqrt axis; y = raw token0 (EVM word), plotted through the
--- PayoffX96 channel of `sqrtFunctionLayout`.
-payoffDeltaLayout :: SqrtPlot -> [(String, PayoffDelta)] -> Layout Double Double
-payoffDeltaLayout config labeled =
-  sqrtFunctionLayout config (RawY "token0 (raw, signed)")
-    [ (lbl, \p -> let PriceDeltaX96 d = runPayoffDelta pd p in PayoffX96 d)
-    | (lbl, pd) <- labeled ]
-
 -- δ = 1/2
 pattern DELTA_ATM :: DeltaX96
 pattern DELTA_ATM = DeltaX96 39614081257132168796771975168
-
 
 -- (3.23) in price coordinates, then κ_{1/2} = √K · 2^96
 strikeFromDelta
@@ -136,34 +118,3 @@ rangeAccrualDelta strike ratio =
   Delta $ \sqrtPrice ->
     runDelta (cpmmDelta strike ratio) sqrtPrice
       - runDelta (coveredCallDelta strike) sqrtPrice
-
-deltaLayout
-  :: SqrtPlot
-  -> StrikeX96
-  -> OptionRatio
-  -> Layout Double Double
-deltaLayout config k r =
-  execEC $ do
-    let
-      SqrtPriceX96 lowerBound = xMin config
-      SqrtPriceX96 upperBound = xMax config
-      numberOfSamples = 500 :: Integer
-      sampleStep =
-        max 1 ((upperBound - lowerBound) `div` numberOfSamples)
-      samples =
-        [ SqrtPriceX96 raw
-        | raw <- [lowerBound, lowerBound + sampleStep .. upperBound]
-        ]
-      seriesPoints (Delta d) =
-        [ (toDouble sample, fromRational (d sample) :: Double)
-        | sample <- samples
-        ]
-
-    layout_title .= "Δ_π₉₆"
-    layout_x_axis . laxis_title .= "sqrtPriceX96"
-    layout_y_axis . laxis_title .= "Delta"
-    setColors [opaque blue, opaque red, opaque green]
-
-    plot $ line "Δ Covered Call" [seriesPoints (coveredCallDelta k)]
-    plot $ line "Δ Range Accrual" [seriesPoints (rangeAccrualDelta k r)]
-    plot $ line "Δ CPMM" [seriesPoints (cpmmDelta k r)]

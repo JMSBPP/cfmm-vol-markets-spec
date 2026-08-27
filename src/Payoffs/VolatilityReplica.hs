@@ -18,14 +18,10 @@ module Payoffs.VolatilityReplica
   ( fourLegReplica
   , legMintValue
   , legPrincipal
-  , legsLayout
-  , replicaLayout
   , ErrorX96(..)
   , replicaError
   , windowTicks
   ) where
-
-import Graphics.Rendering.Chart.Easy (Layout)
 
 import Liquidity.LiquidityChunk (LiquidityChunk, chunkAmount0, chunkAmount1)
 import Panoptic.LegChunk (legChunk)
@@ -33,8 +29,15 @@ import Panoptic.MintPlan (MintPlan(..), fourLegNumLegs)
 import Panoptic.NId (panopticTokenType)
 import qualified Payoffs.CLMMPosition as CLMM
 import qualified Payoffs.Payoff as Payoff
-import Plotting.PlotSqrt (PlotY(..), sqrtFunctionLayout)
-import SqrtGrid (PayoffX96(..), SqrtPlot, SqrtPriceX96(..), Tick, integerSqrt, mulDiv, pattern Q96, sqrtPriceX96)
+import SqrtGrid
+  ( PayoffX96(..)
+  , SqrtPriceX96(..)
+  , Tick
+  , integerSqrt
+  , mulDiv
+  , pattern Q96
+  , sqrtPriceX96
+  )
 import Payoffs.LadderPosition (Ladder(..), ladderN1, ladderT1)
 import Volatility.VolOrder (VolOrder, tickBucketFromVolOrder)
 
@@ -64,32 +67,6 @@ fourLegReplica plan _pStar =
       , let PayoffX96 h = legMintValue plan leg p
       , let PayoffX96 principal = legPrincipal (legChunk plan leg) p
       ]
-
--- | Per-leg replica terms H_leg(p) − π^φ(LC_leg; p) and their sum (= π̂^σ)
--- on one sqrt axis.
-legsLayout :: SqrtPlot -> MintPlan -> Layout Double Double
-legsLayout config plan =
-  sqrtFunctionLayout config PayoffY $
-    [ ("leg " ++ show leg ++ " H − π^φ(LC_leg)", legTerm leg)
-    | leg <- [0 .. fourLegNumLegs (mintTokenId plan) - 1]
-    ]
-    ++ [ ("Σ_leg = π̂^σ", Payoff.runPayoff (fourLegReplica plan (SqrtPriceX96 0))) ]
-  where
-    legTerm leg p =
-      let PayoffX96 h = legMintValue plan leg p
-          PayoffX96 principal = legPrincipal (legChunk plan leg) p
-      in  PayoffX96 (h - principal)
-
--- | π̂^σ against a reference curve (e.g. Hop B Carr–Madan) on one sqrt axis.
-replicaLayout
-  :: SqrtPlot
-  -> MintPlan
-  -> SqrtPriceX96
-  -> [(String, SqrtPriceX96 -> PayoffX96)]
-  -> Layout Double Double
-replicaLayout config plan pStar references =
-  sqrtFunctionLayout config PayoffY $
-    ("π̂^σ 4-leg replica", Payoff.runPayoff (fourLegReplica plan pStar)) : references
 
 -- | e^σ_W (README § REPLICATION_THEORY Def 8): RMS over W of (T2 − T1)/N_1, Q96.
 -- Residuals are normalized by the token1 mint notional N_1 BEFORE squaring
