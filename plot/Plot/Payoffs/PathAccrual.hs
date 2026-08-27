@@ -9,18 +9,6 @@ module Plot.Payoffs.PathAccrual
 import Data.Colour
 import Data.Colour.Names
 import Graphics.Rendering.Chart.Easy
-import Liquidity.LiquidityChunk
-  ( LiquidityChunk
-  , chunkLiquidity
-  , chunkTickLower
-  , chunkTickUpper
-  )
-import Panoptic.LegChunk (legChunks)
-import Panoptic.MintPlan (MintPlan)
-import Pricing.Stremia (FeePips, unFeePips)
-import SqrtGrid (PayoffX96(..), SqrtPriceX96(..), Tick, mulDiv, pattern Q96, sqrtPriceX96)
-import Payoffs.PathAccrual
-
 
 -- | Named-lines layout. Axes carry EVM-representable numbers only (pips, ticks,
 -- raw PayoffX96 words); Double appears here solely as the chart's coordinate type.

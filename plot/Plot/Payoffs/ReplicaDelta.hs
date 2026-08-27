@@ -7,16 +7,12 @@ module Plot.Payoffs.ReplicaDelta
   ) where
 
 import Graphics.Rendering.Chart.Easy (Layout)
-import Greeks.Delta (PayoffDelta(..), PriceDeltaX96(..), deltaOfPayoff)
+import Greeks.Delta (deltaOfPayoff)
 import Plot.Greeks.Delta (payoffDeltaLayout)
-import Liquidity.LiquidityChunk (LiquidityChunk, chunkAmount0, chunkLiquidity, chunkTickLower, chunkTickUpper)
-import Panoptic.LegChunk (legChunk)
-import Panoptic.MintPlan (MintPlan(..), fourLegNumLegs)
-import Panoptic.NId (panopticTokenType)
+import Panoptic.MintPlan (MintPlan(..))
 import Payoffs.VolatilityReplica (fourLegReplica)
-import SqrtGrid (PayoffX96(..), SqrtPlot, SqrtPriceX96(..), mulDiv, pattern Q96, sqrtPriceX96)
+import SqrtGrid (SqrtPlot, SqrtPriceX96(..))
 import Payoffs.ReplicaDelta
-
 
 -- | Closed form vs the generic finite-difference instance on the same axis.
 replicaDeltaLayout :: SqrtPlot -> MintPlan -> SqrtPriceX96 -> Layout Double Double

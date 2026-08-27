@@ -9,42 +9,18 @@ module Plot.Payoffs.LadderPosition
 
 import Graphics.Rendering.Chart.Easy (Layout)
 import Liquidity.LiquidityChunk
-  ( LiquidityChunk
-  , chunkAmount0
-  , chunkAmount1
-  , chunkLiquidity
+  ( chunkLiquidity
   , chunkTickLower
-  , chunkTickUpper
-  , createChunk
-  , unitLiquidity
   )
-import Liquidity.LiquidityGrid
-  ( LadderResolution
-  , LiquidityDensityX96(..)
-  , XiX96
-  , ell
-  , mkLadderResolution
-  , unLadderResolution
-  , xiStar
-  )
-import qualified Payoffs.CLMMPosition as CLMM
-import Payoffs.Log (logPortfolioQ96)
-import qualified Payoffs.Payoff as Payoff
 import Plotting.PlotSqrt (PlotY(..), sqrtFunctionLayout)
 import SqrtGrid
   ( PayoffX96(..)
   , SqrtPlot
   , SqrtPriceX96(..)
-  , Tick
-  , TickSpacing
-  , mulDiv
-  , pattern Q96
   , sqrtPriceX96
   , unTickSpacing
   )
-import TargetVega (TargetVega, unTargetVega)
 import Payoffs.LadderPosition
-
 
 -- | T1/N_1 vs c(S)·logPortfolio on one sqrt axis (Theorem 10 overlay).
 ladderLayout :: SqrtPlot -> Ladder -> Layout Double Double

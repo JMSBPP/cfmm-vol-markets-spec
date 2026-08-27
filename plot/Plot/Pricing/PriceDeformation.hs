@@ -14,13 +14,11 @@ import Graphics.Rendering.Chart.Backend.Cairo
 import Graphics.Rendering.Chart.Easy
 import SqrtGrid
   ( Tick
-  , SqrtPriceX96(..)
   , pattern Q96
   , toDouble
   , sqrtPriceX96
   )
 import Pricing.PriceDeformation
-
 
 deformationEC
   :: String

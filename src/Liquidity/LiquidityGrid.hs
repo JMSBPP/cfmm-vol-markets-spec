@@ -15,19 +15,15 @@ module Liquidity.LiquidityGrid
   , ell
   ) where
 
-import Pricing.PriceDeformation (EtaX96)
 import SqrtGrid
   ( SqrtPriceX96(..)
-  , Tick
   , TickSpacing
   , invX96
   , pattern Q96
   , rpowX96
   , sqrtPriceX96
-  , toDouble
   , unTickSpacing
   )
-import Volatility.VolatilityGrid (gammaCoordinate)
 
 newtype XiX96 = XiX96 Integer
   deriving (Show, Eq, Ord)

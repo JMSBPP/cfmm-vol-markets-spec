@@ -10,7 +10,6 @@ import qualified Payoffs.Payoff as Payoff
 import SqrtGrid
   ( SqrtPriceX96(..)
   , PayoffX96(..)
-  , SqrtPlot
   )
 
 import StrikeX96 (StrikeX96(..))

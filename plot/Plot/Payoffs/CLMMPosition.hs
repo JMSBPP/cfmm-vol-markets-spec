@@ -9,19 +9,14 @@ module Plot.Payoffs.CLMMPosition
   , rhsPayoffLayout
   ) where
 
-import Control.Exception (assert)
 import qualified Payoffs.Payoff as Payoff
 import qualified Payoffs.CoveredCall as CC
-import qualified Payoffs.CashSecuredPut as CSP
 import qualified Payoffs.RangeAccrualNote as RAN
 import Graphics.Rendering.Chart.Easy (Layout)
 import SqrtGrid
   ( SqrtPriceX96(..)
   , PayoffX96(..)
   , SqrtPlot
-  , integerSqrt
-  , pattern Q96
-  , sqrtPriceX96
   , tickFromSqrtPriceX96
   )
 import Plotting.PlotSqrt (PlotY(..), plotSqrtFunction, sqrtFunctionLayout)
@@ -30,18 +25,12 @@ import Pricing.PriceDeformation
   , pattern BASE_ETA
   , deformedSqrtPriceX96
   )
-import Greeks.Delta (DeltaX96, strikeFromDelta)
 import StrikeX96 (StrikeX96(..))
 import Liquidity.LiquidityChunk
   ( LiquidityChunk
-  , chunkAmount0
-  , chunkTickLower
-  , chunkTickUpper
-  , createChunk
   )
 import OptionRatio (OptionRatio(..))
 import Payoffs.CLMMPosition
-
 
 plotPayoff :: FilePath -> SqrtPlot -> StrikeX96 -> OptionRatio -> IO ()
 plotPayoff path config k r =

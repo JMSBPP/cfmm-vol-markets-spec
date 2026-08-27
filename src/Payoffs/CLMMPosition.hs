@@ -23,17 +23,10 @@ import qualified Payoffs.RangeAccrualNote as RAN
 import SqrtGrid
   ( SqrtPriceX96(..)
   , PayoffX96(..)
-  , SqrtPlot
   , integerSqrt
   , pattern Q96
   , sqrtPriceX96
   , tickFromSqrtPriceX96
-  )
-
-import Pricing.PriceDeformation
-  ( EtaX96
-  , pattern BASE_ETA
-  , deformedSqrtPriceX96
   )
 
 import Greeks.Delta (DeltaX96, strikeFromDelta)

@@ -11,20 +11,15 @@ import Data.Colour
 import Data.Colour.Names
 import Graphics.Rendering.Chart.Backend.Cairo
 import Graphics.Rendering.Chart.Easy
-import qualified Payoffs.Payoff as Payoff
 import Payoffs.Linear (linearPayoff)
 import Payoffs.Return (mkReturn, unReturnPips)
 import SqrtGrid
-  ( PayoffX96(..)
-  , SqrtPriceX96(..)
-  , integerSqrt
+  ( SqrtPriceX96(..)
   , invX96
   , mulX96
-  , pattern Q96
   , toDouble
   )
 import Pricing.Stremia
-
 
 plotFeeVsReturn :: FilePath -> SqrtPriceX96 -> [FeePips] -> IO ()
 plotFeeVsReturn path mid fees =

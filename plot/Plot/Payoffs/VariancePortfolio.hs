@@ -6,7 +6,6 @@ module Plot.Payoffs.VariancePortfolio
   , variancePortfolioLayoutVsXi
   ) where
 
-import Control.Exception (assert)
 import Data.Colour
 import Data.Colour.Names
 import Graphics.Rendering.Chart.Easy
@@ -21,11 +20,9 @@ import Pricing.PriceDeformation (EtaX96)
 import qualified Payoffs.Payoff as Payoff
 import Payoffs.Forward
   ( AtmForward
-  , unAtmForward
   )
-import Payoffs.Log (logPortfolioQ96)
-import Panoptic.NId (MintPlan, NId, scaleByNId)
-import TargetVega (TargetVega, targetVegaFromMint, unTargetVega)
+import Panoptic.NId (MintPlan, NId)
+import TargetVega (TargetVega, targetVegaFromMint)
 import SqrtGrid
   ( PayoffX96(..)
   , SqrtPriceX96(..)
@@ -37,7 +34,6 @@ import SqrtGrid
   )
 import Volatility.VolatilityGrid (gammaCoordinate)
 import Payoffs.VariancePortfolio
-
 
 variancePortfolioLayout
   :: NId

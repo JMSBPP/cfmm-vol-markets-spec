@@ -6,10 +6,8 @@ module Plot.Pricing.AdaptiveStremia
 
 import Graphics.Rendering.Chart.Easy (Layout)
 import Plot.Payoffs.PathAccrual (linesLayout)
-import Pricing.Stremia (FeePips, mkFeePips, unFeePips)
-import SqrtGrid (Tick)
+import Pricing.Stremia (unFeePips)
 import Pricing.AdaptiveStremia
-
 
 -- | Fee (pips) vs volatility (oracle units) for a configuration. Axes: uint88 units × pips.
 adaptiveFeeLayout :: AdaptiveStremia -> [Integer] -> Layout Double Double

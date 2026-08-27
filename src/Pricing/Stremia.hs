@@ -22,8 +22,6 @@ module Pricing.Stremia
   ) where
 
 import qualified Payoffs.Payoff as Payoff
-import Payoffs.Linear (linearPayoff)
-import Payoffs.Return (mkReturn, unReturnPips)
 import SqrtGrid
   ( PayoffX96(..)
   , SqrtPriceX96(..)
@@ -31,7 +29,6 @@ import SqrtGrid
   , invX96
   , mulX96
   , pattern Q96
-  , toDouble
   )
 
 -- Stremia container (stub retained).

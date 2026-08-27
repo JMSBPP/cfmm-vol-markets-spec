@@ -46,7 +46,6 @@ import Payoffs.Log (logPortfolioQ96)
 import qualified Payoffs.Payoff as Payoff
 import SqrtGrid
   ( PayoffX96(..)
-  , SqrtPlot
   , SqrtPriceX96(..)
   , Tick
   , TickSpacing

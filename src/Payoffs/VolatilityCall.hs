@@ -6,29 +6,9 @@ module Payoffs.VolatilityCall
   , volatilityCall
   ) where
 
-import qualified Data.Vector as V
-import Liquidity.LiquidityGrid
-  ( LadderResolution
-  , XiX96(..)
-  , unLadderResolution
-  , unXiX96
-  , xiCoordinate
-  )
-import Pricing.PriceDeformation (EtaX96)
-import SqrtGrid
-  ( Tick
-  , TickSpacing
-  , sqrtPriceX96
-  , toDouble
-  , unTickSpacing
-  )
-import TickPath (TickPath(..))
 import Volatility.TickVolatility
   ( RangeVolatility(..)
-  , rangeAlongPath
-  , unRangeVolatility
   )
-import Volatility.VolatilityGrid (gammaCoordinate)
 
 newtype VolStrike = VolStrike Integer
   deriving (Show, Eq)

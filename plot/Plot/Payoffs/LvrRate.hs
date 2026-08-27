@@ -7,16 +7,11 @@ module Plot.Payoffs.LvrRate
   ) where
 
 import Graphics.Rendering.Chart.Easy (Layout)
-import Liquidity.LiquidityChunk (LiquidityChunk, chunkAmount0)
-import Panoptic.LegChunk (legChunks)
 import Panoptic.MintPlan (MintPlan)
-import Payoffs.HolderPath (Regime(..), composedPath)
-import Payoffs.PathAccrual (Accrual(..), Step(..), Tag(..), addAccrual, pathAccrual, pattern PIPS_ONE, stepVolume1, zeroAccrual)
 import Plot.Payoffs.PathAccrual (linesLayout)
 import Pricing.Stremia (FeePips, unFeePips)
-import SqrtGrid (PayoffX96(..), Tick, mulDiv)
+import SqrtGrid (Tick)
 import Payoffs.LvrRate
-
 
 -- | λ vs s for several φ, naive band (crosses zero at 2φ ticks) and rational band (≥ 0).
 -- Axes: ticks, pips.

@@ -27,13 +27,11 @@ import SqrtGrid
   )
 import TickPath (TickPath(..))
 import Volatility.TickVolatility
-  ( RangeVolatility(..)
-  , rangeAlongPath
+  ( rangeAlongPath
   , unRangeVolatility
   )
 import Volatility.VolatilityGrid (gammaCoordinate)
 import Payoffs.VolatilityCall
-
 
 volatilityCallLayoutAgainst
   :: String

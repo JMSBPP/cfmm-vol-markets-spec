@@ -7,13 +7,10 @@ module Plot.Payoffs.CashSecuredPut
 import qualified Payoffs.Payoff as Payoff
 import qualified StrikeX96 as Strike
 import SqrtGrid
-  ( SqrtPriceX96(..)
-  , PayoffX96(..)
-  , SqrtPlot
+  ( SqrtPlot
   )
 import Plotting.PlotSqrt (PlotY(..), plotSqrtFunction)
 import Payoffs.CashSecuredPut
-
 
 plotPayoff
   :: FilePath

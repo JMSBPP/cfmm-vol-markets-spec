@@ -13,19 +13,14 @@ import Data.Colour.Names
 import Graphics.Rendering.Chart.Easy
 import Pricing.PriceDeformation (EtaX96)
 import SqrtGrid
-  ( SqrtPriceX96(..)
-  , Tick
+  ( Tick
   , TickSpacing
-  , invX96
-  , pattern Q96
-  , rpowX96
   , sqrtPriceX96
   , toDouble
   , unTickSpacing
   )
 import Volatility.VolatilityGrid (gammaCoordinate)
 import Liquidity.LiquidityGrid
-
 
 liquidityLayoutAgainst
   :: String

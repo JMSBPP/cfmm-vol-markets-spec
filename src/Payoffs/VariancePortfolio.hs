@@ -14,32 +14,18 @@ module Payoffs.VariancePortfolio
   ) where
 
 import Control.Exception (assert)
-import Liquidity.LiquidityGrid
-  ( LadderResolution
-  , XiX96
-  , unLadderResolution
-  , unXiX96
-  , xiCoordinate
-  )
-import Pricing.PriceDeformation (EtaX96)
 import qualified Payoffs.Payoff as Payoff
 import Payoffs.Forward
   ( AtmForward
   , unAtmForward
   )
 import Payoffs.Log (logPortfolioQ96)
-import Panoptic.NId (MintPlan, NId, scaleByNId)
-import TargetVega (TargetVega, targetVegaFromMint, unTargetVega)
+import Panoptic.NId (NId, scaleByNId)
+import TargetVega (TargetVega, unTargetVega)
 import SqrtGrid
   ( PayoffX96(..)
   , SqrtPriceX96(..)
-  , Tick
-  , TickSpacing
-  , sqrtPriceX96
-  , toDouble
-  , unTickSpacing
   )
-import Volatility.VolatilityGrid (gammaCoordinate)
 
 newtype VariancePortfolio = VariancePortfolio (Payoff.Payoff SqrtPriceX96)
 

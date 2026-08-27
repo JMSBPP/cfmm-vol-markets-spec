@@ -23,7 +23,7 @@ module Pricing.AdaptiveStremia
   , pathVolatility
   ) where
 
-import Pricing.Stremia (FeePips, mkFeePips, unFeePips)
+import Pricing.Stremia (FeePips, mkFeePips)
 import SqrtGrid (Tick)
 
 -- | @AlgebraFeeConfiguration@: α_j, β_j, γ_j, baseFee (uint16/uint32/uint16/uint16).

@@ -29,7 +29,15 @@ import Panoptic.MintPlan (MintPlan(..), fourLegNumLegs)
 import Panoptic.NId (panopticTokenType)
 import qualified Payoffs.CLMMPosition as CLMM
 import qualified Payoffs.Payoff as Payoff
-import SqrtGrid (PayoffX96(..), SqrtPlot, SqrtPriceX96(..), Tick, integerSqrt, mulDiv, pattern Q96, sqrtPriceX96)
+import SqrtGrid
+  ( PayoffX96(..)
+  , SqrtPriceX96(..)
+  , Tick
+  , integerSqrt
+  , mulDiv
+  , pattern Q96
+  , sqrtPriceX96
+  )
 import Payoffs.LadderPosition (Ladder(..), ladderN1, ladderT1)
 import Volatility.VolOrder (VolOrder, tickBucketFromVolOrder)
 

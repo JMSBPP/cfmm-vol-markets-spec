@@ -16,7 +16,6 @@ import SqrtGrid
   ( Tick
   , SqrtPriceX96(..)
   , pattern Q96
-  , toDouble
   , sqrtPriceX96
   )
 

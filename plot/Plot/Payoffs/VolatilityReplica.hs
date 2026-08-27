@@ -8,16 +8,11 @@ module Plot.Payoffs.VolatilityReplica
   ) where
 
 import Graphics.Rendering.Chart.Easy (Layout)
-import Liquidity.LiquidityChunk (LiquidityChunk, chunkAmount0, chunkAmount1)
 import Panoptic.LegChunk (legChunk)
 import Panoptic.MintPlan (MintPlan(..), fourLegNumLegs)
-import Panoptic.NId (panopticTokenType)
-import qualified Payoffs.CLMMPosition as CLMM
 import qualified Payoffs.Payoff as Payoff
 import Plotting.PlotSqrt (PlotY(..), sqrtFunctionLayout)
-import SqrtGrid (PayoffX96(..), SqrtPlot, SqrtPriceX96(..), Tick, integerSqrt, mulDiv, pattern Q96, sqrtPriceX96)
-import Payoffs.LadderPosition (Ladder(..), ladderN1, ladderT1)
-import Volatility.VolOrder (VolOrder, tickBucketFromVolOrder)
+import SqrtGrid (PayoffX96(..), SqrtPlot, SqrtPriceX96(..))
 import Payoffs.VolatilityReplica
 
 -- | Per-leg replica terms H_leg(p) − π^φ(LC_leg; p) and their sum (= π̂^σ)
