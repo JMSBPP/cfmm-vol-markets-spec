@@ -3,17 +3,13 @@
 module TickPath
   ( TickPath(..)
   , mkTickPath
-  , tickPathLayout
   ) where
 
 import Control.Monad.ST (runST)
-import Data.Colour
-import Data.Colour.Names
 import Data.Word (Word32)
 import qualified Data.Vector as V
 import qualified Data.Vector.Mutable as MV
 import qualified Data.Vector.Unboxed as VU
-import Graphics.Rendering.Chart.Easy
 import Pricing.PriceDeformation (uniswapMinTick)
 import SqrtGrid
   ( Tick
@@ -73,17 +69,3 @@ mkTickPath n vts seed i0
             iNext = max uniswapMinTick iRaw
           MV.write buf (t + 1) iNext
           fill gen buf (t + 1) iNext
-
-tickPathLayout :: TickPath -> Layout Double Double
-tickPathLayout path = execEC $ do
-  let
-    ys = V.toList (ticks path)
-    pts =
-      [ (fromIntegral t :: Double, fromIntegral i :: Double)
-      | (t, i) <- zip [0 :: Int ..] ys
-      ]
-  layout_title .= "tick vs steps"
-  layout_x_axis . laxis_title .= "steps"
-  layout_y_axis . laxis_title .= "tick"
-  setColors [opaque blue]
-  plot $ line "TickPath" [pts]
