@@ -1,4 +1,4 @@
-# Changelog for `cfmm-scratchpad`
+# Changelog for `cfmm-vol-markets-spec`
 
 All notable changes to this project will be documented in this file.
 

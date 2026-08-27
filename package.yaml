@@ -1,4 +1,4 @@
-name:                cfmm-scratchpad
+name:                cfmm-vol-markets-spec
 version:             0.1.0.0
 github:              "d2p-finance/cfmm-vol-markets-spec"
 license:             BSD-3-Clause
@@ -42,7 +42,7 @@ library:
   source-dirs: src
 
 executables:
-  cfmm-scratchpad-exe:
+  cfmm-vol-markets-spec-exe:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
@@ -50,11 +50,11 @@ executables:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - cfmm-scratchpad
+    - cfmm-vol-markets-spec
     - directory
 
 tests:
-  cfmm-scratchpad-test:
+  cfmm-vol-markets-spec-test:
     main:                Spec.hs
     source-dirs:         test
     ghc-options:
@@ -66,4 +66,4 @@ tests:
     - -Wno-type-defaults
     - -Wno-gadt-mono-local-binds
     dependencies:
-    - cfmm-scratchpad
+    - cfmm-vol-markets-spec
