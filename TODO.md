@@ -2,7 +2,7 @@
 ## Done
 
 1. ~~Find the .md that ties \(r^{\phi}=\phi\,\delta_{\mathrm{trans}}\) under `~/cfmms-playground/cfmm-wt/` and copy to `refs/`~~
-   - `refs/VOLATILITY_INTRUMENTS_MEV.md` (eq. ~L337)
+   - ~~`refs/VOLATILITY_INTRUMENTS_MEV.md`~~ removed with MEV model off `develop`
 
 2. ~~Is \(\pi^{\phi}\) built?~~
    - **Base yes:** `Payoffs.TransactionalFeeCapture` — \(\pi^\phi=\phi_X P+\phi_M I\); sum along tenor; Swap identity; `fee-capture-*-vs-*.png`
@@ -37,7 +37,7 @@ Workflow: see `AGENTS.md` / `CLAUDE.md` / `QWEN.md` (classify → branch → iss
 |---|---|---|---|
 | 1 | #35 (TODO 24) | \(\chi(\mathcal{LC})\) via per-tick CLMM identity | `CLMMPosition` witness test → Aristotle |
 | 2 | #36 (TODO 25 `feat`) | four \(\mathcal{LC}_{\mathrm{leg}}\), \(\mathrm{or}(\mathrm{leg})\to L_{\mathrm{leg}}\) in Haskell | Hop B vs 4-leg sum |
-| 3 | #34 (TODO 23) + TODO 19/20 | \(u\), atomic \([\nu_{\mathrm{arb}}/\nu]\), \(\sigma_{IV}=2\phi e^{u/2}\) | `volume_path.gms` golden table |
+| 3 | #34 (TODO 23) + TODO 19/20 | \(u\), atomic \([\nu_{\mathrm{arb}}/\nu]\), \(\sigma_{IV}=2\phi e^{u/2}\) | blocked — `volume_path.gms` refs removed from repo |
 | 4 | #51 (TODO 26) | the claim: spec → ex-post LVR check → Aristotle statement | ✓ **derived** (Prop 4, TODO #36, PR #94); Lean C1–C3 with the peer |
 | 5 | #3 (TODO 7) | \(r^{\phi}=\phi\delta_{\mathrm{trans}}\) — fee side of §3 | after 3 |
 | 6 | #31 (TODO 21 Slice 2) | \(r^e_{\mathrm{arb}}=\Lambda(\gamma(u-u^\star))\) — mixture weight | after 3 |
@@ -77,7 +77,7 @@ Workflow: see `AGENTS.md` / `CLAUDE.md` / `QWEN.md` (classify → branch → iss
    - Do **not** implement #6 while brainstorming #17–#21
 
 7. **Ref transactional return** \(r^\phi=\phi\,\delta_{\mathrm{trans}}\) — `feat` — [#3](https://github.com/d2p-finance/cfmm-vol-markets-spec/issues/3)
-   - Distinct from payoff \(\pi^\phi\); scope in `refs/VOLATILITY_INTRUMENTS_MEV.md`
+   - Distinct from payoff \(\pi^\phi\); MEV ref doc removed from repo (see `notes/VOLATILITY_INSTRUMENTS.md` §MEV on `develop`)
    - Decide: scalar control return type vs leave in notes only
    - **Notation:** keep scratchpad \(r^\phi\) / \(r_{\Delta Q_{\mathrm{trans}}}^{e}\) language; do **not** adopt MEV-doc \(\Delta\pi_{\mathrm{trans}}/\pi_{\mathrm{trans}}\) labels (wrong)
    - **Done (PR #16, 2026-08-25):** `Payoffs.TransactionalReturn` — `transTurnover` (δ_X, δ_M in pips of the position's token1 notional), `refTransactionalReturn` = φ_X δ_X + φ_M δ_M, `measuredFeeReturn` = fees_trans/N; equal within 2 pips on composed and round-trip paths (decision: typed `ReturnPips`, not notes-only)
@@ -141,13 +141,12 @@ r_{\Delta Q_{\mathrm{trans}}}^{e}
    - Prereq for composing full \(r_{\Delta Q}^{e}\) and unblocking #6
    - **Answered (2026-08-25):** Definition 15 — \(\partial = \mathbb{E}^{\mathbb{Q}}[\text{share}\cdot r_{\mathrm{arb}}]/\mathbb{E}^{\mathbb{Q}}[r_{\mathrm{arb}}]\) (token1 share `HolderPath.arbShareToken1`; \(\mathbb{E}[\text{share}]\) is the zero-covariance approximation); the share is an output of the update rule; expectation notes-only until #17/#21. `docs/superpowers/specs/2026-08-25-scratchpad-arb-weight-design.md`
 
-23. **\(\nu_{\mathrm{trans}}\) from `volume_path.gms` (prover-native \(u\leftrightarrow\nu\))** — `feat` — [#34](https://github.com/d2p-finance/cfmm-vol-markets-spec/issues/34)
+23. **\(\nu_{\mathrm{trans}}\) from `volume_path.gms` (prover-native \(u\leftrightarrow\nu\))** — `feat` — [#34](https://github.com/d2p-finance/cfmm-vol-markets-spec/issues/34) — **BLOCKED:** `refs/volume_path.gms`, `refs/VOLUME_PATH.md`, and `refs/MEV_TAX_MODEL_ONE_NOTES.md` removed from this repo (MEV model moved off `develop`; prover lives in `cfmm-numopt`).
    - Spec: `docs/superpowers/specs/2026-08-22-scratchpad-rarb-trans-flow-design.md` §3 (option **B** approved)
    - Shock: \(V=\bar L e^u\), \(\delta^\*\) → `volTgtWad`, `txlVolumeRate`; \(u=\ln(V/\bar L)=\ln\kappa\) at prover boundary
    - Derive \(\nu_{\mathrm{trans}}=\sum\sqrt{\bar p|\Delta Q_X\Delta Q_M|}\) from JSON `dQx`/`dQM`; \(\big[\nu_{\mathrm{trans}}/\nu\big]\) read as an atomic given value (not a computed ratio)
    - Golden table \(\big[\nu_{\mathrm{trans}}/\nu\big](\delta^\*,\kappa,\bar\phi,\ldots)\) from GAMS grid (`make test-gams`); option A (exogenous \(\nu\)) **pre-prover stub only**
    - Prereq for #7 \(\delta_{\mathrm{trans}}=\nu_{\mathrm{trans}}/\pi_{\mathrm{trans}}^{\Delta Q}\) beyond stub; complements RARB Slice 1 Lane B (#19 `TransactionalReturn`)
-   - Reads: `refs/volume_path.gms`, `refs/VOLUME_PATH.md`, `refs/MEV_TAX_MODEL_ONE_NOTES.md`
 
 24. **\(\pi^{\varphi}=\pi^{\phi}-\pi^{\mathrm{LVR}}\) decomposition** — `docs`→`feat` — [#35](https://github.com/d2p-finance/cfmm-vol-markets-spec/issues/35)
    - Spec: `docs/superpowers/specs/2026-08-22-scratchpad-pi-varphi-lvr-decomposition-design.md`

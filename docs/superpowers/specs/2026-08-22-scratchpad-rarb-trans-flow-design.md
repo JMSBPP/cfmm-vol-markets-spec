@@ -1,12 +1,12 @@
 # Scratchpad RARB transactional flow — design
 
-**Status:** approved §1–§3 — plan TBD; TODO #7, #19, **#23** (\(\nu\) from `volume_path.gms`)  
+**Status:** approved §1–§3 — plan TBD; TODO #7, #19, **#23** (\(\nu\) from `volume_path.gms`, **blocked** — prover refs removed from this repo 2026-09-01)  
 **Date:** 2026-08-22  
 **Repo:** `cfmm-theory` / package `scratchpad/`  
-**Brainstorm:** RARB split → orthogonally parametrized payoffs; trans leg exogenous; **prover-native** \(u\leftrightarrow\nu\) via `refs/volume_path.gms`  
+**Brainstorm:** RARB split → orthogonally parametrized payoffs; trans leg exogenous; **prover-native** \(u\leftrightarrow\nu\) via `volume_path.gms` (now in `cfmm-numopt`, not this repo)  
 **Linked TODO:** #7, #19, **#23**, #17–#18 (measure), #20 (\(u=\ln(V/L)\)), #21–#22 (arb leg, \(\beta\))
 
-**Reads:** `scratchpad/README.md` (RARB block); `Payoffs/Swap.hs`; `Pricing/ExpectedReturn.hs`; `docs/superpowers/specs/2026-08-22-scratchpad-sigma-iv-latent-u-design.md`; `refs/MEV_TAX_MODEL_ONE_NOTES.md`; `refs/VOLATILITY_INTRUMENTS_MEV.md`; `refs/VOLUME_PATH.md`; **`refs/volume_path.gms`**
+**Reads:** `scratchpad/README.md` (RARB block); `Payoffs/Swap.hs`; `Pricing/ExpectedReturn.hs`; `docs/superpowers/specs/2026-08-22-scratchpad-sigma-iv-latent-u-design.md`; ~~`refs/MEV_TAX_MODEL_ONE_NOTES.md`~~; ~~`refs/VOLATILITY_INTRUMENTS_MEV.md`~~; ~~`refs/VOLUME_PATH.md`~~; ~~`refs/volume_path.gms`~~ (removed — use `cfmm-numopt/model/mev_tax_model_one/`)
 
 ---
 
