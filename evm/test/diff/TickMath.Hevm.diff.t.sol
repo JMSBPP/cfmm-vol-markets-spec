@@ -7,7 +7,7 @@ import {TickMathTest} from "v4-core/src/test/TickMathTest.sol";
 
 /// @dev Shared TickMath API implemented by the canonical test client and HEVM seam.
 interface ITickMathOracle {
-    function getSqrtPriceAtTick(int24 tick) external view returns (uint160);
+    function getSqrtPriceAtTick(int24 tick) external returns (uint160);
 }
 
 /// @title HevmDiffTest
@@ -58,8 +58,14 @@ contract HevmDiffTest is DiffTestBase {
         _requireComparisonRan();
     }
 
+    function test_getSqrtPriceAtTick_requiresHevmReadiness() public {
+        int24 tick = canonical.MIN_TICK();
+        vm.expectRevert(bytes("HevmTickMathHarness: relay/profile unavailable"));
+        hevm.getSqrtPriceAtTick(tick);
+    }
+
     /// @dev External execution makes the TickMath client path compatible with Seaport stateless tests.
-    function fn(Context memory context, FuzzArgs memory args) external view stateless {
+    function fn(Context memory context, FuzzArgs memory args) external stateless {
         assertEq(
             context.oracle.getSqrtPriceAtTick(args.tick),
             context.expectedSqrtPriceX96,
