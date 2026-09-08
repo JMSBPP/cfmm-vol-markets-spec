@@ -65,19 +65,21 @@ Details: `.planning/research/PITFALLS.md`
 
 ## Implications for Roadmap
 
-### Phase 1: HEVM harness + Stack spike
-**Rationale:** Cannot gate CI on an unresolved dependency  
-**Delivers:** `hevm-test` suite compiles; smoke execute pinned bytecode  
-**Avoids:** Blocking rewrite on a broken oracle  
+> **Refinement (2026-09-08):** Phase 1 is **Forge `evm/` + Seaport TickMath differential + `evm-spec-bridge` submodule (`hevm.call`)**. On bridge failure: issue on submodule + notify user. In-process Haskell `hevm` library spike is deferred/optional. See `HEVM-FORGE-TICKMATH.md`.
+
+### Phase 1: Forge `evm/` + TickMath Seaport differential
+**Rationale:** TDD oracle before rewriting SqrtGrid; reuse existing TickMath.sol tests  
+**Delivers:** `evm/` Foundry project, `v3-core@0.8`, `*.diff.t.sol` / `t.sol`, `evm-spec-bridge` submodule, failure→issue protocol  
+**Avoids:** Silent green without HEVM; reinventing relay/cheats; absorbing bridge bugs here  
 
 ### Phase 2: Bit-identical `SqrtGrid` (TickMath + `mulDiv`)
-**Rationale:** Foundation for every tick-indexed path  
-**Delivers:** Haskell port + exact HEVM word/revert parity; `Spec.hs`/plots green  
+**Rationale:** Foundation for every tick-indexed path once the Forge oracle exists  
+**Delivers:** Haskell port + exact differential green; `Spec.hs`/plots green  
 **Avoids:** `Double` TickMath; fused mulDiv  
 
 ### Phase 3: Scope ledger + consumer regression lock
 **Rationale:** Prevent overclaiming “bit-identical” package-wide  
-**Delivers:** Updated `BITWIDTHS.md`; documented deferred leaks; CI jobs split (fast Spec vs hevm-oracle)  
+**Delivers:** Updated `BITWIDTHS.md`; documented deferred leaks; CI jobs (fast Spec vs forge-hevm)  
 
 ### Phase 4+: Parity ladder (optional / later)
 **Rationale:** Only after SqrtGrid is trusted  
@@ -85,14 +87,16 @@ Details: `.planning/research/PITFALLS.md`
 
 ### Phase Ordering Rationale
 
-- HEVM must resolve before parity is a release gate  
+- Forge TickMath differential before Haskell rewrite (RED first)  
+- `evm-spec-bridge` as submodule; bridge defects filed upstream + user notified  
 - SqrtGrid before any cross-layer attribution of mismatches  
 - Anti-features keep v1 off continuum/`OptionRatio` refactors  
 
 ### Research Flags
 
-- **Phase 1:** Confirm `hevm-0.58.0` builds on LTS 24.55 (spike) — may need source pin / Nix CI deps  
-- **Phase 2:** Standard TickMath port once oracle exists — low research, high care on vectors  
+- **Phase 1:** Exact `v3-core@0.8` forge tag/remapping; submodule pin; relay/`FOUNDRY_PROFILE=hevm` in CI  
+- **Phase 2:** Standard TickMath port once oracle is RED — low research, high care on vectors  
+- **Optional:** Haskell in-process `hevm-0.58.0` × GHC 9.10 resolve (see STACK.md)  
 
 ## Confidence Assessment
 

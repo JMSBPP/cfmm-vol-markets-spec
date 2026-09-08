@@ -85,6 +85,15 @@ Prefer also `Fixes #<ISSUE_NUMBER>` / `Closes #<ISSUE_NUMBER>` in the PR body wh
 
 When the PR merges and the item is done, move it under **Done** (strike-through) and record issue + PR URLs.
 
+## 7. `evm-spec-bridge` submodule failures
+
+`evm-spec-bridge` is consumed as a **git submodule** (HEVM `hevm.call` / stdcheats). If a failure is attributable to the bridge (build, `hevm.call`, ffi, relay, stdcheats):
+
+1. Open a GitHub **issue on the submodule repo** (repro, expected vs actual, this package SHA + submodule SHA).
+2. **Notify the user in-chat** with the issue URL and a short paste-ready brief so they can **forward it to the bridge agent**.
+3. Do **not** silently patch bridge bugs in this package unless the user directs a temporary workaround.
+
+Details: `.planning/research/HEVM-FORGE-TICKMATH.md` (BRIDGE-03).
 
 ---
 This file mirrors `AGENTS.md` for Claude Code.

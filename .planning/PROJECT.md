@@ -2,11 +2,11 @@
 
 ## What This Is
 
-A GSD track inside `cfmm-vol-markets-spec` (`scratchpad/`) to make the Haskell `src/` twin of CFMM vol/variance instruments **fully EVM bit-identical**, proven under in-process **HEVM** (`hevm` → `EVM.hs`). The destination is hybrid: rewrite the numeric core so the **same plots and tests** keep working, but every hot path is guaranteed to match EVM semantics — starting with `SqrtGrid`, then expanding outward so EVM-adapted code can eventually replace today’s non-identical `.hs` arithmetic.
+A GSD track inside `cfmm-vol-markets-spec` (`scratchpad/`) to make the Haskell `src/` twin of CFMM vol/variance instruments **fully EVM bit-identical**. TDD starts in a local Foundry tree **`evm/`**: Seaport-style differential tests (vol-markets pattern) over Uniswap **`TickMath`**, with HEVM reached via **`JMSBPP/evm-spec-bridge` `feat/2-hevm-call-stdcheats`** (`hevm.call`). Once that oracle is RED/GREEN, rewrite **`SqrtGrid`** so the **same plots and tests** stay green under bit-identical arithmetic — then expand outward so EVM-adapted code can replace today’s non-identical `.hs` paths.
 
 ## Core Value
 
-**Plots and tests stay green, and the numeric core is bit-identical to the EVM** — HEVM is the oracle that makes that guarantee real, not aspirational.
+**Plots and tests stay green, and the numeric core is bit-identical to the EVM** — the Forge TickMath differential + `hevm.call` is the oracle that makes that guarantee real, not aspirational.
 
 ## Requirements
 
@@ -25,17 +25,18 @@ A GSD track inside `cfmm-vol-markets-spec` (`scratchpad/`) to make the Haskell `
 
 <!-- Hypotheses until shipped and validated. -->
 
-- [ ] Wire **in-process `hevm`** into this package (test/extra-dep; keep public lib plot-free)
-- [ ] Make **`SqrtGrid`** (Q96 / `mulDiv` / tick↔sqrt) **EVM bit-identical** in Haskell
-- [ ] HEVM **oracle tests** prove `SqrtGrid` fixtures match EVM / reference bytecode semantics
+- [ ] Create **`evm/`** Foundry project; `forge install` **`v3-core@0.8`**
+- [ ] First TDD wedge: **Seaport-style TickMath differential** (`*.diff.t.sol` / `t.sol`) over existing TickMath.sol unit-test corpus (vol-markets pattern)
+- [ ] Drive HEVM via **`evm-spec-bridge` submodule** (`feat/2-hevm-call-stdcheats` / `hevm.call`) — on bridge failure: **issue on submodule + notify user** (forward to bridge agent)
+- [ ] Make **`SqrtGrid`** EVM bit-identical in Haskell so the differential goes green
 - [ ] Existing **plots and `stack test` stay green** after the rewrite (same consumer APIs)
 - [ ] Document which `Double` leaks are closed vs deferred (`docs/BITWIDTHS.md` alignment)
-- [ ] Expand the same hybrid pattern to the next EVM-realizable modules (e.g. `LiquidityChunk`, replica paths) after SqrtGrid
+- [ ] Expand the same hybrid pattern to later EVM-realizable modules after TickMath/SqrtGrid
 
 ### Out of Scope
 
-- Replacing the entire `src/` surface with on-VM execution in v1 — hybrid: Haskell rewrite + HEVM oracle first; in-VM hot paths only if needed later
-- Full Foundry↔HEVM relay product work (lives in `evm_spec_rpc`; may integrate later, not this milestone’s core)
+- Replacing the entire `src/` surface with on-VM execution in v1 — hybrid: Forge diff + Haskell rewrite; in-VM hot paths only if needed later
+- Owning the Foundry↔HEVM **relay product** — consume `feat/2-hevm-call-stdcheats`, do not fork the relay
 - Continuum `VariancePortfolio` as an on-chain object — not EVM-realizable; replica remains the realizable path
 - Parent `cfmm-theory` GSD project (Shreve / discrete-calculus) — separate planning root
 - Rewriting Lean proofs or Chart/`plot/` internals for their own sake
@@ -44,15 +45,18 @@ A GSD track inside `cfmm-vol-markets-spec` (`scratchpad/`) to make the Haskell `
 
 - **Repo:** `cfmm-vol-markets-spec` (git root = this directory). Canonical upstream `d2p-finance/cfmm-vol-markets-spec`; fork `JMSBPP`.
 - **Intent:** Multiple `src/` modules are an EVM-semantics twin of vol_markets (payoffs, variance/vol, Panoptic packing). HEVM is being brought in so that twin is *provably* EVM-faithful.
-- **Dependency:** Hackage `hevm` (e.g. 0.58.0) exposes `EVM.hs` — symbolic/concrete EVM evaluator. Not yet in `package.yaml` / `stack.yaml`.
+- **Bridge:** `evm-spec-bridge` as a **git submodule** (branch **`feat/2-hevm-call-stdcheats`**) — `hevm.call` via ffi→relay. Local reference worktree: `apps/evm_spec_rpc/.worktrees/hevm-call-stdcheats`.
+- **Submodule failure protocol:** file issue on the bridge repo + notify user with URL/brief for forwarding to the bridge agent — do not silently absorb bridge bugs here.
+- **Pattern ref:** vol-markets `test/diff/PlankDiffTestBase.sol` + `*.diff.t.sol` (Seaport `DifferentialTest`).
 - **Known debt (from map):** `OptionRatio`/`StrikeX96`/tick→sqrt `Double` leaks; `SqrtGrid.sqrtPriceX96` not TickMath-identical; chunk×density EVM mul open.
-- **Phase-1 wedge:** `SqrtGrid` — foundation every other bit-identical path sits on.
+- **Phase-1 wedge:** Forge `evm/` TickMath Seaport differential (TDD); then Haskell `SqrtGrid`.
 
 ## Constraints
 
 - **Tech:** Stack LTS 24.55 / GHC 9.10.3; public library must remain plot-free (`base`, `vector`, `mwc-random` only today)
 - **Compatibility:** Consumer APIs used by `plot/`, `app/`, `test/Spec.hs` must not break — same plots and tests
 - **Bit-identity:** No “close enough” on HEVM-gated paths — fixtures must match EVM words
+- **Submodule:** `evm-spec-bridge` is a submodule; bridge defects → issue on submodule + user notify (forward to bridge agent)
 - **Planning:** Local `.planning/` only; do not overwrite parent `cfmm-theory/.planning/`
 
 ## Key Decisions
@@ -60,10 +64,13 @@ A GSD track inside `cfmm-vol-markets-spec` (`scratchpad/`) to make the Haskell `
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
 | Local GSD project in `scratchpad/` | Distinct from parent Shreve verification track | — Pending |
-| First component = `SqrtGrid` | Foundation for all Q96/tick math; map flags tick→sqrt as non-identical | — Pending |
-| In-process `hevm` in this repo | Direct oracle next to `src/`; not deferred entirely to bridge | — Pending |
+| First TDD component = Seaport TickMath differential in `evm/` | Reuse existing TickMath.sol tests; vol-markets `DifferentialTest` pattern | — Pending |
+| Forge `evm/` + `v3-core@0.8` | Local Foundry twin; pin Uniswap TickMath as Solidity reference | — Pending |
+| `evm-spec-bridge` as submodule + `hevm.call` | Consume `feat/2-hevm-call-stdcheats`; do not reinvent relay/cheats | — Pending |
+| Bridge failures → submodule issue + user notify | Keeps ownership on bridge agent; this package does not silent-patch | — Pending |
+| Then rewrite `SqrtGrid` | Foundation for all Q96/tick math once the Forge oracle is RED/GREEN | — Pending |
 | Done bar = bit-identical + same plots/tests | EVM-adapted code aims to *replace* non-identical `.hs` arithmetic under stable consumers | — Pending |
-| Hybrid replacement (option 3) | Rewrite Haskell to bit-identical + HEVM tests first; on-VM execution later only if needed | — Pending |
+| Hybrid replacement (option 3) | Forge+HEVM differential first; Haskell bit-identical rewrite; on-VM later only if needed | — Pending |
 
 ## Evolution
 
@@ -83,4 +90,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-09-08 after initialization*
+*Last updated: 2026-09-08 after requirements refinement (Forge TickMath diff + hevm-call-stdcheats)*
