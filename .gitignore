@@ -47,3 +47,4 @@ tmp/
 .aristotle-out/
 lean/archive/
 scratch/
+.run/
