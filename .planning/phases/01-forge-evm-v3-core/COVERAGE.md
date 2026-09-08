@@ -1,0 +1,1 @@
+No external API integration: Phase 1 only vendors Uniswap v4-core as a local Solidity library pin for TickMath compile smoke; no remote HTTP/SDK/webhook/MCP service surface is consumed (detector hit on the phrase "TickMath API").
