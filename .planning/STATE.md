@@ -1,3 +1,18 @@
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
+current_phase: 1
+status: unknown
+stopped_at: Phase 1 context gathered
+last_updated: "2026-09-08T15:21:58.338Z"
+progress:
+  total_phases: 1
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+---
+
 # Project State
 
 ## Project Reference
@@ -6,7 +21,7 @@ See: `.planning/PROJECT.md` (updated 2026-09-08)
 
 **Core value:** Plots and tests stay green, and the numeric core is bit-identical to the EVM — Forge TickMath differential + `hevm.call` is the oracle.
 
-**Current focus:** Phase 1 — Forge `evm/` + v3-core (awaiting discuss/plan)
+**Current focus:** Phase 1 — Forge `evm/` + v4-core@v4.0.0 (context gathered; ready to plan)
 
 ## Current Position
 
@@ -33,9 +48,8 @@ None yet.
 
 ## Next Actions
 
-1. Approve roadmap (or adjust phases)
-2. `$gsd-discuss-phase 1` — gather context for Forge `evm/` scaffold
-3. `$gsd-plan-phase 1` — then execute
+1. `$gsd-plan-phase 1` — plan Forge `evm/` + `Uniswap/v4-core@v4.0.0` scaffold
+2. After Phase 1 execute: `$gsd-discuss-phase 2` — Seaport diff base (TickMath↔SqrtGrid driver follows)
 
 ## Notes
 
@@ -44,3 +58,9 @@ None yet.
 
 ---
 *State initialized: 2026-09-08*
+
+## Session
+
+**Last session:** 2026-09-08T15:21:58.331Z
+**Stopped at:** Phase 1 context gathered
+**Resume file:** .planning/phases/01-forge-evm-v3-core/01-CONTEXT.md
