@@ -29,7 +29,7 @@ Stand up a Foundry `evm/` twin, consume `evm-spec-bridge` as a submodule for `he
   2. TickMathHarness imports the v4 TickMath API through the committed `v4-core/` remapping
   3. The exact v4.0.0 tag and resolved SHA are recorded in remappings, lock, and README
 
-**Plans:** 1/1 plans executed
+**Plans:** 1/1 plans complete
 
 Plans:
 
@@ -179,7 +179,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Forge `evm/` + v4-core | 1/1 | Complete | 2026-09-08 |
+| 1. Forge `evm/` + v4-core | 1/1 | Complete    | 2026-09-08 |
 | 2. Seaport differential base | 0/TBD | Not started | - |
 | 3. Bridge submodule | 0/TBD | Not started | - |
 | 4. TickMath diff RED | 0/TBD | Not started | - |
