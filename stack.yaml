@@ -64,9 +64,9 @@ nix:
   - expat
   - fontconfig
   - freetype
-  - xorg.libXau
-  - xorg.libXdmcp
-  - xorg.libxcb
+  - libxau
+  - libxdmcp
+  - libxcb
 
 # Override default flag values for project packages and extra-deps
 # flags: {}

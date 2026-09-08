@@ -126,9 +126,24 @@ internal-libraries:
     - colour
 
 executables:
+  hevm-tickmath-peer:
+    main:                Main.hs
+    source-dirs:         app/HevmTickMathPeer
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    dependencies:
+    - cfmm-vol-markets-spec
+    - cfmm-vol-markets-spec:hevm-adapter
+    - aeson
+    - bytestring
+    - network
+    - scientific
+    - text
   cfmm-vol-markets-spec-exe:
     main:                Main.hs
     source-dirs:         app
+    other-modules: []
     ghc-options:
     - -threaded
     - -rtsopts
@@ -149,6 +164,7 @@ tests:
   cfmm-vol-markets-spec-test:
     main:                Spec.hs
     source-dirs:         test
+    other-modules: []
     ghc-options:
     - -threaded
     - -rtsopts
