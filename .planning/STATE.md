@@ -22,7 +22,7 @@ See: `.planning/PROJECT.md` (updated 2026-09-08)
 
 **Core value:** Plots and tests stay green, and the numeric core is bit-identical to the EVM — Forge TickMath differential + `hevm.call` is the oracle.
 
-**Current focus:** Phase 2 — Seaport differential base (ready for discussion and planning)
+**Current focus:** Phase 2 — Seaport differential base (context gathered; ready to plan)
 
 ## Current Position
 
@@ -44,6 +44,7 @@ See: `.planning/PROJECT.md` (updated 2026-09-08)
 | `evm-spec-bridge` as submodule | `hevm.call`; failures → issue + user notify | 2026-09-08 |
 | Hybrid replacement | Forge+HEVM oracle, then Haskell rewrite | 2026-09-08 |
 | Phase 1 oracle = v4-core@v4.0.0 | CONTEXT D-01/D-02; no Uniswap `@0.8` tag | 2026-09-08 |
+| Phase 2 HevmDiffTest skeleton | Uniswap TickMath client; HEVM stub RED until bridge | 2026-09-08 |
 
 ## Blockers
 
@@ -51,8 +52,8 @@ None yet.
 
 ## Next Actions
 
-1. `$gsd-verify-work 1` — verify the pinned TickMath Foundry scaffold
-2. `$gsd-discuss-phase 2` — define the Seaport differential base
+1. `$gsd-plan-phase 2` — plan Seaport base + HevmDiffTest skeleton
+2. After execute: `$gsd-discuss-phase 3` — bridge / `hevm.call`
 
 ## Notes
 
@@ -63,9 +64,9 @@ None yet.
 
 ## Session
 
-**Last session:** 2026-09-08T15:39:14.455Z
-**Stopped at:** Completed 01-01-PLAN.md
-**Resume file:** None
+**Last session:** 2026-09-08T16:10:00.000Z
+**Stopped at:** Phase 2 context gathered
+**Resume file:** .planning/phases/02-seaport-differential-base/02-CONTEXT.md
 
 ## Performance Metrics
 
