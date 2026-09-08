@@ -14,6 +14,34 @@ permissions:
   contents: read
 
 jobs:
+  # Push / PR gate for the nested Foundry TickMath scaffold (Phase 1).
+  # Requires recursive submodule init so Uniswap/v4-core@v4.0.0 and its
+  # forge-std / OZ / solmate dependency chain are present before `forge build`.
+  forge:
+    name: submodule init + forge build (evm/)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+
+      - name: Assert v4-core pin
+        run: |
+          expected=e50237c43811bd9b526eff40f26772152a42daba
+          actual="$(git -C evm/lib/v4-core rev-parse HEAD)"
+          echo "v4-core HEAD=$actual"
+          test "$actual" = "$expected"
+          grep -q 'v4-core/=lib/v4-core/' evm/remappings.txt
+          grep -q "$expected" evm/foundry.lock
+
+      - name: forge build
+        run: forge build --root evm
+
   stack:
     name: stack build && stack test
     runs-on: ubuntu-latest
