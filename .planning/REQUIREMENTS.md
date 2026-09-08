@@ -7,7 +7,7 @@
 ## Process (TDD)
 
 1. Stand up **`evm/`** as a Foundry project inside this repo.  
-2. **`forge install` Uniswap `v3-core@0.8`** (exact install string as used in execute).  
+2. **`forge install` Uniswap `v4-core@v4.0.0`** with the `v4-core/` remapping and locked release revision.
 3. First RED→GREEN wedge: a **Seaport-pattern differential test** (vol-markets `*.diff.t.sol` / `DifferentialTest` style) over the **already-written `TickMath.sol` unit-test corpus**, in a `t.sol` / `TickMath.diff.t.sol` suite.  
 4. Drive HEVM through **`hevm.call`** from **`evm-spec-bridge` as a git submodule** (`feat/2-hevm-call-stdcheats`: StdCheats-style `vm.ffi` → relay → HEVM). Do not reinvent the cheat surface. **On submodule failure → open an issue on the bridge repo and notify the user** (forwardable to the bridge agent).  
 5. Only after the TickMath differential is meaningful: rewrite Haskell `SqrtGrid` so plots/`stack test` stay green **and** match the EVM side bit-for-bit.
@@ -16,13 +16,13 @@
 
 ### Forge `evm/` scaffold
 - [ ] **EVM-01**: `evm/` is a working Foundry project (`foundry.toml`, `src/`, `test/`, remappings) under this repo root
-- [ ] **EVM-02**: Uniswap **`v3-core@0.8`** is installed as a forge dependency and TickMath is importable
+- [ ] **EVM-02**: Uniswap **`v4-core@v4.0.0`** is installed as a Forge dependency and v4 TickMath is importable
 - [ ] **EVM-03**: Seaport (or vendored `DifferentialTest` equivalent matching vol-markets) is available for the diff-test base — same pattern as `vol-markets` `test/diff/PlankDiffTestBase.sol`
 
 ### TickMath differential (first component — TDD)
 - [ ] **TICK-01**: Differential suite (`*.diff.t.sol` / `t.sol`) reuses the **existing TickMath.sol test cases** as the input corpus (not a hand-waved new vector set)
 - [ ] **TICK-02**: Seaport-style exec: run the same `Context` twice with swapped oracles / implementations, then assert **exact** equality (tol 0); non-vacuity (`diffComparisons > 0`)
-- [ ] **TICK-03**: One side is canonical v3-core `TickMath`; the other side is reached via **`hevm.call`** (bridge stdcheats path) and/or the Haskell twin once wired — TDD starts RED on the HEVM/Haskell seam
+- [ ] **TICK-03**: One side is canonical v4-core `TickMath`; the other side is reached via **`hevm.call`** (bridge stdcheats path) and/or the Haskell twin once wired — TDD starts RED on the HEVM/Haskell seam
 - [ ] **TICK-04**: Suite documents skip/probe doctrine if the HEVM relay is down (vol-markets SpecHelper pattern: no silent green)
 
 ### Bridge / HEVM cheat surface
@@ -95,7 +95,7 @@
 
 ## Definition of Done (v1)
 
-- `evm/` forge project builds; v3-core@0.8 installed  
+- `evm/` Forge project builds; `Uniswap/v4-core@v4.0.0` installed
 - TickMath Seaport differential suite exists and is non-vacuous when HEVM relay is up  
 - `hevm.call` path uses `feat/2-hevm-call-stdcheats`  
 - SqrtGrid rewritten to pass that oracle; Spec/plots green  

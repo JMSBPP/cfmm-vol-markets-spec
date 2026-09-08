@@ -6,7 +6,7 @@ Stand up a Foundry `evm/` twin, consume `evm-spec-bridge` as a submodule for `he
 
 ## Phases
 
-- [ ] **Phase 1: Forge `evm/` + v3-core** - Scaffold Foundry project and install `v3-core@0.8`
+- [ ] **Phase 1: Forge `evm/` + v4-core** - Scaffold Foundry project and pin `Uniswap/v4-core@v4.0.0`
 - [ ] **Phase 2: Seaport differential base** - Wire `DifferentialTest` pattern (vol-markets style)
 - [ ] **Phase 3: Bridge submodule** - Add `evm-spec-bridge`, docs, failure→issue protocol
 - [ ] **Phase 4: TickMath diff RED** - Corpus from existing TickMath tests; Seaport exec; non-vacuity / skip doctrine
@@ -17,21 +17,19 @@ Stand up a Foundry `evm/` twin, consume `evm-spec-bridge` as a submodule for `he
 
 ## Phase Details
 
-### Phase 1: Forge `evm/` + v3-core
-**Goal:** `evm/` Foundry project builds and imports Uniswap TickMath from `v3-core@0.8`
+### Phase 1: Forge `evm/` + v4-core
+**Goal:** `evm/` Foundry project builds and imports Uniswap v4 TickMath from `Uniswap/v4-core@v4.0.0`
 **Mode:** mvp
 **Depends on:** Nothing (first phase)
 **Requirements:** EVM-01, EVM-02
 **Success Criteria** (what must be TRUE):
   1. `forge build` succeeds under `evm/`
-  2. TickMath (or wrapper) is importable from the installed `v3-core@0.8` remapping
-  3. Exact forge install pin is recorded in remappings / lock / README note
-**Plans:** TBD
+  2. TickMathHarness imports the v4 TickMath API through the committed `v4-core/` remapping
+  3. The exact v4.0.0 tag and resolved SHA are recorded in remappings, lock, and README
+**Plans:** 1
 
 Plans:
-- [ ] 01-01: `forge init` / `foundry.toml` under `evm/`
-- [ ] 01-02: `forge install v3-core@0.8` + remappings
-- [ ] 01-03: Smoke import / compile TickMath
+- [ ] 01-01: Pinned Foundry TickMath walking skeleton
 
 ### Phase 2: Seaport differential base
 **Goal:** Diff-test infrastructure matching vol-markets Seaport `DifferentialTest` pattern
@@ -148,7 +146,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Forge `evm/` + v3-core | 0/TBD | Not started | - |
+| 1. Forge `evm/` + v4-core | 0/1 | Not started | - |
 | 2. Seaport differential base | 0/TBD | Not started | - |
 | 3. Bridge submodule | 0/TBD | Not started | - |
 | 4. TickMath diff RED | 0/TBD | Not started | - |
