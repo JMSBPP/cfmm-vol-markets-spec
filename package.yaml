@@ -44,8 +44,79 @@ ghc-options:
 # to this package's own exe and test suite but not to `build-depends` outside it.
 library:
   source-dirs: src
+  exposed-modules:
+  - Greeks.Delta
+  - Greeks.Gamma
+  - Greeks.Theta
+  - Greeks.Vega
+  - Hedge.Ledger
+  - Lib
+  - Liquidity.LiquidityChunk
+  - Liquidity.LiquidityDensity
+  - Liquidity.LiquidityGrid
+  - Liquidity.TickLiquidity
+  - OptionRatio
+  - Panoptic.Binning
+  - Panoptic.LegChunk
+  - Panoptic.MintPlan
+  - Panoptic.NId
+  - Payoffs.CashSecuredPut
+  - Payoffs.CLMMPosition
+  - Payoffs.CoveredCall
+  - Payoffs.Forward
+  - Payoffs.HolderPath
+  - Payoffs.LadderPosition
+  - Payoffs.Linear
+  - Payoffs.Log
+  - Payoffs.LvrRate
+  - Payoffs.PathAccrual
+  - Payoffs.Payoff
+  - Payoffs.RangeAccrualNote
+  - Payoffs.ReplicaDelta
+  - Payoffs.Return
+  - Payoffs.Savings
+  - Payoffs.Swap
+  - Payoffs.TransactionalFeeCapture
+  - Payoffs.TransactionalReturn
+  - Payoffs.VariancePortfolio
+  - Payoffs.VolatilityCall
+  - Payoffs.VolatilityReplica
+  - Pricing.AdaptiveStremia
+  - Pricing.ExpectedReturn
+  - Pricing.FeeStructure
+  - Pricing.InterestPriceMap
+  - Pricing.InterestSqrt
+  - Pricing.MarkUpStructure
+  - Pricing.PriceDeformation
+  - Pricing.Stremia
+  - SqrtGrid
+  - State
+  - StrikeX96
+  - TargetVega
+  - TickPath
+  - Trading.KappaCoordinate
+  - Trading.PriceImpact
+  - Trading.Quote
+  - Volatility.ExpectedVolatility
+  - Volatility.ImpliedVolatility
+  - Volatility.TickVolatility
+  - Volatility.VolatilityGrid
+  - Volatility.VolOrder
+  - Volatility.VolTermStructure
+  other-modules: []
 
 internal-libraries:
+  hevm-adapter:
+    source-dirs: src
+    exposed-modules:
+    - HevmTickMathAdapter
+    other-modules: []
+    dependencies:
+    - cfmm-vol-markets-spec
+    - aeson
+    - bytestring
+    - hevm == 0.58.0
+    - text
   plot:
     source-dirs: plot
     dependencies:
@@ -68,6 +139,13 @@ executables:
     - directory
 
 tests:
+  hevm-adapter-test:
+    main:                HevmTickMathAdapterSpec.hs
+    source-dirs:         test
+    other-modules: []
+    dependencies:
+    - cfmm-vol-markets-spec
+    - cfmm-vol-markets-spec:hevm-adapter
   cfmm-vol-markets-spec-test:
     main:                Spec.hs
     source-dirs:         test
