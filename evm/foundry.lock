@@ -1,4 +1,16 @@
 {
+  "lib/forge-std": {
+    "tag": {
+      "name": "v1.16.1",
+      "rev": "620536fa5277db4e3fd46772d5cbc1ea0696fb43"
+    }
+  },
+  "lib/seaport": {
+    "tag": {
+      "name": "1.6",
+      "rev": "e9c5a9f17cb5ee658ccc9cb1a8eeab02c1f5a4cd"
+    }
+  },
   "lib/v4-core": {
     "tag": {
       "name": "v4.0.0",
