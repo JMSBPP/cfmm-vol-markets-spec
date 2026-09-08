@@ -10,9 +10,11 @@ contract HevmTickMathHarness {
     Vm private constant VM = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 
     function getSqrtPriceAtTick(int24 tick) external returns (uint160) {
-        string memory profile = VM.envOr("FOUNDRY_PROFILE", string(""));
+        // Foundry may not expose FOUNDRY_PROFILE to cheatcode env; the runner sets HEVM_LIVE=1
+        // alongside FOUNDRY_PROFILE=hevm (FFI). RELAY_SOCK remains the socket readiness guard.
+        string memory live = VM.envOr("HEVM_LIVE", string(""));
         string memory relaySocket = VM.envOr("RELAY_SOCK", string(""));
-        if (keccak256(bytes(profile)) != keccak256(bytes("hevm")) || bytes(relaySocket).length == 0) {
+        if (keccak256(bytes(live)) != keccak256(bytes("1")) || bytes(relaySocket).length == 0) {
             revert("HevmTickMathHarness: relay/profile unavailable");
         }
 
@@ -21,11 +23,14 @@ contract HevmTickMathHarness {
     }
 
     function _decodeJsonUint160(bytes memory raw) private pure returns (uint160) {
-        require(raw.length > 0, "HevmTickMathHarness: invalid uint160 response");
+        // Accept a JSON decimal string (`"123"`) so Foundry ffi does not hex-decode
+        // digit-only stdout. Bare decimals are rejected for that reason.
+        require(raw.length >= 3, "HevmTickMathHarness: invalid uint160 response");
+        require(raw[0] == '"' && raw[raw.length - 1] == '"', "HevmTickMathHarness: invalid uint160 response");
 
         uint256 value;
         uint256 maximum = type(uint160).max;
-        for (uint256 i = 0; i < raw.length; i++) {
+        for (uint256 i = 1; i + 1 < raw.length; i++) {
             uint8 character = uint8(raw[i]);
             require(
                 character >= uint8(bytes1("0")) && character <= uint8(bytes1("9")),
@@ -35,6 +40,7 @@ contract HevmTickMathHarness {
             require(value <= (maximum - digit) / 10, "HevmTickMathHarness: invalid uint160 response");
             value = value * 10 + digit;
         }
+        require(raw.length > 2, "HevmTickMathHarness: invalid uint160 response");
         return uint160(value);
     }
 }

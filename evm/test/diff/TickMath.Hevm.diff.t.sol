@@ -52,13 +52,16 @@ contract HevmDiffTest is DiffTestBase {
         test(this.fn, context, args);
 
         context.oracle = ITickMathOracle(address(hevm));
-        this.fn(context, args);
+        // Same Seaport success-revert catch path as Side A (stateless ends in assertPass).
+        test(this.fn, context, args);
 
         diffComparisons++;
         _requireComparisonRan();
     }
 
     function test_getSqrtPriceAtTick_requiresHevmReadiness() public {
+        vm.setEnv("HEVM_LIVE", "");
+        vm.setEnv("RELAY_SOCK", "");
         int24 tick = canonical.MIN_TICK();
         vm.expectRevert(bytes("HevmTickMathHarness: relay/profile unavailable"));
         hevm.getSqrtPriceAtTick(tick);

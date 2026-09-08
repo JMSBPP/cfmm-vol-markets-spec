@@ -143,11 +143,13 @@ dispatch artifactPath requestLine =
                       (requestId request)
                       (-32000 :: Int)
                       (Text.pack (displayException err))
+                  -- Emit a JSON *string* so Foundry `vm.ffi` does not hex-decode a
+                  -- digit-only decimal (e.g. 4295128739 → 5 raw bytes).
                   Right (SqrtPriceX96 value) ->
                     object
                       [ "jsonrpc" .= ("2.0" :: Text)
                       , "id" .= requestId request
-                      , "result" .= value
+                      , "result" .= Text.pack (show value)
                       ]
 
 singletonInt24 :: Value -> Either Text Int
