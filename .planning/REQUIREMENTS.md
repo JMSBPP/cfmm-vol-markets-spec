@@ -67,7 +67,24 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| *(filled by roadmap)* | | |
+| EVM-01 | 1 | Pending |
+| EVM-02 | 1 | Pending |
+| EVM-03 | 2 | Pending |
+| BRIDGE-01 | 3 | Pending |
+| BRIDGE-02 | 3 | Pending |
+| BRIDGE-03 | 3 | Pending |
+| TICK-01 | 4 | Pending |
+| TICK-02 | 4 | Pending |
+| TICK-04 | 4 | Pending |
+| TICK-03 | 5 | Pending |
+| SQRT-01 | 6 | Pending |
+| SQRT-02 | 6 | Pending |
+| SQRT-04 | 6–7 | Pending |
+| SQRT-03 | 7 | Pending |
+| COMPAT-01 | 8 | Pending |
+| COMPAT-02 | 8 | Pending |
+| COMPAT-03 | 8 | Pending |
+| SCOPE-01 | 8 | Pending |
 
 ## User Stories & Acceptance Criteria
 
