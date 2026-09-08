@@ -8,7 +8,7 @@ Stand up a Foundry `evm/` twin, consume `evm-spec-bridge` as a submodule for `he
 
 - [x] **Phase 1: Forge `evm/` + v4-core** - Scaffold Foundry project and pin `Uniswap/v4-core@v4.0.0`
 - [x] **Phase 2: Seaport differential base** - Wire `DifferentialTest` pattern (vol-markets style)
-- [ ] **Phase 3: Bridge submodule** - Add `evm-spec-bridge`, docs, failure→issue protocol
+- [x] **Phase 3: Bridge submodule** - Add `evm-spec-bridge`, docs, failure→issue protocol
 - [ ] **Phase 4: TickMath diff RED** - Corpus from existing TickMath tests; Seaport exec; non-vacuity / skip doctrine
 - [ ] **Phase 5: `hevm.call` seam** - Second oracle via stdcheats; TICK-03 RED→probe
 - [ ] **Phase 6: SqrtGrid TickMath port** - Bit-identical `sqrtPriceX96` / inverse under the oracle
@@ -80,11 +80,11 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 03-02-PLAN.md — Add the private EVM-backed peer and make the minimum-tick differential live
+- [x] 03-02-PLAN.md — Add the private EVM-backed peer and make the minimum-tick differential live
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 03-03-PLAN.md — Document BRIDGE-02/03 and require relay-up GREEN in CI
+- [x] 03-03-PLAN.md — Document BRIDGE-02/03 and require relay-up GREEN in CI
 
 ### Phase 4: TickMath diff RED
 

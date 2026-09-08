@@ -34,7 +34,7 @@ See: `.planning/PROJECT.md` (updated 2026-09-08)
 | Current Plan | 2 of 3 |
 | Total Plans in Phase | 3 |
 | Plans | `03-01`, `03-02`, `03-03` planned |
-| Status | Ready to execute |
+| Status | Phase 3 complete — ready to verify |
 | Mode | Vertical MVP + Walking Skeleton |
 | Granularity | Fine |
 | Workflow | Interactive; research on; plan_check off; verifier on |
@@ -57,7 +57,7 @@ None yet.
 
 ## Next Actions
 
-1. `$gsd-execute-phase 3` — run Wave 1→3 plans
+1. `$gsd-verify-work 3` — verify Phase 3 bridge GREEN contract
 2. Review assumption-delta in `03-02-PLAN.md` (HEVM-executes TickMath bytecode; SqrtGrid not the min-tick oracle yet)
 
 ## Notes
