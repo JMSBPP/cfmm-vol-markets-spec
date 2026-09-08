@@ -95,7 +95,20 @@ Each task was committed atomically:
 
 ## Deviations from Plan
 
-None - plan executed exactly as written.
+### Auto-fixed Issues
+
+**1. [Rule 3 - Blocking] Normalized state-plan fields for the GSD lifecycle command**
+- **Found during:** Plan close-out
+- **Issue:** The existing `STATE.md` used a prose `Plans` row, so `state.advance-plan` could not parse the current and total plan counts.
+- **Fix:** Added the canonical `Current Plan` and `Total Plans in Phase` fields, then reran the lifecycle transition successfully.
+- **Files modified:** `.planning/STATE.md`
+- **Verification:** `state.advance-plan` returned `reason: "last_plan"` and `status: "ready_for_verification"`.
+- **Committed in:** plan metadata commit
+
+---
+
+**Total deviations:** 1 auto-fixed (1 blocking).
+**Impact on plan:** The state-format normalization was necessary for reliable close-out metadata only; CI behavior and Phase 2 scope are unchanged.
 
 ## Issues Encountered
 

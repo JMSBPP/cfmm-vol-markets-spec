@@ -7,7 +7,7 @@ Stand up a Foundry `evm/` twin, consume `evm-spec-bridge` as a submodule for `he
 ## Phases
 
 - [x] **Phase 1: Forge `evm/` + v4-core** - Scaffold Foundry project and pin `Uniswap/v4-core@v4.0.0`
-- [ ] **Phase 2: Seaport differential base** - Wire `DifferentialTest` pattern (vol-markets style)
+- [x] **Phase 2: Seaport differential base** - Wire `DifferentialTest` pattern (vol-markets style)
 - [ ] **Phase 3: Bridge submodule** - Add `evm-spec-bridge`, docs, failure→issue protocol
 - [ ] **Phase 4: TickMath diff RED** - Corpus from existing TickMath tests; Seaport exec; non-vacuity / skip doctrine
 - [ ] **Phase 5: `hevm.call` seam** - Second oracle via stdcheats; TICK-03 RED→probe
@@ -47,7 +47,7 @@ Plans:
   1. A base contract (or remapped Seaport utils) provides `DifferentialTest` / `assertPass`-style helpers
   2. A trivial smoke `.diff.t.sol` compiles and demonstrates swap-context + non-vacuity counters
 
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans executed
 
 Plans:
 **Wave 1**
@@ -56,7 +56,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 02-02-PLAN.md — Enforce exact pins, green compilation, and cause-specific RED in CI
+- [x] 02-02-PLAN.md — Enforce exact pins, green compilation, and cause-specific RED in CI
 
 ### Phase 3: Bridge submodule
 
@@ -184,7 +184,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Forge `evm/` + v4-core | 1/1 | Complete    | 2026-09-08 |
-| 2. Seaport differential base | 1/2 | In Progress|  |
+| 2. Seaport differential base | 2/2 | Complete | 2026-09-08 |
 | 3. Bridge submodule | 0/TBD | Not started | - |
 | 4. TickMath diff RED | 0/TBD | Not started | - |
 | 5. `hevm.call` seam | 0/TBD | Not started | - |
