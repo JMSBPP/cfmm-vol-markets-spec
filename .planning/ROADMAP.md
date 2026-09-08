@@ -47,7 +47,7 @@ Plans:
   1. A base contract (or remapped Seaport utils) provides `DifferentialTest` / `assertPass`-style helpers
   2. A trivial smoke `.diff.t.sol` compiles and demonstrates swap-context + non-vacuity counters
 
-**Plans:** 2/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 **Wave 1**
@@ -184,7 +184,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Forge `evm/` + v4-core | 1/1 | Complete    | 2026-09-08 |
-| 2. Seaport differential base | 2/2 | Complete | 2026-09-08 |
+| 2. Seaport differential base | 2/2 | Complete    | 2026-09-08 |
 | 3. Bridge submodule | 0/TBD | Not started | - |
 | 4. TickMath diff RED | 0/TBD | Not started | - |
 | 5. `hevm.call` seam | 0/TBD | Not started | - |
