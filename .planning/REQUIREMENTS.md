@@ -15,8 +15,8 @@
 ## v1 Requirements
 
 ### Forge `evm/` scaffold
-- [ ] **EVM-01**: `evm/` is a working Foundry project (`foundry.toml`, `src/`, `test/`, remappings) under this repo root
-- [ ] **EVM-02**: Uniswap **`v4-core@v4.0.0`** is installed as a Forge dependency and v4 TickMath is importable
+- [x] **EVM-01**: `evm/` is a working Foundry project (`foundry.toml`, `src/`, `test/`, remappings) under this repo root
+- [x] **EVM-02**: Uniswap **`v4-core@v4.0.0`** is installed as a Forge dependency and v4 TickMath is importable
 - [ ] **EVM-03**: Seaport (or vendored `DifferentialTest` equivalent matching vol-markets) is available for the diff-test base — same pattern as `vol-markets` `test/diff/PlankDiffTestBase.sol`
 
 ### TickMath differential (first component — TDD)
@@ -67,8 +67,8 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| EVM-01 | 1 | Pending |
-| EVM-02 | 1 | Pending |
+| EVM-01 | 1 | Complete |
+| EVM-02 | 1 | Complete |
 | EVM-03 | 2 | Pending |
 | BRIDGE-01 | 3 | Pending |
 | BRIDGE-02 | 3 | Pending |
