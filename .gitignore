@@ -28,6 +28,9 @@ outputs/
 # Leftover nested template (has its own .git)
 tmp/
 
+# GSD research-store project cache (use research-store get; not source of truth)
+.planning/research/.cache/
+
 # Secrets
 .env
 .env.*
@@ -48,3 +51,8 @@ tmp/
 lean/archive/
 scratch/
 .run/
+
+# Generated Foundry artifacts for the nested EVM oracle scaffold
+evm/cache/
+evm/out/
+evm/broadcast/
