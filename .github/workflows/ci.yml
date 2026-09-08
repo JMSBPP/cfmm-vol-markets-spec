@@ -30,17 +30,52 @@ jobs:
         with:
           version: stable
 
-      - name: Assert v4-core pin
+      - name: Assert exact Foundry dependency pins
         run: |
-          expected=e50237c43811bd9b526eff40f26772152a42daba
-          actual="$(git -C evm/lib/v4-core rev-parse HEAD)"
-          echo "v4-core HEAD=$actual"
-          test "$actual" = "$expected"
+          v4_core_expected=e50237c43811bd9b526eff40f26772152a42daba
+          seaport_expected=e9c5a9f17cb5ee658ccc9cb1a8eeab02c1f5a4cd
+          forge_std_expected=620536fa5277db4e3fd46772d5cbc1ea0696fb43
+
+          v4_core_actual="$(git -C evm/lib/v4-core rev-parse HEAD)"
+          seaport_actual="$(git -C evm/lib/seaport rev-parse HEAD)"
+          forge_std_actual="$(git -C evm/lib/forge-std rev-parse HEAD)"
+          echo "v4-core HEAD=$v4_core_actual"
+          echo "seaport HEAD=$seaport_actual"
+          echo "forge-std HEAD=$forge_std_actual"
+
+          test "$v4_core_actual" = "$v4_core_expected"
+          test "$seaport_actual" = "$seaport_expected"
+          test "$forge_std_actual" = "$forge_std_expected"
+
           grep -q 'v4-core/=lib/v4-core/' evm/remappings.txt
-          grep -q "$expected" evm/foundry.lock
+          grep -q '@seaport/=lib/seaport/test/foundry/' evm/remappings.txt
+          grep -q 'forge-std/=lib/forge-std/src/' evm/remappings.txt
+          grep -A 4 '"lib/v4-core"' evm/foundry.lock | grep -q "$v4_core_expected"
+          grep -A 4 '"lib/seaport"' evm/foundry.lock | grep -q '"name": "1.6"'
+          grep -A 4 '"lib/seaport"' evm/foundry.lock | grep -q "$seaport_expected"
+          grep -A 4 '"lib/forge-std"' evm/foundry.lock | grep -q '"name": "v1.16.1"'
+          grep -A 4 '"lib/forge-std"' evm/foundry.lock | grep -q "$forge_std_expected"
 
       - name: forge build
         run: forge build --root evm
+
+      - name: Assert HevmDiffTest remains intentionally RED
+        run: |
+          set +e
+          out="$(forge test --root evm --match-contract HevmDiffTest -vv 2>&1)"
+          rc=$?
+          set -e
+          printf '%s\n' "$out"
+
+          if [ "$rc" -eq 0 ]; then
+            echo "::error::HevmDiffTest unexpectedly passed; Phase 2 requires the HEVM seam to remain RED"
+            exit 1
+          fi
+
+          if ! printf '%s\n' "$out" | grep -q 'hevm.call not wired'; then
+            echo "::error::HevmDiffTest failed for a cause other than the expected HEVM stub"
+            exit 1
+          fi
 
   stack:
     name: stack build && stack test
