@@ -47,12 +47,16 @@ Plans:
   1. A base contract (or remapped Seaport utils) provides `DifferentialTest` / `assertPass`-style helpers
   2. A trivial smoke `.diff.t.sol` compiles and demonstrates swap-context + non-vacuity counters
 
-**Plans:** TBD
+**Plans:** 2 plans
 
 Plans:
+**Wave 1**
 
-- [ ] 02-01: Vendor or remapping for Seaport `DifferentialTest`
-- [ ] 02-02: `DiffTestBase` + smoke differential
+- [ ] 02-01-PLAN.md — Trace one upstream TickMath case through Seaport to the intentional RED HEVM seam
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 02-02-PLAN.md — Enforce exact pins, green compilation, and cause-specific RED in CI
 
 ### Phase 3: Bridge submodule
 
@@ -180,7 +184,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Forge `evm/` + v4-core | 1/1 | Complete    | 2026-09-08 |
-| 2. Seaport differential base | 0/TBD | Not started | - |
+| 2. Seaport differential base | 0/2 | Planned | - |
 | 3. Bridge submodule | 0/TBD | Not started | - |
 | 4. TickMath diff RED | 0/TBD | Not started | - |
 | 5. `hevm.call` seam | 0/TBD | Not started | - |

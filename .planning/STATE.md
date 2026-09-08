@@ -22,7 +22,7 @@ See: `.planning/PROJECT.md` (updated 2026-09-08)
 
 **Core value:** Plots and tests stay green, and the numeric core is bit-identical to the EVM — Forge TickMath differential + `hevm.call` is the oracle.
 
-**Current focus:** Phase 2 — Seaport differential base (context gathered; ready to plan)
+**Current focus:** Phase 2 — Seaport differential base (planned; ready to execute)
 
 ## Current Position
 
@@ -52,8 +52,8 @@ None yet.
 
 ## Next Actions
 
-1. `$gsd-plan-phase 2` — plan Seaport base + HevmDiffTest skeleton
-2. After execute: `$gsd-discuss-phase 3` — bridge / `hevm.call`
+1. `$gsd-execute-phase 2` — Seaport + HevmDiffTest skeleton (build green, suite RED)
+2. After verify: `$gsd-discuss-phase 3` — bridge / `hevm.call`
 
 ## Notes
 
