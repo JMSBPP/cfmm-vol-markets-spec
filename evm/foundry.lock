@@ -1,4 +1,7 @@
 {
+  "lib/evm-spec-bridge": {
+    "rev": "aad230528f93be04a00d0209f10eaa3084d84de5"
+  },
   "lib/forge-std": {
     "tag": {
       "name": "v1.16.1",

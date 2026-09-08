@@ -3,9 +3,13 @@ src = "src"
 test = "test"
 out = "out"
 libs = ["lib"]
-solc_version = "0.8.28"
+solc_version = "0.8.34"
 remappings = [
     "@seaport/=lib/seaport/test/foundry/",
+    "evm-spec-bridge/=lib/evm-spec-bridge/solidity/src/",
     "forge-std/=lib/forge-std/src/",
     "v4-core/=lib/v4-core/",
 ]
+
+[profile.hevm]
+ffi = true

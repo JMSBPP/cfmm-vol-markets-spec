@@ -7,3 +7,6 @@
 [submodule "evm/lib/forge-std"]
 	path = evm/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
+[submodule "evm/lib/evm-spec-bridge"]
+	path = evm/lib/evm-spec-bridge
+	url = https://github.com/JMSBPP/evm-spec-bridge
