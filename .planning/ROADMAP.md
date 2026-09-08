@@ -70,13 +70,21 @@ Plans:
   2. Docs state relay / `FOUNDRY_PROFILE=hevm` (or equivalent) prerequisites
   3. AGENTS/REQUIREMENTS submodule failure protocol is referenced from `evm/` README
 
-**Plans:** TBD
+**Plans:** 1/3 plans executed
 
 Plans:
 
-- [ ] 03-01: Add submodule at agreed branch/commit
-- [ ] 03-02: Remap `Hevm.sol` / profile notes
-- [ ] 03-03: Document BRIDGE-03 issue+notify protocol in `evm/`
+**Wave 1**
+
+- [x] 03-01-PLAN.md — Pin the bridge and prove its `hevm.call` transport under the opt-in profile
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 03-02-PLAN.md — Add the private EVM-backed peer and make the minimum-tick differential live
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 03-03-PLAN.md — Document BRIDGE-02/03 and require relay-up GREEN in CI
 
 ### Phase 4: TickMath diff RED
 
@@ -185,7 +193,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Forge `evm/` + v4-core | 1/1 | Complete    | 2026-09-08 |
 | 2. Seaport differential base | 2/2 | Complete    | 2026-09-08 |
-| 3. Bridge submodule | 0/TBD | Not started | - |
+| 3. Bridge submodule | 1/3 | In Progress|  |
 | 4. TickMath diff RED | 0/TBD | Not started | - |
 | 5. `hevm.call` seam | 0/TBD | Not started | - |
 | 6. SqrtGrid TickMath port | 0/TBD | Not started | - |
