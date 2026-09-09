@@ -56,3 +56,4 @@ scratch/
 evm/cache/
 evm/out/
 evm/broadcast/
+.todo.md
