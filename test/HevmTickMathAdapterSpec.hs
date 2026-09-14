@@ -8,7 +8,8 @@ import qualified Data.Map as Map
 import qualified Data.Text as Text
 import Data.Text.Encoding (decodeUtf8)
 import EVM.Solidity (ProjectType (Foundry), getContractsMap, readJSON)
-import qualified HevmSqrtGrid
+import Hevm (runHevm)
+import HevmSqrtGrid (TickMath (getSqrtPriceAtTick))
 import "cfmm-vol-markets-spec" SqrtGrid (SqrtPriceX96 (..))
 import System.Exit (die)
 import System.FilePath (takeBaseName)
@@ -28,14 +29,14 @@ main = do
               ( "HevmSqrtGrid: expected one contract in artifact, got "
                   <> show (length loaded)
               )
-  actual <- HevmSqrtGrid.getSqrtPriceAtTick contract (-887272)
+  actual <- runHevm contract (getSqrtPriceAtTick (-887272))
   case actual of
     Right price
       | price == SqrtPriceX96 4295128739 -> pure ()
     other -> die $ "HevmSqrtGrid minimum tick mismatch: " <> show other
 
   -- int24-legal, Uniswap-illegal: bytecode must reject (no Haskell MIN/MAX).
-  outOfRange <- HevmSqrtGrid.getSqrtPriceAtTick contract 887273
+  outOfRange <- runHevm contract (getSqrtPriceAtTick 887273)
   case outOfRange of
     Left _ -> pure ()
     Right price ->

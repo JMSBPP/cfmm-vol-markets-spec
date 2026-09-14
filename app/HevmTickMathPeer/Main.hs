@@ -30,7 +30,8 @@ import Data.Text.Encoding (decodeUtf8)
 import qualified Data.Vector as Vector
 import EVM.Solidity (ProjectType (Foundry), SolcContract, getContractsMap, readJSON)
 import EVM.Types (EvmError)
-import qualified HevmSqrtGrid
+import Hevm (runHevm)
+import HevmSqrtGrid (TickMath (getSqrtPriceAtTick))
 import Network.Socket
   ( Family (AF_UNIX)
   , SockAddr (SockAddrUnix)
@@ -93,7 +94,7 @@ runProbe tickText artifactPath =
           die "hevm-tickmath-peer: probe tick outside signed int24 range"
       | otherwise -> do
           contract <- loadForgeContract artifactPath
-          outcome <- HevmSqrtGrid.getSqrtPriceAtTick contract tick
+          outcome <- runHevm contract (getSqrtPriceAtTick tick)
           case outcome of
             Left evmError ->
               die ("hevm-tickmath-peer: EVM failure: " <> show evmError)
@@ -158,7 +159,7 @@ dispatch contract requestLine =
               pure (rpcError (requestId request) (-32602 :: Int) paramsError)
             Right tick -> do
               result <-
-                try (HevmSqrtGrid.getSqrtPriceAtTick contract tick) ::
+                try (runHevm contract (getSqrtPriceAtTick tick)) ::
                   IO (Either SomeException (Either EvmError SqrtPriceX96))
               pure $
                 case result of

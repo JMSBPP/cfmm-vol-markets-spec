@@ -94,6 +94,7 @@ library
 
 library hevm-adapter
   exposed-modules:
+      Hevm
       HevmSqrtGrid
   other-modules:
       HevmExec
@@ -110,6 +111,7 @@ library hevm-adapter
     , lens
     , mwc-random
     , text
+    , transformers
     , vector
   default-language: Haskell2010
 

@@ -109,6 +109,7 @@ internal-libraries:
   hevm-adapter:
     source-dirs: src
     exposed-modules:
+    - Hevm
     - HevmSqrtGrid
     other-modules:
     - HevmExec
@@ -120,6 +121,7 @@ internal-libraries:
     - hevm == 0.58.0
     - lens
     - text
+    - transformers
     - vector
   plot:
     source-dirs: plot
