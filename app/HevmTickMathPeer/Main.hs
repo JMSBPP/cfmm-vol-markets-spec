@@ -22,11 +22,15 @@ import Data.Aeson
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy as BL
+import qualified Data.Map as Map
 import Data.Scientific (floatingOrInteger)
 import Data.Text (Text)
 import qualified Data.Text as Text
+import Data.Text.Encoding (decodeUtf8)
 import qualified Data.Vector as Vector
-import HevmTickMathAdapter (getSqrtPriceAtTick)
+import EVM.Solidity (ProjectType (Foundry), SolcContract, getContractsMap, readJSON)
+import EVM.Types (EvmError)
+import qualified HevmSqrtGrid
 import Network.Socket
   ( Family (AF_UNIX)
   , SockAddr (SockAddrUnix)
@@ -40,6 +44,7 @@ import Network.Socket
 import "cfmm-vol-markets-spec" SqrtGrid (SqrtPriceX96 (..))
 import System.Environment (getArgs, lookupEnv)
 import System.Exit (die)
+import System.FilePath (takeBaseName)
 import System.IO
   ( BufferMode (LineBuffering)
   , IOMode (ReadWriteMode)
@@ -87,8 +92,12 @@ runProbe tickText artifactPath =
       | not (inInt24Range tick) ->
           die "hevm-tickmath-peer: probe tick outside signed int24 range"
       | otherwise -> do
-          SqrtPriceX96 result <- getSqrtPriceAtTick artifactPath tick
-          print result
+          contract <- loadForgeContract artifactPath
+          outcome <- HevmSqrtGrid.getSqrtPriceAtTick contract tick
+          case outcome of
+            Left evmError ->
+              die ("hevm-tickmath-peer: EVM failure: " <> show evmError)
+            Right (SqrtPriceX96 result) -> print result
 
 resolveSocket :: [String] -> IO (Maybe FilePath)
 resolveSocket args =
@@ -103,25 +112,40 @@ flagValue flag (candidate : value : rest)
   | otherwise = flagValue flag (value : rest)
 flagValue _ [_] = Nothing
 
+loadForgeContract :: FilePath -> IO SolcContract
+loadForgeContract artifactPath = do
+  json <- decodeUtf8 <$> BS.readFile artifactPath
+  case readJSON Foundry (Text.pack (takeBaseName artifactPath)) json of
+    Left err ->
+      die ("hevm-tickmath-peer: Foundry artifact load failed: " <> show err)
+    Right (contracts, _, _) ->
+      case Map.elems (getContractsMap contracts) of
+        [loaded] -> pure loaded
+        loaded ->
+          die
+            ( "hevm-tickmath-peer: expected one contract in artifact, got "
+                <> show (length loaded)
+            )
+
 runPeer :: FilePath -> FilePath -> IO ()
 runPeer socketPath artifactPath = do
+  contract <- loadForgeContract artifactPath
   sock <- connectRetrying socketPath 50
   handle <- socketToHandle sock ReadWriteMode
   hSetBuffering handle LineBuffering
-  loop handle
-  where
-    loop handle = do
-      input <- try (BSC.hGetLine handle) :: IO (Either IOException BS.ByteString)
-      case input of
-        Left _ -> pure ()
-        Right requestLine -> do
-          response <- dispatch artifactPath requestLine
-          (BL.hPut handle (encode response) >> BSC.hPutStr handle "\n" >> hFlush handle)
-            `catch` \(_ :: IOException) -> pure ()
-          loop handle
+  let loop = do
+        input <- try (BSC.hGetLine handle) :: IO (Either IOException BS.ByteString)
+        case input of
+          Left _ -> pure ()
+          Right requestLine -> do
+            response <- dispatch contract requestLine
+            (BL.hPut handle (encode response) >> BSC.hPutStr handle "\n" >> hFlush handle)
+              `catch` \(_ :: IOException) -> pure ()
+            loop
+  loop
 
-dispatch :: FilePath -> BS.ByteString -> IO Value
-dispatch artifactPath requestLine =
+dispatch :: SolcContract -> BS.ByteString -> IO Value
+dispatch contract requestLine =
   case eitherDecodeStrict' requestLine of
     Left decodeError ->
       pure (rpcError Null (-32700 :: Int) ("parse error: " <> Text.pack decodeError))
@@ -134,8 +158,8 @@ dispatch artifactPath requestLine =
               pure (rpcError (requestId request) (-32602 :: Int) paramsError)
             Right tick -> do
               result <-
-                try (getSqrtPriceAtTick artifactPath tick) ::
-                  IO (Either SomeException SqrtPriceX96)
+                try (HevmSqrtGrid.getSqrtPriceAtTick contract tick) ::
+                  IO (Either SomeException (Either EvmError SqrtPriceX96))
               pure $
                 case result of
                   Left err ->
@@ -143,9 +167,14 @@ dispatch artifactPath requestLine =
                       (requestId request)
                       (-32000 :: Int)
                       (Text.pack (displayException err))
+                  Right (Left evmError) ->
+                    rpcError
+                      (requestId request)
+                      (-32000 :: Int)
+                      (Text.pack (show evmError))
                   -- Emit a JSON *string* so Foundry `vm.ffi` does not hex-decode a
                   -- digit-only decimal (e.g. 4295128739 → 5 raw bytes).
-                  Right (SqrtPriceX96 value) ->
+                  Right (Right (SqrtPriceX96 value)) ->
                     object
                       [ "jsonrpc" .= ("2.0" :: Text)
                       , "id" .= requestId request

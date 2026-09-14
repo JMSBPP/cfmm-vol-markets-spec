@@ -109,14 +109,18 @@ internal-libraries:
   hevm-adapter:
     source-dirs: src
     exposed-modules:
-    - HevmTickMathAdapter
-    other-modules: []
+    - HevmSqrtGrid
+    other-modules:
+    - HevmExec
     dependencies:
     - cfmm-vol-markets-spec
-    - aeson
     - bytestring
+    - containers
+    - generic-lens
     - hevm == 0.58.0
+    - lens
     - text
+    - vector
   plot:
     source-dirs: plot
     dependencies:
@@ -137,6 +141,9 @@ executables:
     - cfmm-vol-markets-spec:hevm-adapter
     - aeson
     - bytestring
+    - containers
+    - filepath
+    - hevm == 0.58.0
     - network
     - scientific
     - text
@@ -161,6 +168,11 @@ tests:
     dependencies:
     - cfmm-vol-markets-spec
     - cfmm-vol-markets-spec:hevm-adapter
+    - bytestring
+    - containers
+    - filepath
+    - hevm == 0.58.0
+    - text
   cfmm-vol-markets-spec-test:
     main:                Spec.hs
     source-dirs:         test

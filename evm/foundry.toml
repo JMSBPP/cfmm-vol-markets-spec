@@ -4,6 +4,8 @@ test = "test"
 out = "out"
 libs = ["lib"]
 solc_version = "0.8.34"
+# hevm readJSON Foundry requires artifact `ast` / `id` (not a second Haskell decoder).
+ast = true
 remappings = [
     "@seaport/=lib/seaport/test/foundry/",
     "evm-spec-bridge/=lib/evm-spec-bridge/solidity/src/",
