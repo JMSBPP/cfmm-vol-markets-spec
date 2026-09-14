@@ -3,7 +3,49 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/topics/lock_files
 
-packages: []
+packages:
+- completed:
+    hackage: hevm-0.58.0@sha256:6590f866bda6e7e1c57a6b30cb7eb7e49e45eb452d6818b6d497a4bda7c39189,9411
+    pantry-tree:
+      sha256: ea93806fd1b1ff2ea20beab902c1ff045e8909a64af1a2ea7e5a65b9dfb8cdf1
+      size: 3785
+  original:
+    hackage: hevm-0.58.0
+- completed:
+    hackage: aeson-optics-1.2.1@sha256:f0dc0ffba23baed6ee93e3ca91e1630c4da38eee46c56c28f3b264f376c361c0,1551
+    pantry-tree:
+      sha256: e5abc0e63b06a02eb095e50e80787eb8c23315cf089ab6d655a513d99e0b1cfa
+      size: 340
+  original:
+    hackage: aeson-optics-1.2.1@sha256:f0dc0ffba23baed6ee93e3ca91e1630c4da38eee46c56c28f3b264f376c361c0,1551
+- completed:
+    hackage: jsonl-0.2.0.0@sha256:35f8a3816f0b93830008709a8e64c0c69b9bc632a92c54b3be3345bfccba4a5c,1465
+    pantry-tree:
+      sha256: 586381c8f59403da12c22f1007e1463bbbba510624f7eb567efbf89dbc784d1c
+      size: 249
+  original:
+    hackage: jsonl-0.2.0.0@sha256:35f8a3816f0b93830008709a8e64c0c69b9bc632a92c54b3be3345bfccba4a5c,1465
+- completed:
+    hackage: smt2-parser-0.1.0.1@sha256:1e1a4565915ed851c13d1e6b8bb5185cf5d454da3b43170825d53e221f753d77,1421
+    pantry-tree:
+      sha256: c048b3037a35ab6ca5b33d865d7a0b0f56a0ccc942dd57cbbab6af380770ee13
+      size: 447
+  original:
+    hackage: smt2-parser-0.1.0.1@sha256:1e1a4565915ed851c13d1e6b8bb5185cf5d454da3b43170825d53e221f753d77,1421
+- completed:
+    hackage: spawn-0.3@sha256:b91e01d8f2b076841410ae284b32046f91471943dc799c1af77d666c72101f02,1162
+    pantry-tree:
+      sha256: 3fa87961ef3166c0093ebae68dea83cf2d7b9e131a2db28687b696f077c6f81a
+      size: 262
+  original:
+    hackage: spawn-0.3@sha256:b91e01d8f2b076841410ae284b32046f91471943dc799c1af77d666c72101f02,1162
+- completed:
+    hackage: spool-0.1@sha256:77780cbfc2c0be23ff2ea9e474062f3df97fcd9db946ee0b3508280a923b83e2,1461
+    pantry-tree:
+      sha256: 48eada528a8eda2fcf0d3517a239c59a699acff96111f427833ba2b04bd6111f
+      size: 322
+  original:
+    hackage: spool-0.1@sha256:77780cbfc2c0be23ff2ea9e474062f3df97fcd9db946ee0b3508280a923b83e2,1461
 snapshots:
 - completed:
     sha256: 1c2140555bdf61c30a893b3ec1033987d01eda75ce82a1dda033e8fb6f8b322c

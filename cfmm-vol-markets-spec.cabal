@@ -83,16 +83,35 @@ library
       Volatility.VolatilityGrid
       Volatility.VolOrder
       Volatility.VolTermStructure
-  other-modules:
-      Paths_cfmm_vol_markets_spec
-  autogen-modules:
-      Paths_cfmm_vol_markets_spec
   hs-source-dirs:
       src
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
       base >=4.7 && <5
     , mwc-random
+    , vector
+  default-language: Haskell2010
+
+library hevm-adapter
+  exposed-modules:
+      Hevm
+      HevmSqrtGrid
+  other-modules:
+      HevmExec
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  build-depends:
+      base >=4.7 && <5
+    , bytestring
+    , cfmm-vol-markets-spec
+    , containers
+    , generic-lens
+    , hevm ==0.58.0
+    , lens
+    , mwc-random
+    , text
+    , transformers
     , vector
   default-language: Haskell2010
 
@@ -139,10 +158,6 @@ library plot
 
 executable cfmm-vol-markets-spec-exe
   main-is: Main.hs
-  other-modules:
-      Paths_cfmm_vol_markets_spec
-  autogen-modules:
-      Paths_cfmm_vol_markets_spec
   hs-source-dirs:
       app
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
@@ -155,13 +170,34 @@ executable cfmm-vol-markets-spec-exe
     , vector
   default-language: Haskell2010
 
-test-suite cfmm-vol-markets-spec-test
-  type: exitcode-stdio-1.0
-  main-is: Spec.hs
+executable hevm-tickmath-peer
+  main-is: Main.hs
   other-modules:
       Paths_cfmm_vol_markets_spec
   autogen-modules:
       Paths_cfmm_vol_markets_spec
+  hs-source-dirs:
+      app/HevmTickMathPeer
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts
+  build-depends:
+      aeson
+    , base >=4.7 && <5
+    , bytestring
+    , cfmm-vol-markets-spec
+    , cfmm-vol-markets-spec:hevm-adapter
+    , containers
+    , filepath
+    , hevm ==0.58.0
+    , mwc-random
+    , network
+    , scientific
+    , text
+    , vector
+  default-language: Haskell2010
+
+test-suite cfmm-vol-markets-spec-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
   hs-source-dirs:
       test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N -Wno-name-shadowing -Wno-type-defaults -Wno-gadt-mono-local-binds
@@ -171,5 +207,24 @@ test-suite cfmm-vol-markets-spec-test
     , cfmm-vol-markets-spec
     , cfmm-vol-markets-spec:plot
     , mwc-random
+    , vector
+  default-language: Haskell2010
+
+test-suite hevm-adapter-test
+  type: exitcode-stdio-1.0
+  main-is: HevmTickMathAdapterSpec.hs
+  hs-source-dirs:
+      test
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  build-depends:
+      base >=4.7 && <5
+    , bytestring
+    , cfmm-vol-markets-spec
+    , cfmm-vol-markets-spec:hevm-adapter
+    , containers
+    , filepath
+    , hevm ==0.58.0
+    , mwc-random
+    , text
     , vector
   default-language: Haskell2010

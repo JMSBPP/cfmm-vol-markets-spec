@@ -3,5 +3,15 @@ src = "src"
 test = "test"
 out = "out"
 libs = ["lib"]
-solc_version = "0.8.28"
-remappings = ["v4-core/=lib/v4-core/"]
+solc_version = "0.8.34"
+# hevm readJSON Foundry requires artifact `ast` / `id` (not a second Haskell decoder).
+ast = true
+remappings = [
+    "@seaport/=lib/seaport/test/foundry/",
+    "evm-spec-bridge/=lib/evm-spec-bridge/solidity/src/",
+    "forge-std/=lib/forge-std/src/",
+    "v4-core/=lib/v4-core/",
+]
+
+[profile.hevm]
+ffi = true

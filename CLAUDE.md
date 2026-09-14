@@ -1,4 +1,19 @@
-# Agent instructions — scratchpad TODO → GitHub
+# Agent instructions — scratchpad
+
+## Design pipeline (brainstorm → PRD → issues → TDD)
+
+When designing or implementing new behavior, run this pipeline **in order**. Do not skip to code. This is the default for adapters, HEVM runtime, and any work that changes how Haskell talks to EVM contracts.
+
+1. **brainstorming** — Classify the request as spike, bounded, or architectural. Present a design and wait for **explicit approval** before writing code. **Adapter rule:** a contract adapter must read like the Solidity function (e.g. `getSqrtPriceAtTick tick`). Artifact load, ABI method lookup, encode/decode, and “method / contract not found” errors belong in the **runtime**, not in the adapter body.
+2. **to-prd** — After the design is approved, synthesize a PRD and file it as a GitHub issue on `d2p-finance/cfmm-vol-markets-spec`. Do not re-interview; use the brainstorm locks. Include problem, solution, user stories, implementation decisions, testing decisions, and out of scope.
+3. **to-issues** — Split the PRD into ordered vertical-slice GitHub issues (one observable behavior each, blockers first). Do not open a horizontal “write all tests” issue.
+4. **tdd** — Implement issues in dependency order. One failing test of **public** behavior, then the minimum code to pass, then the next issue. Do not write all tests first.
+
+Keep `CLAUDE.md` and `QWEN.md` in sync when editing this workflow.
+
+---
+
+## TODO.md → GitHub
 
 When working open items in `TODO.md` (section **Open**, not marked Done), follow this workflow for **each** item:
 

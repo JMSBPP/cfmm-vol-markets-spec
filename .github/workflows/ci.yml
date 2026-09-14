@@ -6,7 +6,6 @@ on:
   push:
     branches: [main]
 
-# A force-push cancels the superseded run (the lake build alone is ~7 min); least-privilege token.
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -14,9 +13,6 @@ permissions:
   contents: read
 
 jobs:
-  # Push / PR gate for the nested Foundry TickMath scaffold (Phase 1).
-  # Requires recursive submodule init so Uniswap/v4-core@v4.0.0 and its
-  # forge-std / OZ / solmate dependency chain are present before `forge build`.
   forge:
     name: submodule init + forge build (evm/)
     runs-on: ubuntu-latest
@@ -30,28 +26,102 @@ jobs:
         with:
           version: stable
 
-      - name: Assert v4-core pin
+      - name: Assert exact Foundry dependency pins
         run: |
-          expected=e50237c43811bd9b526eff40f26772152a42daba
-          actual="$(git -C evm/lib/v4-core rev-parse HEAD)"
-          echo "v4-core HEAD=$actual"
-          test "$actual" = "$expected"
+          v4_core_expected=e50237c43811bd9b526eff40f26772152a42daba
+          seaport_expected=e9c5a9f17cb5ee658ccc9cb1a8eeab02c1f5a4cd
+          forge_std_expected=620536fa5277db4e3fd46772d5cbc1ea0696fb43
+          bridge_expected=aad230528f93be04a00d0209f10eaa3084d84de5
+
+          v4_core_actual="$(git -C evm/lib/v4-core rev-parse HEAD)"
+          seaport_actual="$(git -C evm/lib/seaport rev-parse HEAD)"
+          forge_std_actual="$(git -C evm/lib/forge-std rev-parse HEAD)"
+          bridge_actual="$(git -C evm/lib/evm-spec-bridge rev-parse HEAD)"
+          echo "v4-core HEAD=$v4_core_actual"
+          echo "seaport HEAD=$seaport_actual"
+          echo "forge-std HEAD=$forge_std_actual"
+          echo "evm-spec-bridge HEAD=$bridge_actual"
+
+          test "$v4_core_actual" = "$v4_core_expected"
+          test "$seaport_actual" = "$seaport_expected"
+          test "$forge_std_actual" = "$forge_std_expected"
+          test "$bridge_actual" = "$bridge_expected"
+
           grep -q 'v4-core/=lib/v4-core/' evm/remappings.txt
-          grep -q "$expected" evm/foundry.lock
+          grep -q '@seaport/=lib/seaport/test/foundry/' evm/remappings.txt
+          grep -q 'forge-std/=lib/forge-std/src/' evm/remappings.txt
+          grep -q 'evm-spec-bridge/=lib/evm-spec-bridge/solidity/src/' evm/remappings.txt
+          grep -A 4 '"lib/v4-core"' evm/foundry.lock | grep -q "$v4_core_expected"
+          grep -A 4 '"lib/seaport"' evm/foundry.lock | grep -q '"name": "1.6"'
+          grep -A 4 '"lib/seaport"' evm/foundry.lock | grep -q "$seaport_expected"
+          grep -A 4 '"lib/forge-std"' evm/foundry.lock | grep -q '"name": "v1.16.1"'
+          grep -A 4 '"lib/forge-std"' evm/foundry.lock | grep -q "$forge_std_expected"
+          grep -A 4 '"lib/evm-spec-bridge"' evm/foundry.lock | grep -q "$bridge_expected"
 
       - name: forge build
         run: forge build --root evm
+
+  hevm-diff:
+    name: relay-up HevmDiffTest GREEN
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+
+      - name: Install native deps (hevm + cairo)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libcairo2-dev libpango1.0-dev libglib2.0-dev pkg-config \
+            libsecp256k1-dev libgmp-dev \
+            libff-dev || sudo apt-get install -y libff0 libff-dev || true
+
+      - uses: haskell-actions/setup@v2
+        with:
+          enable-stack: true
+          stack-version: latest
+
+      - name: Cache Stack (consumer + bridge)
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.stack
+            .stack-work
+            evm/lib/evm-spec-bridge/.stack-work
+          key: ${{ runner.os }}-hevm-diff-${{ hashFiles('stack.yaml.lock', 'package.yaml', 'evm/lib/evm-spec-bridge/stack.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-hevm-diff-
+
+      - name: Assert bridge pin
+        run: |
+          bridge_expected=aad230528f93be04a00d0209f10eaa3084d84de5
+          test "$(git -C evm/lib/evm-spec-bridge rev-parse HEAD)" = "$bridge_expected"
+
+      - name: Live min-tick relay differential
+        run: bash scripts/hevm-tickmath-relay.sh
 
   stack:
     name: stack build && stack test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-      - name: Install Cairo (Chart-cairo)
+      - name: Install Cairo + hevm native deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y libcairo2-dev libpango1.0-dev libglib2.0-dev pkg-config
+          sudo apt-get install -y \
+            libcairo2-dev libpango1.0-dev libglib2.0-dev pkg-config \
+            libsecp256k1-dev libgmp-dev \
+            libff-dev || sudo apt-get install -y libff0 libff-dev || true
 
       - uses: haskell-actions/setup@v2
         with:
@@ -72,7 +142,6 @@ jobs:
         run: stack build --pedantic
 
       - name: stack test
-        # Spec is a long IO script with intentional reuse; keep build pedantic.
         run: stack test
 
   lean:
@@ -88,9 +157,6 @@ jobs:
           echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
 
       - name: lake build (no sorry/admit)
-        # Mathlib oleans via `lake exe cache get` only; .lake/packages (~7 GB) is deliberately
-        # NOT cached with actions/cache (10 GB repo cap would evict the Stack cache).
-        # The sorry-guard reads Lean's own compiler warning, so our modules must compile fresh.
         run: |
           lake exe cache get
           out="$(lake build 2>&1)"; echo "$out"

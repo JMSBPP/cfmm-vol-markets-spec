@@ -1,3 +1,12 @@
 [submodule "evm/lib/v4-core"]
 	path = evm/lib/v4-core
 	url = https://github.com/Uniswap/v4-core
+[submodule "evm/lib/seaport"]
+	path = evm/lib/seaport
+	url = https://github.com/ProjectOpenSea/seaport
+[submodule "evm/lib/forge-std"]
+	path = evm/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+[submodule "evm/lib/evm-spec-bridge"]
+	path = evm/lib/evm-spec-bridge
+	url = https://github.com/JMSBPP/evm-spec-bridge

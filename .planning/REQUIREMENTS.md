@@ -15,17 +15,20 @@
 ## v1 Requirements
 
 ### Forge `evm/` scaffold
+
 - [x] **EVM-01**: `evm/` is a working Foundry project (`foundry.toml`, `src/`, `test/`, remappings) under this repo root
 - [x] **EVM-02**: Uniswap **`v4-core@v4.0.0`** is installed as a Forge dependency and v4 TickMath is importable
-- [ ] **EVM-03**: Seaport (or vendored `DifferentialTest` equivalent matching vol-markets) is available for the diff-test base — same pattern as `vol-markets` `test/diff/PlankDiffTestBase.sol`
+- [x] **EVM-03**: Seaport (or vendored `DifferentialTest` equivalent matching vol-markets) is available for the diff-test base — same pattern as `vol-markets` `test/diff/PlankDiffTestBase.sol`
 
 ### TickMath differential (first component — TDD)
+
 - [ ] **TICK-01**: Differential suite (`*.diff.t.sol` / `t.sol`) reuses the **existing TickMath.sol test cases** as the input corpus (not a hand-waved new vector set)
 - [ ] **TICK-02**: Seaport-style exec: run the same `Context` twice with swapped oracles / implementations, then assert **exact** equality (tol 0); non-vacuity (`diffComparisons > 0`)
 - [ ] **TICK-03**: One side is canonical v4-core `TickMath`; the other side is reached via **`hevm.call`** (bridge stdcheats path) and/or the Haskell twin once wired — TDD starts RED on the HEVM/Haskell seam
 - [ ] **TICK-04**: Suite documents skip/probe doctrine if the HEVM relay is down (vol-markets SpecHelper pattern: no silent green)
 
 ### Bridge / HEVM cheat surface
+
 - [ ] **BRIDGE-01**: **`evm-spec-bridge` enters as a git submodule** (pin `feat/2-hevm-call-stdcheats` / agreed commit) providing `hevm.call(method, paramsJson)` via `vm.ffi` → `relay send`
 - [ ] **BRIDGE-02**: Local docs note required relay/`FOUNDRY_PROFILE=hevm` (or equivalent) for the diff suite CI job
 - [ ] **BRIDGE-03**: **Submodule failure protocol** — if anything fails that is attributable to the bridge (build, `hevm.call`, relay, ffi, stdcheats surface):
@@ -34,17 +37,20 @@
   3. Do **not** silently patch around bridge bugs inside this package unless the user directs a temporary workaround
 
 ### SqrtGrid bit-identity (after TickMath diff is green)
+
 - [ ] **SQRT-01**: `sqrtPriceX96` matches TickMath bit-for-bit under the differential oracle
 - [ ] **SQRT-02**: Inverse tick-from-sqrt matches TickMath bit-for-bit
 - [ ] **SQRT-03**: `mulDiv` matches FullMath words **and** revert classes where in scope
 - [ ] **SQRT-04**: HEVM-/diff-gated paths use exact equality — no tolerance
 
 ### Compatibility
+
 - [ ] **COMPAT-01**: Existing `test/Spec.hs` stays green after SqrtGrid rewrite
 - [ ] **COMPAT-02**: Existing plot/`app` consumers keep working (same public APIs)
 - [ ] **COMPAT-03**: Public Haskell library remains plot-free and does not take HEVM as a library dependency
 
 ### Scope ledger
+
 - [ ] **SCOPE-01**: `docs/BITWIDTHS.md` (or linked manifest) marks paths as exact / oracle-tested / deferred / off-chain
 
 ## v2 Requirements (deferred)
@@ -69,7 +75,7 @@
 |-------------|-------|--------|
 | EVM-01 | 1 | Complete |
 | EVM-02 | 1 | Complete |
-| EVM-03 | 2 | Pending |
+| EVM-03 | 2 | Complete |
 | BRIDGE-01 | 3 | Pending |
 | BRIDGE-02 | 3 | Pending |
 | BRIDGE-03 | 3 | Pending |

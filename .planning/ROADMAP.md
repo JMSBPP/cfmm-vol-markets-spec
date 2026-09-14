@@ -7,8 +7,8 @@ Stand up a Foundry `evm/` twin, consume `evm-spec-bridge` as a submodule for `he
 ## Phases
 
 - [x] **Phase 1: Forge `evm/` + v4-core** - Scaffold Foundry project and pin `Uniswap/v4-core@v4.0.0`
-- [ ] **Phase 2: Seaport differential base** - Wire `DifferentialTest` pattern (vol-markets style)
-- [ ] **Phase 3: Bridge submodule** - Add `evm-spec-bridge`, docs, failure→issue protocol
+- [x] **Phase 2: Seaport differential base** - Wire `DifferentialTest` pattern (vol-markets style)
+- [x] **Phase 3: Bridge submodule** - Add `evm-spec-bridge`, docs, failure→issue protocol
 - [ ] **Phase 4: TickMath diff RED** - Corpus from existing TickMath tests; Seaport exec; non-vacuity / skip doctrine
 - [ ] **Phase 5: `hevm.call` seam** - Second oracle via stdcheats; TICK-03 RED→probe
 - [ ] **Phase 6: SqrtGrid TickMath port** - Bit-identical `sqrtPriceX96` / inverse under the oracle
@@ -47,12 +47,16 @@ Plans:
   1. A base contract (or remapped Seaport utils) provides `DifferentialTest` / `assertPass`-style helpers
   2. A trivial smoke `.diff.t.sol` compiles and demonstrates swap-context + non-vacuity counters
 
-**Plans:** TBD
+**Plans:** 2/2 plans complete
 
 Plans:
+**Wave 1**
 
-- [ ] 02-01: Vendor or remapping for Seaport `DifferentialTest`
-- [ ] 02-02: `DiffTestBase` + smoke differential
+- [x] 02-01-PLAN.md — Trace one upstream TickMath case through Seaport to the intentional RED HEVM seam
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [x] 02-02-PLAN.md — Enforce exact pins, green compilation, and cause-specific RED in CI
 
 ### Phase 3: Bridge submodule
 
@@ -66,13 +70,21 @@ Plans:
   2. Docs state relay / `FOUNDRY_PROFILE=hevm` (or equivalent) prerequisites
   3. AGENTS/REQUIREMENTS submodule failure protocol is referenced from `evm/` README
 
-**Plans:** TBD
+**Plans:** 1/3 plans executed
 
 Plans:
 
-- [ ] 03-01: Add submodule at agreed branch/commit
-- [ ] 03-02: Remap `Hevm.sol` / profile notes
-- [ ] 03-03: Document BRIDGE-03 issue+notify protocol in `evm/`
+**Wave 1**
+
+- [x] 03-01-PLAN.md — Pin the bridge and prove its `hevm.call` transport under the opt-in profile
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [x] 03-02-PLAN.md — Add the private EVM-backed peer and make the minimum-tick differential live
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [x] 03-03-PLAN.md — Document BRIDGE-02/03 and require relay-up GREEN in CI
 
 ### Phase 4: TickMath diff RED
 
@@ -180,8 +192,8 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Forge `evm/` + v4-core | 1/1 | Complete    | 2026-09-08 |
-| 2. Seaport differential base | 0/TBD | Not started | - |
-| 3. Bridge submodule | 0/TBD | Not started | - |
+| 2. Seaport differential base | 2/2 | Complete    | 2026-09-08 |
+| 3. Bridge submodule | 1/3 | In Progress|  |
 | 4. TickMath diff RED | 0/TBD | Not started | - |
 | 5. `hevm.call` seam | 0/TBD | Not started | - |
 | 6. SqrtGrid TickMath port | 0/TBD | Not started | - |
