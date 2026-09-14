@@ -30,8 +30,8 @@ import Data.Text.Encoding (decodeUtf8)
 import qualified Data.Vector as Vector
 import EVM.Solidity (ProjectType (Foundry), SolcContract, getContractsMap, readJSON)
 import EVM.Types (EvmError)
-import Hevm (runHevm)
-import HevmSqrtGrid (TickMath (getSqrtPriceAtTick))
+import Hevm (Session, runHevm)
+import HevmSqrtGrid (TickMath (getSqrtPriceAtTick), TickMathHarness, asTickMath)
 import Network.Socket
   ( Family (AF_UNIX)
   , SockAddr (SockAddrUnix)
@@ -94,7 +94,8 @@ runProbe tickText artifactPath =
           die "hevm-tickmath-peer: probe tick outside signed int24 range"
       | otherwise -> do
           contract <- loadForgeContract artifactPath
-          outcome <- runHevm contract (getSqrtPriceAtTick tick)
+          session <- asTickMath contract
+          outcome <- runHevm session (getSqrtPriceAtTick tick)
           case outcome of
             Left evmError ->
               die ("hevm-tickmath-peer: EVM failure: " <> show evmError)
@@ -131,6 +132,7 @@ loadForgeContract artifactPath = do
 runPeer :: FilePath -> FilePath -> IO ()
 runPeer socketPath artifactPath = do
   contract <- loadForgeContract artifactPath
+  session <- asTickMath contract
   sock <- connectRetrying socketPath 50
   handle <- socketToHandle sock ReadWriteMode
   hSetBuffering handle LineBuffering
@@ -139,14 +141,14 @@ runPeer socketPath artifactPath = do
         case input of
           Left _ -> pure ()
           Right requestLine -> do
-            response <- dispatch contract requestLine
+            response <- dispatch session requestLine
             (BL.hPut handle (encode response) >> BSC.hPutStr handle "\n" >> hFlush handle)
               `catch` \(_ :: IOException) -> pure ()
             loop
   loop
 
-dispatch :: SolcContract -> BS.ByteString -> IO Value
-dispatch contract requestLine =
+dispatch :: Session TickMathHarness -> BS.ByteString -> IO Value
+dispatch session requestLine =
   case eitherDecodeStrict' requestLine of
     Left decodeError ->
       pure (rpcError Null (-32700 :: Int) ("parse error: " <> Text.pack decodeError))
@@ -159,7 +161,7 @@ dispatch contract requestLine =
               pure (rpcError (requestId request) (-32602 :: Int) paramsError)
             Right tick -> do
               result <-
-                try (runHevm contract (getSqrtPriceAtTick tick)) ::
+                try (runHevm session (getSqrtPriceAtTick tick)) ::
                   IO (Either SomeException (Either EvmError SqrtPriceX96))
               pure $
                 case result of

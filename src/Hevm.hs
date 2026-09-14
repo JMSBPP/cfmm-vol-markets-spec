@@ -1,77 +1,86 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE PackageImports #-}
 {-# LANGUAGE TypeApplications #-}
 
-module Hevm (Hevm, runHevm, callGetSqrtPriceAtTick) where
+module Hevm
+  ( Hevm
+  , Session
+  , mkSession
+  , runHevm
+  , call
+  , requireNamedMethod
+  ) where
 
 import Control.Lens (view)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.Except (ExceptT, runExceptT, throwE)
 import Control.Monad.Trans.Reader (ReaderT (..), ask)
-import qualified Data.ByteString as BS
-import Data.Generics.Product.Fields (field)
+import Data.Kind (Type)
 import Data.List (find)
 import qualified Data.Map as Map
 import Data.Text (Text)
-import qualified Data.Vector as Vector
+import qualified Data.Text as Text
+import Data.Generics.Product.Fields (field)
 import EVM.ABI
-  ( AbiType
-  , AbiVals (..)
-  , AbiValue (..)
+  ( AbiVals (..)
+  , AbiValue
   , abiMethod
   , decodeBuf
   )
 import EVM.Solidity (Method, SolcContract)
 import EVM.Types (EvmError, Expr (ConcreteBuf))
 import HevmExec (execRuntime)
-import "cfmm-vol-markets-spec" SqrtGrid (SqrtPriceX96 (..), Tick)
 
-newtype Hevm a = Hevm (ExceptT EvmError (ReaderT SolcContract IO) a)
+newtype Session (c :: Type) = Session SolcContract
+
+newtype Hevm (c :: Type) a = Hevm (ExceptT EvmError (ReaderT (Session c) IO) a)
   deriving newtype (Functor, Applicative, Monad, MonadIO)
 
-runHevm :: SolcContract -> Hevm a -> IO (Either EvmError a)
-runHevm contract (Hevm action) =
-  runReaderT (runExceptT action) contract
+mkSession :: SolcContract -> Session c
+mkSession = Session
 
-callGetSqrtPriceAtTick :: Tick -> Hevm SqrtPriceX96
-callGetSqrtPriceAtTick tick = Hevm $ do
-  contract <- lift ask
+runHevm :: Session c -> Hevm c a -> IO (Either EvmError a)
+runHevm session (Hevm action) =
+  runReaderT (runExceptT action) session
+
+requireNamedMethod :: Text -> SolcContract -> IO ()
+requireNamedMethod name contract =
+  maybe
+    (ioError (userError ("Hevm: missing method " <> Text.unpack name)))
+    (\_ -> pure ())
+    (lookupMethod contract name)
+
+call :: Text -> AbiValue -> Hevm c [AbiValue]
+call name args = Hevm $ do
+  Session contract <- lift ask
   method <-
     liftIO $
       maybe
-        (ioError (userError "Hevm: missing method getSqrtPriceAtTick"))
+        (ioError (userError ("Hevm: missing method " <> Text.unpack name)))
         pure
-        (lookupMethod contract "getSqrtPriceAtTick")
-  let callData =
-        abiMethod
-          (view (field @"methodSignature") method)
-          (AbiTuple (Vector.singleton (AbiInt 24 (fromIntegral tick))))
+        (lookupMethod contract name)
+  let callData = abiMethod (view (field @"methodSignature") method) args
   liftIO (execRuntime (view (field @"runtimeCode") contract) callData) >>= \case
     Left evmError -> throwE evmError
     Right bytes ->
-      case decodeUint160 (snd <$> view (field @"output") method) bytes of
-        Left err -> liftIO (ioError (userError ("Hevm: " <> err)))
-        Right price -> pure price
+      case decodeBuf (snd <$> view (field @"output") method) (ConcreteBuf bytes) of
+        (CAbi values, _) -> pure values
+        (NoVals, err) ->
+          liftIO (ioError (userError ("Hevm: ABI decode failed" <> suffix err)))
+        (SAbi _, _) ->
+          liftIO (ioError (userError "Hevm: symbolic ABI output"))
+  where
+    suffix err
+      | null err = ""
+      | otherwise = ": " <> err
 
 lookupMethod :: SolcContract -> Text -> Maybe Method
 lookupMethod contract wanted =
   find
     (\method -> view (field @"name") method == wanted)
     (Map.elems (view (field @"abiMap") contract))
-
-decodeUint160 :: [AbiType] -> BS.ByteString -> Either String SqrtPriceX96
-decodeUint160 types bytes =
-  case decodeBuf types (ConcreteBuf bytes) of
-    (CAbi [AbiUInt _ word], _) -> Right (SqrtPriceX96 (fromIntegral word))
-    (CAbi _, err) -> Left ("unexpected ABI value" <> suffix err)
-    (NoVals, err) -> Left ("ABI decode failed" <> suffix err)
-    (SAbi _, _) -> Left "symbolic ABI output"
-  where
-    suffix err
-      | null err = ""
-      | otherwise = ": " <> err
