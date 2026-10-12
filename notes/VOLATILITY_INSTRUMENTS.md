@@ -396,6 +396,27 @@ SUBSTITUTION RULE (operational, user ruling 2026-08-11): \(p_{\varphi}^{-3/2} \t
 
 — the \(\xi\)-power map of the tick, the exponent being the tick warped by the factor \(3\eta\) with the half-spacing offset from the marginal price's adjacent product. The coordinate IS \(\Gamma_{\varphi}(i)\) — PURE (dimensionless, tick-scale, int24; no liquidity factor, exactly as Definition 8's map carries none; user units ruling 2026-08-11) — and no auxiliary exponent symbol is minted. Disambiguation by argument: with a TICK argument \(\Gamma_{\varphi}(i)\) is this coordinate map; with the MARGINAL PRICE as argument, \(\Gamma_{\varphi}(p_{\varphi}) \equiv p_{\varphi}^{-3/2}\) — the SAME map read through the price (on the grid \(\Gamma_{\varphi}(i) = \Gamma_{\varphi}(p_{\varphi}(i))\), Theorem 38); bare \(\Gamma_{\varphi}\) remains Definition 38's payoff second derivative, whose grid VALUE is \(-\tfrac12\,\bar L_{(1/2,\,0)}\,\Gamma_{\varphi}(i)\) (Theorem 38) — the liquidity multiplication is EVALUATION in liquidity units (uint128), the same split as Definition 9's amounts, the on-chain product at 128+24-bit scale.
 
+COORDINATE INDEXING (user ruling 2026-10-12): \(\Gamma_{\varphi}\) is a coordinate over ticks, so a parameter or a variable may be declared on it. The open reading — \(\iota(\Gamma_{\varphi})\) or \(L(\Gamma_{\varphi})\) — is sent to the prover; it is not claimed here.
+
+**Theorem 51 (Ladder dollar gamma; the \(\iota = 1\) level).** Theorem 2 does not select \(\iota\): the weights sum to 1 for every \(\iota \ge 1\), so minimizing \(\iota\) subject only to \(\iota \ge 1\) returns 1. On the geometric ladder at \(\xi = \xi^{\star}\), v3 gamma \(\Gamma = -\tfrac12 L\, p^{-3/2}\) makes dollar gamma the same on every rung, and that common level still depends on the resolution:
+
+\[
+	\begin{aligned}
+		G(\iota) \, &= \, \frac{\bar L_{(1/2,\,0)}}{2}\,\frac{1-\xi^{\star}}{1-(\xi^{\star})^{\iota}}, \qquad
+		G(1) \, = \, \frac{\bar L_{(1/2,\,0)}}{2}.
+	\end{aligned}
+\]
+
+\(G\) is strictly decreasing in \(\iota\), from \(\bar L_{(1/2,\,0)}/2\) at one rung toward \(\bar L_{(1/2,\,0)}(1-\xi^{\star})/2\). The equality \(G(\iota) = g\) solves
+
+\[
+	\begin{aligned}
+		\iota \, &= \, \frac{\log\big(1 - \bar L_{(1/2,\,0)}(1-\xi^{\star})/(2g)\big)}{\log \xi^{\star}},
+	\end{aligned}
+\]
+
+and the floor \(G(\iota) \ge g\) is an upper bound on \(\iota\). The one-rung level \(\bar L/2\) meets the same factor \(2\) that [CFMM1](../refs/cfmm/risk_tung_wang-pricing_hedging_liquidity_provision-2026.pdf) uses to pass from intrinsic liquidity to the profile \(L(q) = \ell(q)\,/\,(2\, q^{3/2})\). *Formalized* (`IotaGates`, project `fe222d63-4522-470d-b4c8-a10ad92fe3e9`, no `sorry`): `rungDollarGamma_flat`, `gammaLevel_one`, `iota_eq_log_div_log`. `GeomProfile.lean` was not rebuilt in that upload (`vol_markets.Flow` was absent); the carriers copy `geomWeight` and `priceGrid`.
+
 **Theorem 39 (The compositional reading; the flatness threshold).** With \(L(t) \equiv \bar L_{(1/2,\,0)}\,\xi^{t}\) the \(\xi\)-geometric liquidity read on the tick coordinate (the argument is a TICK VALUE, not a new symbol):
 
 \[
