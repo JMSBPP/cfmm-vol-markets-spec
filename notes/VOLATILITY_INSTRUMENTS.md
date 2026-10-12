@@ -396,7 +396,7 @@ SUBSTITUTION RULE (operational, user ruling 2026-08-11): \(p_{\varphi}^{-3/2} \t
 
 — the \(\xi\)-power map of the tick, the exponent being the tick warped by the factor \(3\eta\) with the half-spacing offset from the marginal price's adjacent product. The coordinate IS \(\Gamma_{\varphi}(i)\) — PURE (dimensionless, tick-scale, int24; no liquidity factor, exactly as Definition 8's map carries none; user units ruling 2026-08-11) — and no auxiliary exponent symbol is minted. Disambiguation by argument: with a TICK argument \(\Gamma_{\varphi}(i)\) is this coordinate map; with the MARGINAL PRICE as argument, \(\Gamma_{\varphi}(p_{\varphi}) \equiv p_{\varphi}^{-3/2}\) — the SAME map read through the price (on the grid \(\Gamma_{\varphi}(i) = \Gamma_{\varphi}(p_{\varphi}(i))\), Theorem 38); bare \(\Gamma_{\varphi}\) remains Definition 38's payoff second derivative, whose grid VALUE is \(-\tfrac12\,\bar L_{(1/2,\,0)}\,\Gamma_{\varphi}(i)\) (Theorem 38) — the liquidity multiplication is EVALUATION in liquidity units (uint128), the same split as Definition 9's amounts, the on-chain product at 128+24-bit scale.
 
-COORDINATE INDEXING (user ruling 2026-10-12): \(\Gamma_{\varphi}\) is a coordinate over ticks, so a parameter or a variable may be declared on it. The open reading — \(\iota(\Gamma_{\varphi})\) or \(L(\Gamma_{\varphi})\) — is sent to the prover; it is not claimed here.
+COORDINATE INDEXING (user ruling 2026-10-12): \(\Gamma_{\varphi}\) is a coordinate over ticks, so a parameter or a variable may be declared on it. Both readings are defined: liquidity \(L(\Gamma)\) and resolution \(\iota(\Gamma)\). The statements are Theorem 52.
 
 **Theorem 51 (Ladder dollar gamma; the \(\iota = 1\) level).** Theorem 2 does not select \(\iota\): the weights sum to 1 for every \(\iota \ge 1\), so minimizing \(\iota\) subject only to \(\iota \ge 1\) returns 1. On the geometric ladder at \(\xi = \xi^{\star}\), v3 gamma \(\Gamma = -\tfrac12 L\, p^{-3/2}\) makes dollar gamma the same on every rung, and that common level still depends on the resolution:
 
@@ -416,6 +416,24 @@ COORDINATE INDEXING (user ruling 2026-10-12): \(\Gamma_{\varphi}\) is a coordina
 \]
 
 and the floor \(G(\iota) \ge g\) is an upper bound on \(\iota\). The one-rung level \(\bar L/2\) meets the same factor \(2\) that [CFMM1](../refs/cfmm/risk_tung_wang-pricing_hedging_liquidity_provision-2026.pdf) uses to pass from intrinsic liquidity to the profile \(L(q) = \ell(q)\,/\,(2\, q^{3/2})\). *Formalized* (`IotaGates`, project `fe222d63-4522-470d-b4c8-a10ad92fe3e9`, no `sorry`): `rungDollarGamma_flat`, `gammaLevel_one`, `iota_eq_log_div_log`. `GeomProfile.lean` was not rebuilt in that upload (`vol_markets.Flow` was absent); the carriers copy `geomWeight` and `priceGrid`.
+
+**Theorem 52 (Indexing by the gamma coordinate).** On the grid \(K_i = 1.0001^{i\Delta_i}\) with base \(\xi^{\star} = 1.0001^{-\Delta_i/2}\) and coordinate \(\Gamma_i = K_i^{-3/2}\), the map \(i \mapsto \Gamma_i\) is one-to-one whenever \(\Delta_i \neq 0\), and \(\Gamma_i = (\xi^{\star})^{3i}\). Rung liquidity of the geometric ladder is a power of that coordinate,
+
+\[
+	\begin{aligned}
+		\bar L\,\ell(\xi^{\star},\iota;i) \, &= \, 2\,G(\iota)\,\Gamma_i^{1/3},
+	\end{aligned}
+\]
+
+so the dollar gamma of every rung, read in this coordinate, is \(-G(\iota)\). Flat dollar gamma \(-g\) on every rung holds if and only if \(\ell_i = 2g\,\Gamma_i^{1/3}\). The resolution is the tick of the end coordinate, \(\Gamma_{\iota} = (\xi^{\star})^{3\iota}\) and \(\iota = \log\Gamma_{\iota}/(3\log\xi^{\star})\). A gamma level fixes that end coordinate:
+
+\[
+	\begin{aligned}
+		G(\iota) = g \quad &\iff \quad \Gamma_{\iota} = \Bigl(1 - \bar L\,(1-\xi^{\star})/(2g)\Bigr)^{3}.
+	\end{aligned}
+\]
+
+The CFMM1 profile equals \(\tfrac12\,\ell\,\Gamma(q)\), so Theorem 51's one-rung level \(\bar L/2\) is that same factor of \(2\). On the ladder the CFMM1 density is \(L(K_i) = G(\iota)\,\Gamma_i^{4/3}\). *Formalized* (`GammaIndexing`, project `55d0ad1b-db3f-4731-8ed1-1f847f333e54`, no `sorry`): `rungLiquidity_eq_onGamma`, `flat_iff_onGamma`, `iota_eq_tickOfGamma`, `gammaLevel_eq_iff_endCoord`, `cfmmProfile_eq_gamma`, `cfmmProfile_ladder_onGamma`. This file uses the grid above. Definition 41's \(3\eta\) warp and half-spacing offset are a reparametrization of the same coordinate; they are not the statements proved in `GammaIndexing`.
 
 **Theorem 39 (The compositional reading; the flatness threshold).** With \(L(t) \equiv \bar L_{(1/2,\,0)}\,\xi^{t}\) the \(\xi\)-geometric liquidity read on the tick coordinate (the argument is a TICK VALUE, not a new symbol):
 
