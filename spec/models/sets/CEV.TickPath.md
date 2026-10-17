@@ -6,7 +6,7 @@ Stochastic tick-path generator consuming the static RE strike tables from [`CEV.
 
 `CEV.TickStrikes` emits cross-sectional tables on `TickStrikes`:
 
-- `tickVal` — strike levels  
+- `tickStrikeVal` — strike levels  
 - `localTickVol` — \(\sigma(i)\)  
 - `localTickDrift` — \(\mu(i)\)  
 
@@ -18,10 +18,10 @@ Path length equals `nStrikes` (same cardinality). This module adds Wiener noise 
 |--------|--------|
 | `nStrikes`, `TickStrikes`, `strikeIdx` | TickStrikes factory |
 | `localTickVol(strikeIdx)`, `localTickDrift(strikeIdx)` | TickStrikes factory |
-| `tickVal(strikeIdx)` | initial level (first active strike) |
+| `tickStrikeVal(strikeIdx)` | initial level (first active strike) |
 | `Window` | \(24\times 60\times 60\) (math spec) |
 | \(\bar dt\) | `Window / max(nStrikes-1, 1)` |
-| \(\epsilon_j\sim\mathcal N(0,1)\) | GAMS `normal` |
+| \(\epsilon_j\sim\mathcal N(0,\sqrt{\Delta_i})\) | GAMS `normal(0, sqrt(TickSpacing))` — Var(ε)=TickSpacing |
 
 ## Dynamics
 

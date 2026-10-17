@@ -44,7 +44,7 @@ Higher vol ↔ lower tick:
 | `cevTickFromVol(sigmaF, L, sigma)` | \(i(\sigma)\) via `toTickSpace` |
 | `cevLocalVol(sigmaF, L, tick)` | \(e^{\alpha-\beta\,\mathrm{tick}}\) |
 | `cevLocalDrift(sigmaF, muF, L, tick)` | Markdown \(\mu(i)\) with \(\sqrt{p}=1.0001^{\mathrm{tick}}\) |
-| Factory block in `CEV.TickStrikes.draft1.gms` | Band → bounds → dynamic `TickStrikes` + `tickVal` |
+| Factory block in `CEV.TickStrikes.draft1.gms` | Band → bounds → dynamic `TickStrikes` + `tickStrikeVal` |
 
 ## Files
 
