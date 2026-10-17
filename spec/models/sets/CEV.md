@@ -1,6 +1,6 @@
 # GAMS design: CEV static RE strike lattice
 
-Canonical GAMS system spec for `model/CEV.draft1.gms` (numopt). Copies also at `docs/specs/CEV.md` and `docs/superpowers/specs/2026-10-17-cev-re-strike-lattice-design.md`.
+Canonical GAMS system spec for `model/CEV.TickStrikes.draft1.gms` (numopt). Copies also at `docs/specs/CEV.md` and `docs/superpowers/specs/2026-10-17-cev-re-strike-lattice-design.md`.
 
 ## Context
 
@@ -44,12 +44,12 @@ Higher vol ↔ lower tick:
 | `cevTickFromVol(sigmaF, L, sigma)` | \(i(\sigma)\) via `toTickSpace` |
 | `cevLocalVol(sigmaF, L, tick)` | \(e^{\alpha-\beta\,\mathrm{tick}}\) |
 | `cevLocalDrift(sigmaF, muF, L, tick)` | Markdown \(\mu(i)\) with \(\sqrt{p}=1.0001^{\mathrm{tick}}\) |
-| Factory block in `CEV.draft1.gms` | Band → bounds → dynamic `TickStrikes` + `tickVal` |
+| Factory block in `CEV.TickStrikes.draft1.gms` | Band → bounds → dynamic `TickStrikes` + `tickVal` |
 
 ## Files
 
 - Spec: this document (`spec/models/sets/CEV.md`, upper section)
-- Model: `model/CEV.draft1.gms`
+- Model: `model/CEV.TickStrikes.draft1.gms`
 - Includes: `model/infra/TickLattice.draft1.gms`, `model/instruments/position.gms`
 
 ---
